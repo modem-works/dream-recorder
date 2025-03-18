@@ -1,0 +1,75 @@
+sequenceDiagram
+    autonumber
+    title Dream Recorder - Detailed Architecture and Data Flow
+
+    %% Participants
+    participant U as User 🧔
+    participant TS as Touch Sensor 🔘<br>(TTP223B)
+    participant MIC as Microphone 🎙️<br>(USB Dongle)
+    participant GPIO as GPIO Pins<br>(Raspberry Pi)
+    participant DISP as Display 📺<br>(Raspberry Pi)
+    participant RPI as Raspberry Pi 5 🥧<br>(Hardware)
+    participant FLASK as Flask Server 🌶️<br>(Backend)
+    participant WS as WebSockets<br>Server 🔌
+    participant FE as Frontend<br>Web App 🖥️
+    participant OpenAI as OpenAI API 🤖<br>(STT + LLM)
+    participant LL as LumaLabs API 🤖<br>(Video Gen)
+    
+    %% Setup and Initialization
+    Note over RPI,FLASK: System Boot & Initialization
+    RPI ->> FLASK: Start Flask server
+    FLASK ->> WS: Initialize WebSockets server
+    FLASK ->> FE: Serve frontend application
+    FE ->> DISP: Display UI on screen
+    
+    %% Touch Interaction 1 - Start Recording
+    U ->> TS: Single press 👆
+    TS ->> GPIO: Send touch signal
+    GPIO ->> RPI: Process GPIO interrupt
+    RPI ->> FLASK: Signal touch event
+    FLASK ->> FE: Notify recording start
+    FE ->> DISP: Display "Recording..." UI
+    
+    %% Voice Recording
+    U ->> MIC: Speak dream description 🗣️
+    MIC ->> RPI: Capture audio stream
+    RPI ->> FE: Stream raw audio
+    FE ->> WS: Stream binary audio data
+    
+    %% Touch Interaction 2 - Stop Recording
+    U ->> TS: Single press 👆
+    TS ->> GPIO: Send touch signal
+    GPIO ->> RPI: Process GPIO interrupt
+    RPI ->> FLASK: Signal touch event
+    FLASK ->> FE: Notify recording stop
+    FE ->> DISP: Display "Processing..." UI
+    
+    %% Audio Processing
+    WS ->> FLASK: Forward complete audio data
+    FLASK ->> OpenAI: Send audio for Speech-to-Text
+    OpenAI -->> FLASK: Return transcript text
+    
+    %% Prompt Creation
+    FLASK ->> OpenAI: Send transcript for prompt enhancement
+    Note right of OpenAI: LLM processes transcript<br>to create optimal video<br>generation prompt
+    OpenAI -->> FLASK: Return enhanced video prompt
+    
+    %% Video Generation
+    FLASK ->> LL: Send video prompt to Luma Labs
+    Note right of LL: Generate video based<br>on enhanced prompt
+    FLASK ->> FE: Update status "Generating video..."
+    FE ->> DISP: Display "Creating your dream..." UI
+    
+    %% Waiting for video
+    FLASK -->> FLASK: Poll for video completion
+    LL -->> FLASK: Return video URL when ready
+    
+    %% Video Playback
+    FLASK ->> FE: Send video URL
+    FE ->> DISP: Display video player UI
+    FE ->> DISP: Stream and play video 📺️
+    
+    %% Reset for next interaction
+    Note over DISP: After video completes
+    FE ->> DISP: Return to idle screen
+    Note over U,DISP: System ready for next dream recording 

@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+
+    participant U as User 🧔
+    participant DM as Dream Machine 🖥️
+    participant OpenAI as OpenAI 🤖
+    participant LL as LumaLabs 🤖
+    
+    U ->> DM: Pushes button 🔘
+    U ->> DM: Voices dream 🗣️
+    U ->> DM: Pushes button 🔘
+    
+    DM ->> OpenAI: Sends dream voice for STT 🎶
+    OpenAI -->> DM: Returns voice text 📃
+    
+    DM ->> OpenAI: Sends voice text for Video Prompt creation 📃
+    OpenAI -->> DM: Returns Video Prompt 📃
+    
+    DM ->> LL: Sends Video Prompt for video creation 📃
+    DM -->> DM: Awaits response 💤
+    
+    LL -->> DM: Returns video URL 🔗
+
+    % DM -->> DM: Proprietary conversion ⁉️
+
+    DM ->> U: Plays video 📺️

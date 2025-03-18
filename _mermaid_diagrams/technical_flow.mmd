@@ -1,0 +1,114 @@
+flowchart TD
+    %% Main System Components
+    subgraph RaspberryPi["Raspberry Pi 5 System"]
+        %% Hardware Input/Output
+        TS[Touch Sensor\nTTP223B]
+        MIC[USB Microphone]
+        SCRN[Display Screen]
+        
+        %% Backend Components
+        subgraph Backend["Backend (Python)"]
+            GPIO_HANDLER[GPIO Event Handler]
+            FLASK[Flask Web Server]
+            WS_SERVER[WebSocket Server]
+            AUDIO_BUFFER[Audio Buffer]
+            STT_CLIENT[OpenAI STT Client]
+            PROMPT_CLIENT[OpenAI Prompt Client]
+            LUMA_CLIENT[LumaLabs Client]
+            VIDEO_PROCESSOR[FFmpeg Video Processor]
+            VIDEO_STORAGE[Video File Storage]
+            STATE_MANAGER[State Manager]
+            POLLING_SERVICE[Luma Polling Service]
+        end
+        
+        %% Frontend Components
+        subgraph Frontend["Frontend (Browser)"]
+            HTML_UI[HTML/CSS UI]
+            JS_CONTROLLER[JavaScript Controller]
+            AUDIO_RECORDER[Audio Recorder]
+            WS_CLIENT[WebSocket Client]
+            VIDEO_PLAYER[Video Player]
+        end
+    end
+    
+    %% External APIs
+    subgraph ExternalAPIs["External APIs"]
+        OPENAI_STT_API[OpenAI Speech-to-Text API]
+        OPENAI_CHAT_API[OpenAI Chat Completion API]
+        LUMALABS_API[LumaLabs Video API]
+    end
+    
+    %% System Initialization
+    TS -- "GPIO Signal\n(Start/Stop)" --> GPIO_HANDLER
+    GPIO_HANDLER -- "Event Notification" --> STATE_MANAGER
+    STATE_MANAGER -- "State Change" --> FLASK
+    FLASK -- "State Update" --> HTML_UI
+    
+    %% Audio Recording Flow
+    MIC -- "Raw Audio" --> AUDIO_RECORDER
+    AUDIO_RECORDER -- "Audio Chunks" --> WS_CLIENT
+    WS_CLIENT -- "WebSocket Binary Data" --> WS_SERVER
+    WS_SERVER -- "Audio Data" --> AUDIO_BUFFER
+    
+    %% Processing Flow
+    STATE_MANAGER -- "Recording Complete" --> STT_CLIENT
+    AUDIO_BUFFER -- "Complete Audio" --> STT_CLIENT
+    STT_CLIENT -- "Audio File\nwhistper-1" --> OPENAI_STT_API
+    OPENAI_STT_API -- "Transcribed Text" --> STT_CLIENT
+    STT_CLIENT -- "Dream Text" --> STATE_MANAGER
+    STATE_MANAGER -- "Update UI" --> FLASK
+    FLASK -- "Show Transcription" --> HTML_UI
+    
+    %% Prompt Enhancement
+    STATE_MANAGER -- "Transcription Ready" --> PROMPT_CLIENT
+    PROMPT_CLIENT -- "User Dream Text\ngpt-4-turbo" --> OPENAI_CHAT_API
+    OPENAI_CHAT_API -- "Enhanced Video Prompt" --> PROMPT_CLIENT
+    PROMPT_CLIENT -- "Video Prompt" --> STATE_MANAGER
+    
+    %% Video Generation
+    STATE_MANAGER -- "Prompt Ready" --> LUMA_CLIENT
+    LUMA_CLIENT -- "Video Generation Request" --> LUMALABS_API
+    LUMA_CLIENT -- "Generation ID" --> POLLING_SERVICE
+    POLLING_SERVICE -- "Status Check" --> LUMALABS_API
+    LUMALABS_API -- "Video URL" --> POLLING_SERVICE
+    POLLING_SERVICE -- "Video Ready" --> STATE_MANAGER
+    
+    %% Video Post-Processing
+    STATE_MANAGER -- "Download Video" --> LUMA_CLIENT
+    LUMA_CLIENT -- "Video URL" --> LUMA_CLIENT
+    LUMA_CLIENT -- "Downloaded Video" --> VIDEO_STORAGE
+    STATE_MANAGER -- "Process Video" --> VIDEO_PROCESSOR
+    VIDEO_STORAGE -- "Raw Video File" --> VIDEO_PROCESSOR
+    VIDEO_PROCESSOR -- "Processes Video\n(FFmpeg)" --> VIDEO_PROCESSOR
+    VIDEO_PROCESSOR -- "Processed Video" --> VIDEO_STORAGE
+    VIDEO_PROCESSOR -- "Processing Complete" --> STATE_MANAGER
+    
+    %% Video Playback
+    STATE_MANAGER -- "Video Ready" --> FLASK
+    FLASK -- "Video File Path" --> HTML_UI
+    HTML_UI -- "Load Video" --> VIDEO_PLAYER
+    VIDEO_PLAYER -- "Display" --> SCRN
+    
+    %% Data Specifications
+    classDef dataSpec fill:#f9f,stroke:#333,stroke-width:1px
+    
+    %% Define Key Data Transformations
+    RAW_AUDIO[("Raw Audio:\nBinary WebM/Opus")]:::dataSpec
+    TRANSCRIBED_TEXT[("Transcribed Text:\nJSON")]:::dataSpec
+    ENHANCED_PROMPT[("Enhanced Prompt:\nJSON")]:::dataSpec
+    VIDEO_URL_DATA[("Video URL:\nJSON")]:::dataSpec
+    RAW_VIDEO_DATA[("Raw Video:\nMP4 File")]:::dataSpec
+    PROCESSED_VIDEO_DATA[("Processed Video:\nMP4 File")]:::dataSpec
+    
+    AUDIO_RECORDER --> RAW_AUDIO
+    RAW_AUDIO --> WS_SERVER
+    OPENAI_STT_API --> TRANSCRIBED_TEXT
+    TRANSCRIBED_TEXT --> PROMPT_CLIENT
+    OPENAI_CHAT_API --> ENHANCED_PROMPT
+    ENHANCED_PROMPT --> LUMA_CLIENT
+    LUMALABS_API --> VIDEO_URL_DATA
+    VIDEO_URL_DATA --> LUMA_CLIENT
+    LUMA_CLIENT --> RAW_VIDEO_DATA
+    RAW_VIDEO_DATA --> VIDEO_PROCESSOR
+    VIDEO_PROCESSOR --> PROCESSED_VIDEO_DATA
+    PROCESSED_VIDEO_DATA --> VIDEO_PLAYER 

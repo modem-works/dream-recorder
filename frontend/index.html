@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream Recorder</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="dream-recorder">
+        <header>
+            <h1>Dream Recorder</h1>
+            <div class="status-indicator">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="status-text">Ready</span>
+            </div>
+        </header>
+        
+        <main>
+            <div class="container">
+                <div class="section" id="recording-section">
+                    <div class="mic-visualizer">
+                        <div class="mic-icon" id="mic-icon"></div>
+                        <div class="visualizer-container">
+                            <canvas id="visualizer"></canvas>
+                        </div>
+                    </div>
+                    <div class="recording-info">
+                        <div id="recording-time">00:00</div>
+                        <div id="recording-prompt">Touch the sensor to start recording your dream</div>
+                    </div>
+                </div>
+                
+                <div class="section hidden" id="transcription-section">
+                    <h2>Your Dream</h2>
+                    <div id="transcription-container">
+                        <p id="transcription-text"></p>
+                    </div>
+                </div>
+                
+                <div class="section hidden" id="video-section">
+                    <h2>Dream Visualization</h2>
+                    <div class="video-container">
+                        <video id="dream-video" controls playsinline></video>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="progress-bar"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">Ready to record</div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <div class="button-container">
+                <button id="manual-trigger" class="hidden">Manual Trigger</button>
+                <button id="reset-button" class="hidden">Reset</button>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html> 
