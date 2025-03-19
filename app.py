@@ -122,7 +122,8 @@ def generate_video(prompt):
                 'prompt': prompt,
                 'model': 'ray-2',
                 'resolution': '540p',
-                'duration': '5s'
+                'duration': '5s',
+                "aspect_ratio": "21:9",
             }
         )
         
