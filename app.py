@@ -275,6 +275,28 @@ def process_audio(sid):
         audio_buffer = io.BytesIO()
         audio_chunks = []
 
+@socketio.on('generate_video')
+def handle_generate_video(data):
+    """Handle video generation request."""
+    try:
+        recording_state['status'] = 'generating'
+        socketio.emit('state_update', recording_state)
+        
+        # Generate video
+        video_path = generate_video(data['prompt'])
+        recording_state['video_url'] = f'/videos/{os.path.basename(video_path)}'
+        socketio.emit('video_ready', {'url': recording_state['video_url']})
+        
+        # Update state to complete
+        recording_state['status'] = 'complete'
+        socketio.emit('state_update', recording_state)
+        
+    except Exception as e:
+        logger.error(f"Error generating video: {str(e)}")
+        socketio.emit('error', {'message': f"Error generating video: {str(e)}"})
+        recording_state['status'] = 'complete'
+        socketio.emit('state_update', recording_state)
+
 @app.route('/')
 def index():
     return render_template('index.html')

@@ -109,7 +109,6 @@
 </head>
 <body>
     <div class="container">
-        <h1>Dream Recorder</h1>
         <div id="status" class="status">Status: Ready</div>
         <button id="startBtn">Start Recording</button>
         <button id="stopBtn">Stop Recording</button>
@@ -124,6 +123,9 @@
         <div class="text-output">
             <h3>Video Prompt</h3>
             <div id="videoPrompt"></div>
+            <button id="generateDreamBtn" class="button" style="display: none; margin-top: 10px;">
+                Generate Dream
+            </button>
         </div>
         <div class="text-output">
             <h3>Generated Video</h3>
@@ -140,6 +142,7 @@
         const socket = io();
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const generateDreamBtn = document.getElementById('generateDreamBtn');
         const statusDiv = document.getElementById('status');
         const errorDiv = document.getElementById('error');
         const transcriptionDiv = document.getElementById('transcription');
@@ -267,6 +270,7 @@
 
         socket.on('video_prompt_update', (data) => {
             videoPromptDiv.textContent = data.text;
+            generateDreamBtn.style.display = 'block';
             loadingDiv.style.display = 'none';
         });
 
@@ -274,24 +278,40 @@
             videoContainer.style.display = 'block';
             generatedVideo.src = data.url;
             loadingDiv.style.display = 'none';
+            generateDreamBtn.disabled = false;
+        });
+
+        generateDreamBtn.addEventListener('click', () => {
+            generateDreamBtn.disabled = true;
+            loadingDiv.style.display = 'block';
+            socket.emit('generate_video', { prompt: videoPromptDiv.textContent });
         });
 
         function updateUI(state) {
-            statusDiv.textContent = `Status: ${state.status.charAt(0).toUpperCase() + state.status.slice(1)}`;
-            statusDiv.className = 'status ' + state.status;
+            startBtn.disabled = state.is_recording;
+            stopBtn.disabled = !state.is_recording;
+            statusDiv.textContent = state.status;
             
+            // Update button visibility based on recording state
             if (state.is_recording) {
                 startBtn.style.display = 'none';
                 stopBtn.style.display = 'inline-block';
                 loadingDiv.style.display = 'none';
-            } else if (state.status === 'processing') {
-                startBtn.style.display = 'inline-block';
-                stopBtn.style.display = 'none';
-                loadingDiv.style.display = 'block';
             } else {
                 startBtn.style.display = 'inline-block';
                 stopBtn.style.display = 'none';
-                loadingDiv.style.display = 'none';
+                if (state.status === 'processing') {
+                    loadingDiv.style.display = 'block';
+                } else {
+                    loadingDiv.style.display = 'none';
+                }
+            }
+            
+            // Update generate dream button visibility based on state
+            if (state.video_prompt && !state.video_url) {
+                generateDreamBtn.style.display = 'block';
+            } else {
+                generateDreamBtn.style.display = 'none';
             }
         }
 
