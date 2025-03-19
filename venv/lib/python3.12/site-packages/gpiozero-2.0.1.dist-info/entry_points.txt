@@ -1,0 +1,17 @@
+[console_scripts]
+pinout = gpiozerocli.pinout:main
+pintest = gpiozerocli.pintest:main
+
+[gpiozero_mock_pin_classes]
+mockchargingpin = gpiozero.pins.mock:MockChargingPin
+mockpin = gpiozero.pins.mock:MockPin
+mockpwmpin = gpiozero.pins.mock:MockPWMPin
+mocktriggerpin = gpiozero.pins.mock:MockTriggerPin
+
+[gpiozero_pin_factories]
+lgpio = gpiozero.pins.lgpio:LGPIOFactory
+mock = gpiozero.pins.mock:MockFactory
+native = gpiozero.pins.native:NativeFactory
+pigpio = gpiozero.pins.pigpio:PiGPIOFactory
+rpigpio = gpiozero.pins.rpigpio:RPiGPIOFactory
+

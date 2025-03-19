@@ -1,40 +1,12 @@
-# Setuptools constraint to fix Python 3.12 compatibility
-setuptools>=69.0.2
-
-# Web Framework
-Flask==2.3.3
-Werkzeug==2.3.7
-Flask-SocketIO==5.3.6
-python-dotenv==1.0.0
-
-# API Clients
-# Use a more compatible OpenAI version
-openai==0.28.1  # Downgraded for compatibility
+flask==3.0.2
+flask-socketio==5.3.6
+python-dotenv==1.0.1
+openai==1.12.0
+httpx==0.26.0
 requests==2.31.0
-
-# Raspberry Pi Specific
-RPi.GPIO==0.7.1; platform_system == "Linux"
-gpiozero==2.0.1; platform_system == "Linux"
-
-# Audio Processing
-# PyAudio requires system libraries (portaudio)
-# You might need to install it separately:
-# For Ubuntu/Raspberry Pi: sudo apt-get install python3-pyaudio portaudio19-dev
-# PyAudio==0.2.13
-numpy==1.26.0
-pydub==0.25.1
-
-# WebSockets
-# Python 3.12 compatibility: switch from eventlet to gevent
-# eventlet==0.33.3
-gevent==23.9.1
+gevent==24.2.1
 gevent-websocket==0.10.1
-websockets==11.0.3
-
-# Video Processing
-python-ffmpeg==2.0.4
-
-# Utilities
-python-socketio==5.10.0
-tenacity==8.2.3
-tqdm==4.66.1 
+python-engineio==4.9.0
+python-socketio==5.11.1
+eventlet==0.35.2
+dnspython==2.5.0 

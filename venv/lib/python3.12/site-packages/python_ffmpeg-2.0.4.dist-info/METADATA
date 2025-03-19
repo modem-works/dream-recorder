@@ -1,0 +1,152 @@
+Metadata-Version: 2.1
+Name: python-ffmpeg
+Version: 2.0.4
+Summary: A python binding for FFmpeg which provides sync and async APIs
+Home-page: https://github.com/jonghwanhyeon/python-ffmpeg
+Author: Jonghwan Hyeon
+Author-email: jonghwanhyeon93@gmail.com
+License: MIT
+Keywords: ffmpeg,asyncio
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pyee
+Requires-Dist: typing-extensions
+
+# python-ffmpeg
+A python binding for FFmpeg which provides sync and async APIs
+
+## Help
+See [documentation](https://python-ffmpeg.readthedocs.io) for more details.
+
+## Install
+To install **python-ffmpeg**, simply use pip:
+
+```console
+$ pip install python-ffmpeg
+```
+
+## Examples
+You can find more examples in [the documentation](https://python-ffmpeg.readthedocs.io/).
+### Transcoding
+#### Synchronous API
+```python
+from ffmpeg import FFmpeg, Progress
+
+
+def main():
+    ffmpeg = (
+        FFmpeg()
+        .option("y")
+        .input("input.mp4")
+        .output(
+            "ouptut.mp4",
+            {"codec:v": "libx264"},
+            vf="scale=1280:-1",
+            preset="veryslow",
+            crf=24,
+        )
+    )
+
+    ffmpeg.execute()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+#### Asynchronous API
+``` python
+import asyncio
+
+from ffmpeg import Progress
+from ffmpeg.asyncio import FFmpeg
+
+
+async def main():
+    ffmpeg = (
+        FFmpeg()
+        .option("y")
+        .input("input.mp4")
+        .output(
+            "ouptut.mp4",
+            {"codec:v": "libx264"},
+            vf="scale=1280:-1",
+            preset="veryslow",
+            crf=24,
+        )
+    )
+
+    await ffmpeg.execute()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Recording
+#### Synchronous API
+```python
+from ffmpeg import FFmpeg, Progress
+
+
+def main():
+    ffmpeg = (
+        FFmpeg()
+        .option("y")
+        .input(
+            "rtsp://username:password@127.0.0.1/cam",
+            rtsp_transport="tcp",
+            rtsp_flags="prefer_tcp",
+        )
+        .output("output.mp4", vcodec="copy")
+    )
+
+    @ffmpeg.on("progress")
+    def time_to_terminate(progress: Progress):
+        if progress.frame > 200:
+            ffmpeg.terminate()
+
+    ffmpeg.execute()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+#### Asynchronous API
+``` python
+import asyncio
+
+from ffmpeg import Progress
+from ffmpeg.asyncio import FFmpeg
+
+
+async def main():
+    ffmpeg = (
+        FFmpeg()
+        .option("y")
+        .input(
+            "rtsp://username:password@127.0.0.1/cam",
+            rtsp_transport="tcp",
+            rtsp_flags="prefer_tcp",
+        )
+        .output("output.mp4", vcodec="copy")
+    )
+
+    @ffmpeg.on("progress")
+    def time_to_terminate(progress: Progress):
+        if progress.frame > 200:
+            ffmpeg.terminate()
+
+    await ffmpeg.execute()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```

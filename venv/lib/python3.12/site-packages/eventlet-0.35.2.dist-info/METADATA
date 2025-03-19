@@ -1,0 +1,131 @@
+Metadata-Version: 2.1
+Name: eventlet
+Version: 0.35.2
+Summary: Highly concurrent networking library
+Project-URL: Homepage, https://github.com/eventlet/eventlet
+Project-URL: History, https://github.com/eventlet/eventlet/blob/master/NEWS
+Project-URL: Tracker, https://github.com/eventlet/eventlet/issues
+Project-URL: Source, https://github.com/eventlet/eventlet
+Project-URL: Documentation, https://eventlet.readthedocs.io/
+Author-email: Sergey Shepelev <temotor@gmail.com>, Jakub Stasiak <jakub@stasiak.at>, Tim Burke <tim.burke@gmail.com>, Nat Goodspeed <nat@lindenlab.com>, Itamar Turner-Trauring <itamar@itamarst.org>, Hervé Beraud <hberaud@redhat.com>
+License: MIT
+License-File: AUTHORS
+License-File: LICENSE
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: POSIX
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Internet
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.7
+Requires-Dist: dnspython>=1.15.0
+Requires-Dist: greenlet>=1.0
+Requires-Dist: monotonic>=1.4; python_version < '3.5'
+Provides-Extra: dev
+Requires-Dist: black; extra == 'dev'
+Requires-Dist: build; extra == 'dev'
+Requires-Dist: commitizen; extra == 'dev'
+Requires-Dist: isort; extra == 'dev'
+Requires-Dist: pip-tools; extra == 'dev'
+Requires-Dist: pre-commit; extra == 'dev'
+Requires-Dist: twine; extra == 'dev'
+Description-Content-Type: text/x-rst
+
+Warning
+=======
+
+**New usages of eventlet are now heavily discouraged! Please read the
+following.**
+
+Eventlet was created almost 18 years ago, at a time where async
+features were absent from the CPython stdlib. With time eventlet evolved and
+CPython too, but since several years the maintenance activity of eventlet
+dicreased leading to a growing gap between eventlet and the CPython
+implementation.
+
+This gap is now too high and can lead you to unexpected side effects and bugs
+in your applications.
+
+Eventlet now follows a new maintenance policy. **Only maintenance for
+stability and bug fixing** will be provided. **No new features will be
+accepted**, except those related to the asyncio migration. **Usages in new
+projects are discouraged**. **Our goal is to plan the retirement of eventlet**
+and to give you ways to move away from eventlet.
+
+If you are looking for a library to manage async network programming,
+and if you do not yet use eventlet, then, we encourage you to use `asyncio`_,
+which is the official async library of the CPython stdlib.
+
+If you already use eventlet, our goal is to allow you to smoothly migrate
+from eventlet to asyncio. We are currently thinking about solutions to
+make that kind of migrations possible. Only new features related to the
+migration solution will be accepted.
+
+If you have questions concerning maintenance goals or concerning
+the migration do not hesitate to `open a new issue`_, we will be happy to
+answer them.
+
+.. _asyncio: https://docs.python.org/3/library/asyncio.html
+.. _open a new issue: https://github.com/eventlet/eventlet/issues/new
+
+Eventlet
+========
+
+.. image:: https://img.shields.io/pypi/v/eventlet
+    :target: https://pypi.org/project/eventlet/
+
+.. image:: https://img.shields.io/github/actions/workflow/status/eventlet/eventlet/test.yaml?branch=master
+    :target: https://github.com/eventlet/eventlet/actions?query=workflow%3Atest+branch%3Amaster
+
+.. image:: https://codecov.io/gh/eventlet/eventlet/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/eventlet/eventlet
+
+
+Eventlet is a concurrent networking library for Python that allows you to change how you run your code, not how you write it.
+
+It uses epoll or libevent for highly scalable non-blocking I/O.  Coroutines ensure that the developer uses a blocking style of programming that is similar to threading, but provide the benefits of non-blocking I/O.  The event dispatch is implicit, which means you can easily use Eventlet from the Python interpreter, or as a small part of a larger application.
+
+It's easy to get started using Eventlet, and easy to convert existing
+applications to use it.  Start off by looking at the `examples`_,
+`common design patterns`_, and the list of `basic API primitives`_.
+
+.. _examples: https://eventlet.readthedocs.io/en/latest/examples.html
+.. _common design patterns: https://eventlet.readthedocs.io/en/latest/design_patterns.html
+.. _basic API primitives: https://eventlet.readthedocs.io/en/latest/basic_usage.html
+
+
+Getting Eventlet
+================
+
+The easiest way to get Eventlet is to use pip::
+
+  pip install -U eventlet
+
+To install latest development version once::
+
+  pip install -U https://github.com/eventlet/eventlet/archive/master.zip
+
+
+Building the Docs Locally
+=========================
+
+To build a complete set of HTML documentation::
+
+  tox -e docs
+
+The built html files can be found in doc/build/html afterward.
+
+Supported Python versions
+=========================
+
+Python 3.7-3.12 are currently supported.

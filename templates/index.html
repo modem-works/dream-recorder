@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream Recorder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #e9ecef;
+        }
+        .recording {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .processing {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+        .complete {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #startBtn {
+            background-color: #4caf50;
+            color: white;
+        }
+        #startBtn:hover {
+            background-color: #45a049;
+        }
+        #stopBtn {
+            background-color: #f44336;
+            color: white;
+            display: none;
+        }
+        #stopBtn:hover {
+            background-color: #da190b;
+        }
+        .error {
+            color: #f44336;
+            margin-top: 10px;
+        }
+        .audio-visualizer {
+            width: 100%;
+            height: 100px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .text-output {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            min-height: 100px;
+        }
+        .text-output h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .text-output p {
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dream Recorder</h1>
+        <div id="status" class="status">Status: Ready</div>
+        <button id="startBtn">Start Recording</button>
+        <button id="stopBtn">Stop Recording</button>
+        <div class="audio-visualizer">
+            <canvas id="visualizer"></canvas>
+        </div>
+        <div id="loading" class="loading">Processing...</div>
+        <div class="text-output">
+            <h3>Transcription</h3>
+            <div id="transcription"></div>
+        </div>
+        <div class="text-output">
+            <h3>Video Prompt</h3>
+            <div id="videoPrompt"></div>
+        </div>
+        <div class="text-output">
+            <h3>Generated Video</h3>
+            <div id="videoContainer" style="display: none;">
+                <video id="generatedVideo" width="100%" controls muted autoplay loop>
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        const socket = io();
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const statusDiv = document.getElementById('status');
+        const errorDiv = document.getElementById('error');
+        const transcriptionDiv = document.getElementById('transcription');
+        const videoPromptDiv = document.getElementById('videoPrompt');
+        const loadingDiv = document.getElementById('loading');
+        const videoContainer = document.getElementById('videoContainer');
+        const generatedVideo = document.getElementById('generatedVideo');
+        const canvas = document.getElementById('visualizer');
+        const ctx = canvas.getContext('2d');
+
+        let mediaRecorder = null;
+        let audioContext = null;
+        let analyser = null;
+        let animationFrame = null;
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Audio visualization
+        function drawVisualizer() {
+            if (!analyser) return;
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteFrequencyData(dataArray);
+            
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const barWidth = (canvas.width / bufferLength) * 2.5;
+            let barHeight;
+            let x = 0;
+            
+            for(let i = 0; i < bufferLength; i++) {
+                barHeight = dataArray[i] / 2;
+                ctx.fillStyle = '#4caf50';
+                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                x += barWidth + 1;
+            }
+            
+            animationFrame = requestAnimationFrame(drawVisualizer);
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        channelCount: 1,
+                        sampleRate: 44100,
+                        sampleSize: 16
+                    } 
+                });
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
+                
+                // Set up audio context and analyser for visualization
+                audioContext = new AudioContext();
+                const source = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+                drawVisualizer();
+
+                // Handle audio data
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        // Convert blob to array buffer before sending
+                        event.data.arrayBuffer().then(buffer => {
+                            socket.emit('audio_data', {
+                                data: Array.from(new Uint8Array(buffer)),
+                                timestamp: Date.now()
+                            });
+                        });
+                    }
+                };
+
+                // Start recording
+                mediaRecorder.start(100); // Send chunks every 100ms
+                socket.emit('start_recording');
+            } catch (err) {
+                errorDiv.textContent = `Error accessing microphone: ${err.message}`;
+                console.error('Error accessing microphone:', err);
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                if (audioContext) {
+                    audioContext.close();
+                    audioContext = null;
+                }
+                if (animationFrame) {
+                    cancelAnimationFrame(animationFrame);
+                    animationFrame = null;
+                }
+                socket.emit('stop_recording');
+            }
+        }
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            errorDiv.textContent = '';
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+            errorDiv.textContent = 'Disconnected from server';
+        });
+
+        socket.on('state_update', (state) => {
+            updateUI(state);
+        });
+
+        socket.on('transcription_update', (data) => {
+            transcriptionDiv.textContent = data.text;
+        });
+
+        socket.on('video_prompt_update', (data) => {
+            videoPromptDiv.textContent = data.text;
+            loadingDiv.style.display = 'none';
+        });
+
+        socket.on('video_ready', (data) => {
+            videoContainer.style.display = 'block';
+            generatedVideo.src = data.url;
+            loadingDiv.style.display = 'none';
+        });
+
+        function updateUI(state) {
+            statusDiv.textContent = `Status: ${state.status.charAt(0).toUpperCase() + state.status.slice(1)}`;
+            statusDiv.className = 'status ' + state.status;
+            
+            if (state.is_recording) {
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                loadingDiv.style.display = 'none';
+            } else if (state.status === 'processing') {
+                startBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'none';
+                loadingDiv.style.display = 'block';
+            } else {
+                startBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'none';
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        startBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+    </script>
+</body>
+</html> 
