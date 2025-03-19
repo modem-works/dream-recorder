@@ -126,14 +126,24 @@ def generate_video(prompt):
             }
         )
         
-        if response.status_code != 200:
+        # Accept both 200 and 201 status codes
+        if response.status_code not in [200, 201]:
             raise Exception(f"Luma API error: {response.text}")
         
-        generation_id = response.json()['id']
+        response_data = response.json()
+        logger.info(f"API response: {response_data}")
+        
+        generation_id = response_data.get('id')
+        if not generation_id:
+            raise Exception("Failed to get generation ID from response")
+        
         logger.info(f"Started video generation with ID: {generation_id}")
         
-        # Poll for completion
-        while True:
+        # Poll for completion with more detailed status checking
+        max_attempts = 60
+        poll_interval = 5
+        
+        for attempt in range(max_attempts):
             status_response = requests.get(
                 f'https://api.lumalabs.ai/dream-machine/v1/generations/{generation_id}',
                 headers={
@@ -142,17 +152,45 @@ def generate_video(prompt):
                 }
             )
             
-            if status_response.status_code != 200:
-                raise Exception(f"Luma API error: {status_response.text}")
+            if status_response.status_code not in [200, 201]:
+                logger.error(f"Status check failed with code {status_response.status_code}: {status_response.text}")
+                time.sleep(poll_interval)
+                continue
             
             status_data = status_response.json()
-            if status_data['status'] == 'completed':
-                # Download the video
-                video_url = status_data['output']['url']
-                video_response = requests.get(video_url)
+            
+            # Log the full response periodically for debugging
+            if attempt == 0 or attempt % 10 == 0:
+                logger.info(f"Full status response: {status_data}")
+            
+            # Check for different possible state values
+            state = status_data.get('state')
+            logger.info(f"Generation state: {state} (attempt {attempt+1}/{max_attempts})")
+            
+            if state in ['completed', 'succeeded']:
+                # Try to extract the video URL from different possible locations
+                assets = status_data.get('assets') or {}
+                video_url = None
                 
-                if video_response.status_code != 200:
-                    raise Exception("Failed to download video")
+                if isinstance(assets, dict):
+                    video_url = (assets.get('video') or 
+                               assets.get('url') or 
+                               (assets.get('videos', {}) or {}).get('url'))
+                
+                # Also check the result field for backward compatibility
+                if not video_url and 'result' in status_data:
+                    result = status_data.get('result', {})
+                    if isinstance(result, dict):
+                        video_url = result.get('url')
+                
+                if not video_url:
+                    raise Exception("Video URL not found in completed response")
+                
+                logger.info(f"Video generation completed: {video_url}")
+                
+                # Download the video
+                video_response = requests.get(video_url, stream=True)
+                video_response.raise_for_status()
                 
                 # Save the video locally
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -160,14 +198,19 @@ def generate_video(prompt):
                 video_path = os.path.join("videos", f"generated_{timestamp}.mp4")
                 
                 with open(video_path, 'wb') as f:
-                    f.write(video_response.content)
+                    for chunk in video_response.iter_content(chunk_size=8192):
+                        f.write(chunk)
                 
                 logger.info(f"Saved video to {video_path}")
                 return video_path
-            elif status_data['status'] == 'failed':
-                raise Exception(f"Video generation failed: {status_data.get('error', 'Unknown error')}")
+                
+            elif state in ['failed', 'error']:
+                error_msg = status_data.get('failure_reason') or status_data.get('error') or "Unknown error"
+                raise Exception(f"Video generation failed: {error_msg}")
             
-            time.sleep(5)  # Wait 5 seconds before polling again
+            time.sleep(poll_interval)
+        
+        raise Exception(f"Timed out waiting for video generation after {max_attempts} attempts")
             
     except Exception as e:
         logger.error(f"Error generating video: {str(e)}")
