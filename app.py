@@ -246,31 +246,61 @@ def process_audio(sid):
         # Update the transcription in the global state
         recording_state['transcription'] = transcription.text
 
-        # Emit the transcription using the session ID
-        socketio.emit('transcription_update', {'text': transcription.text}, room=sid)
+        # Emit the transcription using the session ID if available
+        if sid:
+            socketio.emit('transcription_update', {'text': transcription.text}, room=sid)
+        else:
+            # Broadcast to all connected clients if no specific session
+            socketio.emit('transcription_update', {'text': transcription.text})
 
         # Generate video prompt
         video_prompt = generate_video_prompt(transcription.text)
         if video_prompt:
             recording_state['video_prompt'] = video_prompt
-            socketio.emit('video_prompt_update', {'text': video_prompt}, room=sid)
+            if sid:
+                socketio.emit('video_prompt_update', {'text': video_prompt}, room=sid)
+            else:
+                socketio.emit('video_prompt_update', {'text': video_prompt})
             
             # Generate video
             try:
                 video_path = generate_video(video_prompt)
                 recording_state['video_url'] = f'/videos/{os.path.basename(video_path)}'
-                socketio.emit('video_ready', {'url': recording_state['video_url']}, room=sid)
+                if sid:
+                    socketio.emit('video_ready', {'url': recording_state['video_url']}, room=sid)
+                else:
+                    socketio.emit('video_ready', {'url': recording_state['video_url']})
             except Exception as e:
-                socketio.emit('error', {'message': f"Error generating video: {str(e)}"}, room=sid)
+                if sid:
+                    socketio.emit('error', {'message': f"Error generating video: {str(e)}"}, room=sid)
+                else:
+                    socketio.emit('error', {'message': f"Error generating video: {str(e)}"})
         else:
-            socketio.emit('error', {'message': "Failed to generate video prompt"}, room=sid)
+            error_msg = "Failed to generate video prompt"
+            logger.error(error_msg)
+            if sid:
+                socketio.emit('error', {'message': error_msg}, room=sid)
+            else:
+                socketio.emit('error', {'message': error_msg})
 
         # Clean up the temporary file
         os.unlink(temp_file_path)
 
+        # Set status to complete
+        recording_state['status'] = 'complete'
+        socketio.emit('state_update', recording_state)
+
     except Exception as e:
         logger.error(f"Error processing audio: {str(e)}")
-        socketio.emit('error', {'message': f"Error processing audio: {str(e)}"}, room=sid)
+        error_msg = f"Error processing audio: {str(e)}"
+        if sid:
+            socketio.emit('error', {'message': error_msg}, room=sid)
+        else:
+            socketio.emit('error', {'message': error_msg})
+            
+        # Set status to complete even on error
+        recording_state['status'] = 'complete'
+        socketio.emit('state_update', recording_state)
     finally:
         # Reset the buffer and chunks
         audio_buffer = io.BytesIO()
@@ -345,10 +375,6 @@ def handle_stop_recording():
         
         # Process the audio in a background task
         gevent.spawn(process_audio, sid)
-        
-        # Update state to complete after processing
-        recording_state['status'] = 'complete'
-        emit('state_update', recording_state)
 
 @socketio.on('audio_data')
 def handle_audio_data(data):
@@ -370,7 +396,7 @@ def serve_video(filename):
 
 @app.route('/api/trigger_recording', methods=['POST'])
 def trigger_recording():
-    """API endpoint to trigger recording from GPIO controller."""
+    """API endpoint to trigger recording from GPIO controller (long press)."""
     try:
         if recording_state['status'] == 'ready':
             # Simulate a start_recording event
@@ -385,12 +411,90 @@ def trigger_recording():
             
             # Broadcast the recording state change to all clients
             socketio.emit('recording_state', {'status': 'recording'})
-            logger.info("Recording triggered via GPIO")
+            logger.info("Recording triggered via GPIO long press")
             return jsonify({'success': True, 'message': 'Recording started'})
         else:
             return jsonify({'success': False, 'message': f'Cannot start recording in current state: {recording_state["status"]}'})
     except Exception as e:
         logger.error(f"Error triggering recording: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/wake_device', methods=['POST'])
+def wake_device():
+    """API endpoint to wake the device (single tap)."""
+    try:
+        # If device is sleeping, wake it up by sending a wake event to clients
+        socketio.emit('device_event', {'action': 'wake'})
+        logger.info("Device wake triggered via GPIO single tap")
+        return jsonify({'success': True, 'message': 'Device woken up'})
+    except Exception as e:
+        logger.error(f"Error waking device: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/show_previous_dream', methods=['POST'])
+def show_previous_dream():
+    """API endpoint to show the most recent dream (double tap)."""
+    try:
+        # Find the most recent video
+        videos_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'videos')
+        if os.path.exists(videos_dir):
+            # Get all mp4 files sorted by modification time (newest first)
+            video_files = [f for f in os.listdir(videos_dir) if f.endswith('.mp4')]
+            if video_files:
+                video_files.sort(key=lambda x: os.path.getmtime(os.path.join(videos_dir, x)), reverse=True)
+                latest_video = video_files[0]
+                
+                # Send the video URL to clients
+                video_url = f'/videos/{latest_video}'
+                socketio.emit('device_event', {
+                    'action': 'show_dream',
+                    'video_url': video_url
+                })
+                logger.info(f"Showing previous dream video: {latest_video} via GPIO double tap")
+                return jsonify({'success': True, 'message': 'Showing previous dream', 'video_url': video_url})
+            else:
+                logger.info("No previous dreams found")
+                socketio.emit('device_event', {
+                    'action': 'notification',
+                    'message': 'No previous dreams found'
+                })
+                return jsonify({'success': False, 'message': 'No previous dreams found'})
+        else:
+            logger.error(f"Videos directory not found: {videos_dir}")
+            return jsonify({'success': False, 'message': 'Videos directory not found'}), 404
+    except Exception as e:
+        logger.error(f"Error showing previous dream: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/stop_recording', methods=['POST'])
+def stop_recording_api():
+    """API endpoint to stop recording from GPIO controller (long press release)."""
+    try:
+        if recording_state['is_recording'] and recording_state['status'] == 'recording':
+            # Set recording state to processing
+            recording_state['is_recording'] = False
+            recording_state['status'] = 'processing'
+            
+            # Broadcast the state change to all clients
+            socketio.emit('recording_state', {'status': 'processing'})
+            logger.info("Recording stopped via GPIO long press release")
+            
+            # Get the first available client session ID
+            sessions = list(socketio.server.environ.keys())
+            if sessions:
+                sid = sessions[0]
+                # Process the audio in a background task
+                gevent.spawn(process_audio, sid)
+            else:
+                logger.warning("No active sessions found for audio processing")
+                # Process audio without a session
+                gevent.spawn(process_audio, None)
+            
+            return jsonify({'success': True, 'message': 'Recording stopped and processing started'})
+        else:
+            return jsonify({'success': False, 'message': f'Cannot stop recording in current state: {recording_state["status"]}'})
+    except Exception as e:
+        logger.error(f"Error stopping recording: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 if __name__ == '__main__':

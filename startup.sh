@@ -71,7 +71,7 @@ start_flask_app() {
 # Function to start GPIO service
 start_gpio_service() {
     log "Starting GPIO service..."
-    if is_process_running "python.*gpio_script.py"; then
+    if is_process_running "python.*gpio_service.py"; then
         log "GPIO service is already running"
     else
         # Give Flask app time to start up
