@@ -1,0 +1,18 @@
+[Unit]
+Description=Dream Recorder Kiosk Mode
+After=network.target dream-recorder.service
+Requires=dream-recorder.service
+
+[Service]
+Type=simple
+User=%USER%
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/%USER%/.Xauthority
+ExecStartPre=/bin/bash -c "sleep 15"
+ExecStart=/bin/bash -c "chromium-browser --no-first-run --disable-session-crashed-bubble --app=http://localhost:5000"
+# --kiosk --disable-infobars (put in above command when ready)
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=graphical.target 

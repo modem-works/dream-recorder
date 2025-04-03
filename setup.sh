@@ -7,8 +7,12 @@ log() {
 
 # Check for install-service flag
 INSTALL_SERVICE=false
+SETUP_KIOSK=false
 if [[ "$1" == "--install-service" ]]; then
     INSTALL_SERVICE=true
+fi
+if [[ "$1" == "--setup-kiosk" || "$2" == "--setup-kiosk" ]]; then
+    SETUP_KIOSK=true
 fi
 
 # Kill any existing processes
@@ -71,6 +75,22 @@ if [ "$INSTALL_SERVICE" = true ]; then
         sudo systemctl daemon-reload
         sudo systemctl enable dream-recorder.service
         log "Service installed and enabled. To start it now, run: sudo systemctl start dream-recorder.service"
+        
+        # Install kiosk service if both flags are provided
+        if [ "$SETUP_KIOSK" = true ] && [ -f "dream-recorder-kiosk.service" ]; then
+            log "Installing kiosk mode service..."
+            
+            # Update user in kiosk service file
+            sed -i "s|User=%USER%|User=$(whoami)|g" dream-recorder-kiosk.service
+            sed -i "s|XAUTHORITY=/home/%USER%/.Xauthority|XAUTHORITY=/home/$(whoami)/.Xauthority|g" dream-recorder-kiosk.service
+            
+            # Install and enable kiosk service
+            sudo cp dream-recorder-kiosk.service /etc/systemd/system/
+            sudo systemctl daemon-reload
+            sudo systemctl enable dream-recorder-kiosk.service
+            log "Kiosk service installed and enabled. It will start automatically after the Dream Recorder service."
+            log "To start it now, run: sudo systemctl start dream-recorder-kiosk.service"
+        fi
     else
         log "Error: dream-recorder.service file not found"
     fi
@@ -88,11 +108,80 @@ if [ -e "/dev/gpiomem" ]; then
     fi
 fi
 
+# Setup Chrome to start in kiosk mode at boot
+if [ "$SETUP_KIOSK" = true ]; then
+    log "Setting up Chrome kiosk mode autostart..."
+    
+    # Check if Chromium or Chrome is installed
+    if command -v chromium-browser >/dev/null 2>&1; then
+        BROWSER_CMD="chromium-browser"
+    elif command -v chromium >/dev/null 2>&1; then
+        BROWSER_CMD="chromium"
+    elif command -v google-chrome >/dev/null 2>&1; then
+        BROWSER_CMD="google-chrome"
+    else
+        log "Installing Chromium browser..."
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser
+        BROWSER_CMD="chromium-browser"
+    fi
+    
+    # Create autostart directory if it doesn't exist
+    mkdir -p ~/.config/autostart
+    
+    # Create desktop entry for autostart
+    AUTOSTART_FILE=~/.config/autostart/dream-recorder-kiosk.desktop
+    
+    # Write desktop entry file
+    cat > "$AUTOSTART_FILE" << EOL
+[Desktop Entry]
+Type=Application
+Name=Dream Recorder Kiosk
+Exec=$BROWSER_CMD --kiosk --no-first-run --disable-session-crashed-bubble --disable-infobars --app=http://localhost:5000
+X-GNOME-Autostart-enabled=true
+EOL
+    
+    # Create script to disable screen blanking and screensaver
+    log "Creating script to disable screen blanking..."
+    SCREEN_SCRIPT=~/disable-screen-blanking.sh
+    
+    cat > "$SCREEN_SCRIPT" << EOL
+#!/bin/bash
+# Disable screen blanking and screensaver
+xset s off
+xset s noblank
+xset -dpms
+EOL
+    
+    chmod +x "$SCREEN_SCRIPT"
+    
+    # Add script to autostart
+    BLANKING_AUTOSTART=~/.config/autostart/disable-screen-blanking.desktop
+    
+    cat > "$BLANKING_AUTOSTART" << EOL
+[Desktop Entry]
+Type=Application
+Name=Disable Screen Blanking
+Exec=$SCREEN_SCRIPT
+X-GNOME-Autostart-enabled=true
+EOL
+    
+    log "Chrome kiosk mode has been set up to autostart on boot"
+    log "The web interface will be available at http://localhost:5000"
+    log "Note: You may need to restart your Raspberry Pi for changes to take effect"
+fi
+
 log "Setup complete!"
 log "To run the application manually:"
 log "  ./startup.sh"
 log ""
 log "To run with systemd (after installing the service):"
 log "  sudo systemctl start dream-recorder.service"
+log ""
+log "To setup Chrome kiosk mode:"
+log "  ./setup.sh --setup-kiosk"
+log ""
+log "To install both the service and kiosk mode:"
+log "  ./setup.sh --install-service --setup-kiosk"
 log ""
 log "Once running, open http://localhost:5000 in your browser" 
