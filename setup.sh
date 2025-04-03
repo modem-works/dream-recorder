@@ -39,16 +39,17 @@ mkdir -p data/audio videos recordings
 
 # Check for .env file
 if [ ! -f ".env" ]; then
-    log "Creating .env file..."
-    cat > .env << EOL
-OPENAI_API_KEY="your-openai-api-key"
-LUMALABS_API_KEY="your-lumalabs-api-key"
-PORT=5000
-HOST=0.0.0.0
-FLASK_ENV=development
-SECRET_KEY="$(openssl rand -hex 16)"
-EOL
-    log "Please update the .env file with your API keys"
+    log "Creating .env file from .env.example..."
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        # Generate a random secret key
+        SECRET_KEY=$(openssl rand -hex 16)
+        sed -i "s/SECRET_KEY=\"generate-a-secret-key-here\"/SECRET_KEY=\"$SECRET_KEY\"/g" .env
+        log "Created .env file. Please update it with your API keys"
+    else
+        log "Error: .env.example file not found"
+        exit 1
+    fi
 fi
 
 # Make startup and GPIO scripts executable
