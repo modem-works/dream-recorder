@@ -368,6 +368,31 @@ def handle_audio_data(data):
 def serve_video(filename):
     return send_file(os.path.join('videos', filename))
 
+@app.route('/api/trigger_recording', methods=['POST'])
+def trigger_recording():
+    """API endpoint to trigger recording from GPIO controller."""
+    try:
+        if recording_state['status'] == 'ready':
+            # Simulate a start_recording event
+            recording_state['is_recording'] = True
+            recording_state['status'] = 'recording'
+            
+            # Reset the audio buffer
+            global audio_buffer, wav_file, audio_chunks
+            audio_buffer = io.BytesIO()
+            audio_chunks = []
+            create_wav_file()
+            
+            # Broadcast the recording state change to all clients
+            socketio.emit('recording_state', {'status': 'recording'})
+            logger.info("Recording triggered via GPIO")
+            return jsonify({'success': True, 'message': 'Recording started'})
+        else:
+            return jsonify({'success': False, 'message': f'Cannot start recording in current state: {recording_state["status"]}'})
+    except Exception as e:
+        logger.error(f"Error triggering recording: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5010))
     host = os.getenv('HOST', '0.0.0.0')

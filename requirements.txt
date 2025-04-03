@@ -9,4 +9,5 @@ gevent-websocket==0.10.1
 python-engineio==4.9.0
 python-socketio==5.11.1
 eventlet==0.35.2
-dnspython==2.5.0 
+dnspython==2.5.0
+RPi.GPIO==0.7.1 

@@ -1,0 +1,13 @@
+[Unit]
+Description=Dream Recorder GPIO Service
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/dream-recorder
+ExecStart=/home/pi/dream-recorder/venv/bin/python /home/pi/dream-recorder/gpio_service.py --flask-url http://localhost:5000
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target 
