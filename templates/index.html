@@ -267,10 +267,12 @@
                     if (event.data.size > 0) {
                         // Convert blob to array buffer before sending
                         event.data.arrayBuffer().then(buffer => {
-                            socket.emit('audio_data', {
+                            const audioData = {
                                 data: Array.from(new Uint8Array(buffer)),
                                 timestamp: Date.now()
-                            });
+                            };
+                            socket.emit('audio_data', audioData);
+                            console.log('Sent audio_data chunk, size:', audioData.data.length);
                         });
                     }
                 };
@@ -278,6 +280,7 @@
                 // Start recording
                 mediaRecorder.start(100); // Send chunks every 100ms
                 socket.emit('start_recording');
+                console.log('Sent start_recording event to server');
             } catch (err) {
                 errorDiv.textContent = `Error accessing microphone: ${err.message}`;
                 console.error('Error accessing microphone:', err);
@@ -299,6 +302,7 @@
                 // Hide visualizer
                 document.querySelector('.audio-visualizer').style.display = 'none';
                 socket.emit('stop_recording');
+                console.log('Sent stop_recording event to server');
             }
         }
 
@@ -313,16 +317,19 @@
         });
 
         socket.on('state_update', (state) => {
+            console.log('Received state_update:', state);
             updateUI(state);
         });
 
         socket.on('transcription_update', (data) => {
+            console.log('Received transcription_update:', data);
             const transcriptionOutput = document.getElementById('transcriptionOutput');
             transcriptionOutput.style.display = 'block';
             transcriptionDiv.textContent = data.text;
         });
 
         socket.on('video_prompt_update', (data) => {
+            console.log('Received video_prompt_update:', data);
             const transcriptionOutput = document.getElementById('transcriptionOutput');
             const videoPromptOutput = document.getElementById('videoPromptOutput');
             transcriptionOutput.style.display = 'none';
@@ -332,6 +339,7 @@
         });
 
         socket.on('video_ready', (data) => {
+            console.log('Received video_ready:', data);
             const transcriptionOutput = document.getElementById('transcriptionOutput');
             const videoPromptOutput = document.getElementById('videoPromptOutput');
             transcriptionOutput.style.display = 'none';
@@ -342,9 +350,25 @@
             generateDreamBtn.disabled = false;
         });
 
+        socket.on('error', (data) => {
+            console.log('Received error message:', data);
+            errorDiv.textContent = data.message;
+        });
+
+        socket.on('recording_state', (data) => {
+            console.log('Received recording_state:', data);
+            startRecording();
+        });
+
+        socket.on('device_event', (data) => {
+            console.log('Received device_event:', data);
+            stopRecording();
+        });
+
         generateDreamBtn.addEventListener('click', () => {
             generateDreamBtn.disabled = true;
             loadingDiv.style.display = 'block';
+            console.log('Sending generate_video with prompt:', videoPromptDiv.textContent);
             socket.emit('generate_video', { prompt: videoPromptDiv.textContent });
         });
 
