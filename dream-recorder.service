@@ -1,0 +1,14 @@
+[Unit]
+Description=Dream Recorder Service
+After=network.target
+
+[Service]
+Type=forking
+User=pi
+WorkingDirectory=/home/dreamer/dream-recorder
+ExecStart=/home/dreamer/dream-recorder/startup.sh
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target 

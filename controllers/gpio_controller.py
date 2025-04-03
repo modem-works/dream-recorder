@@ -7,9 +7,9 @@ particularly the capacitive touch sensor (TTP223B) that triggers
 recording actions.
 """
 
-import RPi.GPIO as GPIO
 import time
 import logging
+import RPi.GPIO as GPIO
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,11 +32,27 @@ class GPIOController:
         self.is_running = False
         self.callback = None
         
+        # Small delay to ensure GPIO system is ready
+        time.sleep(0.5)
+        
+        # Reset GPIO before setup (in case it wasn't properly cleaned up)
+        try:
+            GPIO.cleanup()
+        except:
+            # Ignore errors during cleanup
+            pass
+            
         # Set up GPIO
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.touch_pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         
-        logger.info(f"GPIO Controller initialized with touch sensor on pin {self.touch_pin}")
+        # Test the GPIO pin to make sure it's working
+        try:
+            GPIO.input(self.touch_pin)
+            logger.info(f"GPIO Controller successfully initialized with touch sensor on pin {self.touch_pin}")
+        except Exception as e:
+            logger.error(f"Failed to read from GPIO pin {self.touch_pin}: {str(e)}")
+            raise RuntimeError(f"GPIO initialization failed: {str(e)}")
     
     def set_callback(self, callback_func):
         """
@@ -55,10 +71,15 @@ class GPIOController:
         
         try:
             while self.is_running:
-                if GPIO.input(self.touch_pin) == GPIO.HIGH:
-                    logger.info("Touch detected!")
-                    if self.callback:
-                        self.callback()
+                try:
+                    if GPIO.input(self.touch_pin) == GPIO.HIGH:
+                        logger.info("Touch detected!")
+                        if self.callback:
+                            self.callback()
+                except Exception as e:
+                    logger.error(f"Error reading GPIO: {str(e)}")
+                    # Continue anyway, might be a temporary error
+                
                 time.sleep(0.1)
         except KeyboardInterrupt:
             self.cleanup()
@@ -73,8 +94,11 @@ class GPIOController:
     
     def cleanup(self):
         """Clean up GPIO resources."""
-        GPIO.cleanup()
-        logger.info("GPIO resources cleaned up")
+        try:
+            GPIO.cleanup()
+            logger.info("GPIO resources cleaned up")
+        except Exception as e:
+            logger.error(f"Error during GPIO cleanup: {str(e)}")
 
 
 # Simple standalone test if file is run directly
