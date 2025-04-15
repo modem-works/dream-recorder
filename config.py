@@ -16,6 +16,10 @@ class Config:
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
 
     # --- Flask Settings ---
+    # Development mode can be set via:
+    # 1. FLASK_ENV environment variable (preferred)
+    # 2. .env file (FLASK_ENV=development)
+    # 3. Command line (--reload flag)
     FLASK_ENV = os.getenv('FLASK_ENV', 'production')
     DEBUG = FLASK_ENV == 'development'
     HOST = os.getenv('HOST', '0.0.0.0')
@@ -65,7 +69,6 @@ Format the response as a single paragraph."""
     GPIO_DEBOUNCE_TIME = float(os.getenv('GPIO_DEBOUNCE_TIME', 0.05))
     GPIO_STARTUP_DELAY = int(os.getenv('GPIO_STARTUP_DELAY', 2))
     GPIO_SAMPLING_RATE = float(os.getenv('GPIO_SAMPLING_RATE', 0.01))
-
 
 # Validate essential API keys
 config_instance = Config()

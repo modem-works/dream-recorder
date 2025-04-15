@@ -15,47 +15,32 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
 
 ### Development Setup
 
-For local development, follow these steps:
+For local development, simply run:
+```bash
+./dev.sh
+```
 
-1. Create and activate a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+This will:
+1. Create a virtual environment (if it doesn't exist)
+2. Install required dependencies
+3. Create necessary directories
+4. Start the Flask application in development mode
 
-2. Install development dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Set up development environment variables:
-   ```bash
-   cp .env.example .env
-   # Edit .env and set:
-   FLASK_ENV=development
-   ```
-
-4. Create necessary directories:
-   ```bash
-   mkdir -p recordings videos
-   ```
-
-5. Start the application in development mode:
-   ```bash
-   # Terminal 1: Start the Flask app
-   FLASK_ENV=development python app.py --reload
-   
-   # Terminal 2: Start the GPIO service (if needed)
-   python gpio_service.py
-   ```
-
-The development mode provides:
+Development mode provides:
 - Auto-reloading when Python files change
+- Input simulator for testing without hardware
 - Direct console output for debugging
-- No background processes or log files
 - Easy process management (Ctrl+C to stop)
 
-Note: The GPIO service is optional during development if you're not testing hardware features.
+The development mode can be enabled in three ways (in order of precedence):
+1. Using the `dev.sh` script (recommended)
+2. Setting `FLASK_ENV=development` in your `.env` file
+3. Setting the `FLASK_ENV` environment variable
+
+Note: The GPIO service is not started in development mode by default. If you need to test hardware features, you can start it separately:
+```bash
+python gpio_service.py
+```
 
 ### Running the Application
 
