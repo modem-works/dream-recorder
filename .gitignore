@@ -2,8 +2,6 @@
 recordings/*
 videos/*
 
-# TEMPORARY!!!
-static/images/*
 
 # Node.js
 node_modules/

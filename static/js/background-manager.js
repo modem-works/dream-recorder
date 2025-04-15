@@ -64,7 +64,7 @@ class BackgroundManager {
     getImagePath() {
         const segment = this.getCurrentTimeSegment();
         const imageNumber = this.getImageNumberForTime();
-        return `/static/images/backgrounds/${segment.folder}/DR-BG-${imageNumber}.png`;
+        return `/static/images/backgrounds/${segment.folder}/DR-BG-${imageNumber}.jpg`;
     }
 
     async changeBackground() {
