@@ -6,9 +6,23 @@ flowchart TD
         MIC[USB Microphone]
         SCRN[Display Screen]
         
+        %% System Services
+        subgraph SystemServices["System Services"]
+            SYSTEMD_SVC[Dream Recorder Service]
+            KIOSK_SVC[Kiosk Mode Service]
+            STARTUP_SCRIPT[Startup Script]
+            SETUP_SCRIPT[Setup Script]
+        end
+        
+        %% GPIO Service
+        subgraph GPIOService["GPIO Service"]
+            GPIO_HANDLER[GPIO Event Handler]
+            TOUCH_DETECTOR[Touch Pattern Detector]
+            HTTP_CLIENT[HTTP Client]
+        end
+        
         %% Backend Components
         subgraph Backend["Backend (Python)"]
-            GPIO_HANDLER[GPIO Event Handler]
             FLASK[Flask Web Server]
             WS_SERVER[WebSocket Server]
             AUDIO_BUFFER[Audio Buffer]
@@ -23,6 +37,7 @@ flowchart TD
         
         %% Frontend Components
         subgraph Frontend["Frontend (Browser)"]
+            CHROME_KIOSK[Chrome in Kiosk Mode]
             HTML_UI[HTML/CSS UI]
             JS_CONTROLLER[JavaScript Controller]
             AUDIO_RECORDER[Audio Recorder]
@@ -39,10 +54,24 @@ flowchart TD
     end
     
     %% System Initialization
-    TS -- "GPIO Signal\n(Start/Stop)" --> GPIO_HANDLER
-    GPIO_HANDLER -- "Event Notification" --> STATE_MANAGER
-    STATE_MANAGER -- "State Change" --> FLASK
-    FLASK -- "State Update" --> HTML_UI
+    SYSTEMD_SVC -- "Start" --> STARTUP_SCRIPT
+    STARTUP_SCRIPT -- "Launch" --> FLASK
+    STARTUP_SCRIPT -- "Launch" --> GPIO_HANDLER
+    KIOSK_SVC -- "Start" --> CHROME_KIOSK
+    CHROME_KIOSK -- "Load" --> HTML_UI
+    
+    %% GPIO & Touch Handling
+    TS -- "GPIO Signal" --> GPIO_HANDLER
+    GPIO_HANDLER -- "Touch Event" --> TOUCH_DETECTOR
+    TOUCH_DETECTOR -- "Single Tap\n(Wake Device)" --> HTTP_CLIENT
+    TOUCH_DETECTOR -- "Double Tap\n(Show Previous Dream)" --> HTTP_CLIENT
+    TOUCH_DETECTOR -- "Long Press\n(Start Recording)" --> HTTP_CLIENT
+    TOUCH_DETECTOR -- "Long Press Release\n(Stop Recording)" --> HTTP_CLIENT
+    HTTP_CLIENT -- "HTTP Request" --> FLASK
+    
+    %% State Management
+    FLASK -- "State Changes" --> STATE_MANAGER
+    STATE_MANAGER -- "UI Updates" --> HTML_UI
     
     %% Audio Recording Flow
     MIC -- "Raw Audio" --> AUDIO_RECORDER
@@ -89,6 +118,11 @@ flowchart TD
     HTML_UI -- "Load Video" --> VIDEO_PLAYER
     VIDEO_PLAYER -- "Display" --> SCRN
     
+    %% Setup & Configuration
+    SETUP_SCRIPT -- "Install Services" --> SYSTEMD_SVC
+    SETUP_SCRIPT -- "Install Services" --> KIOSK_SVC
+    SETUP_SCRIPT -- "Configure Environment" --> FLASK
+    
     %% Data Specifications
     classDef dataSpec fill:#f9f,stroke:#333,stroke-width:1px
     
@@ -99,6 +133,7 @@ flowchart TD
     VIDEO_URL_DATA[("Video URL:\nJSON")]:::dataSpec
     RAW_VIDEO_DATA[("Raw Video:\nMP4 File")]:::dataSpec
     PROCESSED_VIDEO_DATA[("Processed Video:\nMP4 File")]:::dataSpec
+    TOUCH_PATTERN[("Touch Pattern:\nHTTP Request")]:::dataSpec
     
     AUDIO_RECORDER --> RAW_AUDIO
     RAW_AUDIO --> WS_SERVER
@@ -111,4 +146,6 @@ flowchart TD
     LUMA_CLIENT --> RAW_VIDEO_DATA
     RAW_VIDEO_DATA --> VIDEO_PROCESSOR
     VIDEO_PROCESSOR --> PROCESSED_VIDEO_DATA
-    PROCESSED_VIDEO_DATA --> VIDEO_PLAYER 
+    PROCESSED_VIDEO_DATA --> VIDEO_PLAYER
+    TOUCH_DETECTOR --> TOUCH_PATTERN
+    TOUCH_PATTERN --> HTTP_CLIENT 

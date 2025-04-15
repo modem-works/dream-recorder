@@ -10,10 +10,19 @@ graph TD
     
     %% Software Components
     subgraph Software["Software Components"]
+        %% System Services
+        subgraph SystemServices["System Services"]
+            SYSTEMD_SVC[Systemd Service]
+            KIOSK_SVC[Kiosk Service]
+            STARTUP[Startup Scripts]
+            SETUP[Setup Scripts]
+        end
+        
         %% Backend Components
         subgraph Backend["Backend (Python)"]
             FLASK[Flask Web Server]
             WS[WebSocket Server]
+            GPIO_SVC[GPIO Service]
             GP_CTRL[GPIO Controller]
             AUDIO_PROC[Audio Processor]
             API_CLIENT[API Client]
@@ -38,6 +47,15 @@ graph TD
         LUMALABS[LumaLabs Video API]
     end
     
+    %% System Services Connections
+    SYSTEMD_SVC --> STARTUP
+    STARTUP --> FLASK
+    STARTUP --> GPIO_SVC
+    KIOSK_SVC --> CHROME[Chrome Browser]
+    CHROME --> UI
+    SETUP --> SYSTEMD_SVC
+    SETUP --> KIOSK_SVC
+    
     %% Hardware Connections
     TS --> GPIO
     GPIO --> RPI
@@ -45,7 +63,8 @@ graph TD
     RPI --> SCRN
     
     %% Software Connections
-    GPIO --> GP_CTRL
+    GPIO --> GPIO_SVC
+    GPIO_SVC --> GP_CTRL
     GP_CTRL --> FLASK
     
     %% Backend Connections
@@ -72,6 +91,15 @@ graph TD
     API_CLIENT --> OPENAI_STT
     API_CLIENT --> OPENAI_PROMPT
     API_CLIENT --> LUMALABS
+    
+    %% Touch Event Flow
+    TS -- "Touch Event" --> GPIO
+    GPIO -- "Interrupt" --> GPIO_SVC
+    GPIO_SVC -- "Detect Pattern" --> GPIO_SVC
+    GPIO_SVC -- "Single Tap Event" --> FLASK
+    GPIO_SVC -- "Double Tap Event" --> FLASK
+    GPIO_SVC -- "Long Press Event" --> FLASK
+    GPIO_SVC -- "Long Press Release Event" --> FLASK
     
     %% Data Flow for Key Operations
     AUDIO_REC -- "Audio Stream" --> WS_CLIENT

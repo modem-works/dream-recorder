@@ -9,6 +9,9 @@ sequenceDiagram
     participant GPIO as GPIO Pins<br>(Raspberry Pi)
     participant DISP as Display 📺<br>(Raspberry Pi)
     participant RPI as Raspberry Pi 5 🥧<br>(Hardware)
+    participant SYSTEMD as Systemd<br>Services 🔄
+    participant GPIOSVC as GPIO Service 🔌<br>(Python)
+    participant KIOSK as Chrome Kiosk<br>Browser 🖥️
     participant FLASK as Flask Server 🌶️<br>(Backend)
     participant WS as WebSockets<br>Server 🔌
     participant FE as Frontend<br>Web App 🖥️
@@ -17,16 +20,26 @@ sequenceDiagram
     
     %% Setup and Initialization
     Note over RPI,FLASK: System Boot & Initialization
-    RPI ->> FLASK: Start Flask server
+    SYSTEMD ->> FLASK: Start Dream Recorder service
+    FLASK ->> GPIOSVC: Start GPIO service
+    SYSTEMD ->> KIOSK: Start Chrome kiosk mode
     FLASK ->> WS: Initialize WebSockets server
-    FLASK ->> FE: Serve frontend application
+    KIOSK ->> FE: Load frontend application
     FE ->> DISP: Display UI on screen
     
-    %% Touch Interaction 1 - Start Recording
-    U ->> TS: Single press 👆
+    %% Touch Interaction 1 - Wake Device
+    U ->> TS: Single tap 👆
     TS ->> GPIO: Send touch signal
-    GPIO ->> RPI: Process GPIO interrupt
-    RPI ->> FLASK: Signal touch event
+    GPIO ->> GPIOSVC: Process GPIO interrupt
+    GPIOSVC ->> FLASK: Send single tap event
+    FLASK ->> FE: Notify wake device
+    FE ->> DISP: Display "Ready" UI
+    
+    %% Touch Interaction 2 - Start Recording
+    U ->> TS: Long press 👇
+    TS ->> GPIO: Send touch signal
+    GPIO ->> GPIOSVC: Process GPIO interrupt
+    GPIOSVC ->> FLASK: Send long press event
     FLASK ->> FE: Notify recording start
     FE ->> DISP: Display "Recording..." UI
     
@@ -36,11 +49,11 @@ sequenceDiagram
     RPI ->> FE: Stream raw audio
     FE ->> WS: Stream binary audio data
     
-    %% Touch Interaction 2 - Stop Recording
-    U ->> TS: Single press 👆
+    %% Touch Interaction 3 - Stop Recording
+    U ->> TS: Release long press 👆
     TS ->> GPIO: Send touch signal
-    GPIO ->> RPI: Process GPIO interrupt
-    RPI ->> FLASK: Signal touch event
+    GPIO ->> GPIOSVC: Process GPIO interrupt
+    GPIOSVC ->> FLASK: Send long press release event
     FLASK ->> FE: Notify recording stop
     FE ->> DISP: Display "Processing..." UI
     
@@ -68,6 +81,14 @@ sequenceDiagram
     FLASK ->> FE: Send video URL
     FE ->> DISP: Display video player UI
     FE ->> DISP: Stream and play video 📺️
+    
+    %% Touch Interaction 4 - View Previous Dream
+    U ->> TS: Double tap 👆👆
+    TS ->> GPIO: Send touch signal
+    GPIO ->> GPIOSVC: Process GPIO interrupt
+    GPIOSVC ->> FLASK: Send double tap event
+    FLASK ->> FE: Notify show previous dream
+    FE ->> DISP: Display previous dream video
     
     %% Reset for next interaction
     Note over DISP: After video completes

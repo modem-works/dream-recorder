@@ -2,16 +2,32 @@ sequenceDiagram
     autonumber
 
     participant U as User 🧔
+    participant TS as Touch Sensor 🔘
+    participant GPIO as GPIO Service 🔄
     participant DM as Dream Machine 🖥️
     participant OpenAI as OpenAI 🤖
     participant LL as LumaLabs 🤖
     
-    U ->> DM: Pushes button 🔘
-    U ->> DM: Voices dream 🗣️
-    U ->> DM: Pushes button 🔘
+    Note over U,DM: Device Idle
+    U ->> TS: Single tap 👆 (wake device)
+    TS ->> GPIO: Detects single tap pattern
+    GPIO ->> DM: Sends wake request
+    DM ->> U: Displays ready UI 🎬
     
+    Note over U,DM: Recording Dream
+    U ->> TS: Long press 👇 (start recording)
+    TS ->> GPIO: Detects long press pattern
+    GPIO ->> DM: Sends start recording request
+    DM ->> U: Shows recording UI 🔴
+    U ->> DM: Voices dream 🗣️
+    U ->> TS: Releases button 👆 (stop recording)
+    TS ->> GPIO: Detects long press release
+    GPIO ->> DM: Sends stop recording request
+    
+    Note over DM,OpenAI: Processing Dream
     DM ->> OpenAI: Sends dream voice for STT 🎶
     OpenAI -->> DM: Returns voice text 📃
+    DM ->> U: Shows transcription 📝
     
     DM ->> OpenAI: Sends voice text for Video Prompt creation 📃
     OpenAI -->> DM: Returns Video Prompt 📃
@@ -20,7 +36,12 @@ sequenceDiagram
     DM -->> DM: Awaits response 💤
     
     LL -->> DM: Returns video URL 🔗
+    DM ->> U: Plays video 📺️
+    
+    Note over U,DM: Viewing Previous Dreams
+    U ->> TS: Double tap 👆👆 (view previous)
+    TS ->> GPIO: Detects double tap pattern
+    GPIO ->> DM: Sends show previous dream request
+    DM ->> U: Plays previous dream video 📽️
 
     % DM -->> DM: Proprietary conversion ⁉️
-
-    DM ->> U: Plays video 📺️

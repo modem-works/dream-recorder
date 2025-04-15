@@ -9,9 +9,12 @@ sequenceDiagram
     end
     
     box Software Components
+        participant SYSTEMD as Systemd Services
+        participant CHROME as Chrome Kiosk
         participant FE as Frontend (Web Interface)
         participant WS as WebSocket Server
         participant BE as Backend (Flask)
+        participant GPIO_SVC as GPIO Service
         participant GP as GPIO Controller
         participant FFMPEG as FFmpeg Processor
     end
@@ -21,17 +24,30 @@ sequenceDiagram
         participant LL as LumaLabs API
     end
     
+    Note over SYSTEMD,CHROME: Step 0: System Startup
+    SYSTEMD ->> BE: Start Dream Recorder Service
+    BE ->> GPIO_SVC: Initialize GPIO Service
+    SYSTEMD ->> CHROME: Start Kiosk Mode (after main service)
+    CHROME ->> SCRN: Display Web Interface in Fullscreen
+    
     Note over TS,SCRN: Step 1: Initial Setup & Recording
-    TS ->> GP: User touches sensor (start recording)
-    GP ->> BE: Sends GPIO interrupt signal
+    TS ->> GP: User single taps sensor (wake device)
+    GP ->> GPIO_SVC: Detects single tap pattern
+    GPIO_SVC ->> BE: Sends wake device request
+    BE ->> FE: Notifies to wake up UI
+    
+    TS ->> GP: User long presses sensor (start recording)
+    GP ->> GPIO_SVC: Detects long press pattern
+    GPIO_SVC ->> BE: Sends recording start request
     BE ->> FE: Notifies to start recording
     FE ->> FE: Updates UI (recording state)
     MIC ->> FE: Captures audio stream
     FE ->> WS: Streams audio data via WebSockets
     
     Note over WS,OpenAI: Step 2: Speech Processing
-    TS ->> GP: User touches sensor again (stop recording)
-    GP ->> BE: Sends GPIO interrupt signal
+    TS ->> GP: User releases long press (stop recording)
+    GP ->> GPIO_SVC: Detects long press release
+    GPIO_SVC ->> BE: Sends recording stop request
     BE ->> FE: Notifies to stop recording
     FE ->> FE: Updates UI (processing state)
     WS ->> OpenAI: Forwards complete audio data for STT
@@ -60,6 +76,13 @@ sequenceDiagram
     BE ->> FE: Sends processed video location
     FE ->> FE: Loads processed video
     FE ->> SCRN: Displays video on screen
+    
+    Note over TS,SCRN: Step 8: User Interactions
+    TS ->> GP: User double taps sensor
+    GP ->> GPIO_SVC: Detects double tap pattern
+    GPIO_SVC ->> BE: Sends show previous dream request
+    BE ->> FE: Notifies to load previous dream
+    FE ->> SCRN: Displays previous dream video
     
     Note over RPI,SCRN: System Ready for Next Dream
     BE ->> FE: Resets UI to ready state 
