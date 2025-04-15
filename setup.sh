@@ -46,9 +46,6 @@ if [ ! -f ".env" ]; then
     log "Creating .env file from .env.example..."
     if [ -f ".env.example" ]; then
         cp .env.example .env
-        # Generate a random secret key
-        SECRET_KEY=$(openssl rand -hex 16)
-        sed -i "s/SECRET_KEY=\"generate-a-secret-key-here\"/SECRET_KEY=\"$SECRET_KEY\"/g" .env
         log "Created .env file. Please update it with your API keys"
     else
         log "Error: .env.example file not found"
