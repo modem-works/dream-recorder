@@ -6,9 +6,16 @@
     <title>Dream Recorder</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/icon-animations.css">
 </head>
 <body>
     <div class="container">
+        <div id="icon-animations">
+            <div class="icon-animation recording-animation"></div>
+            <div class="icon-animation generating-animation"></div>
+            <div class="icon-animation error-animation"></div>
+        </div>
+        
         <div id="status" class="status">Status: Ready</div>
         
         <div class="audio-visualizer">
@@ -42,6 +49,7 @@
         </div>
     </div>
 
+    <script src="/static/js/icon-animations.js"></script>
     <script src="/static/js/state-manager.js"></script>
     <script src="/static/js/recorder.js"></script>
     <script src="/static/js/sockets.js"></script>

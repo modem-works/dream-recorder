@@ -1,0 +1,63 @@
+#icon-animations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.icon-animation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 1280px 400px;
+}
+
+.icon-animation.active {
+    display: block;
+}
+
+.icon-animation img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1280px;
+    height: 400px;
+    object-fit: contain;
+}
+
+/* Animation timing */
+.rec-animation {
+    animation: playRec 2.5s steps(151) infinite;
+}
+
+.gen-animation {
+    animation: playGen 2.5s steps(151) infinite;
+}
+
+.error-animation {
+    animation: playError 1.2s steps(72) infinite;
+}
+
+@keyframes playRec {
+    from { background-position: 0px; }
+    to { background-position: -193280px; }
+}
+
+@keyframes playGen {
+    from { background-position: 0px; }
+    to { background-position: -193280px; }
+}
+
+@keyframes playError {
+    from { background-position: 0px; }
+    to { background-position: -92160px; }
+} 

@@ -21,6 +21,8 @@ const StateManager = {
     currentState: 'idle',
     currentMode: 'tap_and_hold', // Default to TAP_AND_HOLD
     error: null,
+    previousState: null,
+    stateChangeCallbacks: [],
 
     // Initialize state manager
     init() {
@@ -31,9 +33,24 @@ const StateManager = {
 
     // Update state
     updateState(newState, errorMessage = null) {
+        this.previousState = this.currentState;
         this.currentState = newState;
         this.error = errorMessage;
         this.updateStatus();
+        
+        // Handle icon animations based on state
+        if (this.currentState === this.STATES.RECORDING) {
+            IconAnimations.show(IconAnimations.TYPES.RECORDING);
+        } else if (this.currentState === this.STATES.PROCESSING) {
+            IconAnimations.show(IconAnimations.TYPES.GENERATING);
+        } else if (this.currentState === this.STATES.ERROR) {
+            IconAnimations.show(IconAnimations.TYPES.ERROR);
+        } else {
+            IconAnimations.hide();
+        }
+        
+        // Notify all registered callbacks
+        this.stateChangeCallbacks.forEach(callback => callback(this.currentState, this.previousState));
         
         // Emit state change event
         const event = new CustomEvent('stateChange', { 
@@ -197,6 +214,11 @@ const StateManager = {
             default:
                 console.log(`Unhandled event type: ${eventType}`);
         }
+    },
+
+    // Register a callback for state changes
+    registerStateChangeCallback(callback) {
+        this.stateChangeCallbacks.push(callback);
     }
 };
 
