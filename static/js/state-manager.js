@@ -75,7 +75,6 @@ const StateManager = {
         }
         
         statusDiv.textContent = statusText;
-        statusDiv.className = `status ${this.currentState}`;
     },
 
     // Go to idle state

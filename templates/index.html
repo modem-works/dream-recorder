@@ -16,36 +16,53 @@
             <div class="icon-animation error-animation"></div>
         </div>
         
-        <div id="status" class="status">Status: Ready</div>
-        
         <div class="audio-visualizer">
             <canvas id="visualizer"></canvas>
         </div>
+
         <div id="loading" class="loading"></div>
-        <div class="text-output" id="transcriptionOutput">
-            <h3>Transcription</h3>
-            <div id="transcription"></div>
-        </div>
-        <div class="text-output" id="videoPromptOutput">
-            <h3>Video Prompt</h3>
-            <div id="videoPrompt"></div>
-        </div>
+
         <div id="videoContainer">
             <video id="generatedVideo" controls muted autoplay loop>
                 Your browser does not support the video tag.
             </video>
         </div>
-        <div id="error" class="error"></div>
     </div>
 
-    <div class="mode-selector">
-        <div class="input-simulator">
-            <h4>Input Simulator (Development Only)</h4>
-            <button id="tapBtn">Tap</button>
-            <button id="doubleTapBtn">Double Tap</button>
-            <button id="tripleTapBtn">Triple Tap</button>
-            <button id="holdStartBtn">Hold Start</button>
-            <button id="holdReleaseBtn">Hold Release</button>
+    <div class="debug-console {% if not is_development %}hidden{% endif %}">
+        <div class="debug-header">
+            <h3>Debug Console</h3>
+        </div>
+        
+        <div class="debug-section">
+            <h4>Status</h4>
+            <div id="status">Status: Ready</div>
+        </div>
+
+        <div class="debug-section">
+            <h4>Transcription</h4>
+            <div id="transcription"></div>
+        </div>
+
+        <div class="debug-section">
+            <h4>Video Prompt</h4>
+            <div id="videoPrompt"></div>
+        </div>
+
+        <div class="debug-section">
+            <h4>Error</h4>
+            <div id="error"></div>
+        </div>
+
+        <div class="debug-section">
+            <h4>Input Simulator</h4>
+            <div class="input-simulator">
+                <button id="tapBtn">Tap</button>
+                <button id="doubleTapBtn">Double Tap</button>
+                <button id="tripleTapBtn">Triple Tap</button>
+                <button id="holdStartBtn">Hold Start</button>
+                <button id="holdReleaseBtn">Hold Release</button>
+            </div>
         </div>
     </div>
 

@@ -15,6 +15,8 @@ window.socket.on('connect', () => {
     window.errorDiv.textContent = '';
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.IDLE);
+    } else {
+        window.statusDiv.textContent = 'Status: Connected';
     }
 });
 
@@ -23,6 +25,8 @@ window.socket.on('disconnect', () => {
     window.errorDiv.textContent = 'Disconnected from server';
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.ERROR, 'Disconnected from server');
+    } else {
+        window.statusDiv.textContent = 'Status: Disconnected';
     }
 });
 
@@ -41,32 +45,24 @@ window.socket.on('state_update', (state) => {
         } else {
             window.StateManager.updateState(window.StateManager.STATES.IDLE);
         }
+    } else {
+        window.statusDiv.textContent = `Status: ${state.status}`;
     }
 });
 
 window.socket.on('transcription_update', (data) => {
     console.log('Received transcription_update:', data);
-    const transcriptionOutput = document.getElementById('transcriptionOutput');
-    transcriptionOutput.style.display = 'block';
     window.transcriptionDiv.textContent = data.text;
 });
 
 window.socket.on('video_prompt_update', (data) => {
     console.log('Received video_prompt_update:', data);
-    const transcriptionOutput = document.getElementById('transcriptionOutput');
-    const videoPromptOutput = document.getElementById('videoPromptOutput');
-    transcriptionOutput.style.display = 'none';
-    videoPromptOutput.style.display = 'block';
     window.videoPromptDiv.textContent = data.text;
     window.loadingDiv.style.display = 'none';
 });
 
 window.socket.on('video_ready', (data) => {
     console.log('Received video_ready:', data);
-    const transcriptionOutput = document.getElementById('transcriptionOutput');
-    const videoPromptOutput = document.getElementById('videoPromptOutput');
-    transcriptionOutput.style.display = 'none';
-    videoPromptOutput.style.display = 'none';
     window.videoContainer.style.display = 'block';
     window.generatedVideo.src = data.url;
     window.loadingDiv.style.display = 'none';
@@ -81,10 +77,6 @@ window.socket.on('video_ready', (data) => {
 window.socket.on('previous_video', (data) => {
     console.log('Received previous_video:', data);
     if (data.url) {
-        const transcriptionOutput = document.getElementById('transcriptionOutput');
-        const videoPromptOutput = document.getElementById('videoPromptOutput');
-        transcriptionOutput.style.display = 'none';
-        videoPromptOutput.style.display = 'none';
         window.videoContainer.style.display = 'block';
         window.generatedVideo.src = data.url;
         window.loadingDiv.style.display = 'none';

@@ -314,7 +314,7 @@ def handle_generate_video(data):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', is_development=Config.DEBUG)
 
 @app.route('/api/config')
 def get_config():

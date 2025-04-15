@@ -16,42 +16,6 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.status {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 5px 10px;
-    border-radius: 4px;
-    background-color: #e9ecef;
-    font-size: 12px;
-    z-index: 100;
-}
-
-/* State-based status styles */
-.status.idle {
-    background-color: #e9ecef;
-    color: #495057;
-}
-
-.status.recording {
-    background-color: #ffebee;
-    color: #c62828;
-}
-
-.status.processing {
-    background-color: #fff3e0;
-    color: #ef6c00;
-}
-
-.status.playback {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-}
-
-.status.error {
-    background-color: #ffebee;
-    color: #c62828;
-}
 
 /* Control buttons container */
 /*
@@ -110,14 +74,6 @@ button {
 
 .input-simulator button:hover {
     background-color: #e0a800;
-}
-
-.error {
-    color: #f44336;
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    z-index: 100;
 }
 
 .audio-visualizer {
@@ -226,4 +182,109 @@ canvas {
     0% { opacity: 1; }
     50% { opacity: 0.5; }
     100% { opacity: 1; }
+}
+
+/* Production mode styles */
+.production-mode {
+    display: none !important;
+    visibility: hidden !important;
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+.debug-console {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: 'Courier New', monospace;
+    color: #00ff00;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.debug-console.hidden {
+    display: none;
+}
+
+.debug-header {
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.debug-header h3 {
+    color: #00ff00;
+    margin: 0;
+    font-size: 1.2em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.debug-section {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.debug-section h4 {
+    color: #00ff00;
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.debug-section .status {
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+}
+
+.debug-section #transcription,
+.debug-section #videoPrompt {
+    color: #00ff00;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.debug-section .error {
+    color: #ff4444;
+    font-family: 'Courier New', monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.input-simulator {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.input-simulator button {
+    background-color: #333;
+    color: #00ff00;
+    border: 1px solid #00ff00;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.input-simulator button:hover {
+    background-color: #00ff00;
+    color: #1e1e1e;
 } 
