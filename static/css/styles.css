@@ -2,7 +2,7 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f5f5f5;
+    background-color: #000000;
     height: 400px;
     overflow: hidden;
 }
@@ -14,8 +14,45 @@ body {
     margin: 0 auto;
     background-color: white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.5s ease-in-out;
+    overflow: hidden;
 }
 
+.container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/static/images/Mask.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Ensure all direct children of container are below the mask */
+.container > * {
+    position: relative;
+    z-index: 1;
+}
+
+.background-fade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+}
 
 /* Control buttons container */
 /*
@@ -201,7 +238,7 @@ canvas {
 .debug-console {
     width: 100%;
     max-width: 1280px;
-    margin: 40px auto;
+    margin: 100px auto 0 auto;
     background-color: #1e1e1e;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
