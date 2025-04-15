@@ -16,7 +16,7 @@ window.socket.on('connect', () => {
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.IDLE);
     } else {
-        window.statusDiv.textContent = 'Status: Connected';
+        window.statusDiv.textContent = 'Connected';
     }
 });
 
@@ -26,7 +26,7 @@ window.socket.on('disconnect', () => {
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.ERROR, 'Disconnected from server');
     } else {
-        window.statusDiv.textContent = 'Status: Disconnected';
+        window.statusDiv.textContent = 'Disconnected';
     }
 });
 
@@ -46,7 +46,7 @@ window.socket.on('state_update', (state) => {
             window.StateManager.updateState(window.StateManager.STATES.IDLE);
         }
     } else {
-        window.statusDiv.textContent = `Status: ${state.status}`;
+        window.statusDiv.textContent = `${state.status}`;
     }
 });
 

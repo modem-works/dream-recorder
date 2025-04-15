@@ -68,7 +68,7 @@ const StateManager = {
         const statusDiv = document.getElementById('status');
         if (!statusDiv) return;
         
-        let statusText = `Status: ${this.currentState.charAt(0).toUpperCase() + this.currentState.slice(1)}`;
+        let statusText = `${this.currentState.charAt(0).toUpperCase() + this.currentState.slice(1)}`;
         
         if (this.currentState === this.STATES.ERROR && this.error) {
             statusText += ` - ${this.error}`;

@@ -51,7 +51,6 @@ button {
 
 /* Input simulator styles */
 .input-simulator {
-    background-color: #ffecb3;
     padding: 10px;
     border-radius: 4px;
 }
@@ -66,6 +65,7 @@ button {
 .input-simulator button {
     padding: 6px 10px;
     font-size: 12px;
+    font-weight: bold;
     margin-right: 5px;
     margin-bottom: 5px;
     background-color: #ffc107;
@@ -201,8 +201,8 @@ canvas {
 
 .debug-console {
     width: 100%;
-    max-width: 800px;
-    margin: 20px auto;
+    max-width: 1280px;
+    margin: 40px auto;
     background-color: #1e1e1e;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
