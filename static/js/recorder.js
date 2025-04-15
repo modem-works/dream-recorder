@@ -26,8 +26,8 @@ function drawVisualizer() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // Set up the line style
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; // Semi-transparent white
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; // Semi-transparent white
     ctx.lineCap = 'round';  // Rounded line caps
     ctx.lineJoin = 'round'; // Rounded line joins
     ctx.beginPath();
