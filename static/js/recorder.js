@@ -22,19 +22,35 @@ function drawVisualizer() {
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteFrequencyData(dataArray);
     
-    ctx.fillStyle = '#f8f9fa';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    const barWidth = (canvas.width / bufferLength) * 2.5;
-    let barHeight;
+    // Set up the line style
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; // Semi-transparent white
+    ctx.lineCap = 'round';  // Rounded line caps
+    ctx.lineJoin = 'round'; // Rounded line joins
+    ctx.beginPath();
+    
+    // Calculate the slice width
+    const sliceWidth = canvas.width / bufferLength;
     let x = 0;
     
+    // Start the path at the bottom of the canvas
+    ctx.moveTo(0, canvas.height);
+    
+    // Draw the waveform
     for(let i = 0; i < bufferLength; i++) {
-        barHeight = dataArray[i] / 2;
-        ctx.fillStyle = '#4caf50';
-        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-        x += barWidth + 1;
+        // Normalize the value to a range that looks good
+        const v = dataArray[i] / 128.0;
+        const y = canvas.height - (v * canvas.height / 4);
+        
+        ctx.lineTo(x, y);
+        x += sliceWidth;
     }
+    
+    // Complete the path
+    ctx.stroke();
     
     animationFrame = requestAnimationFrame(drawVisualizer);
 }
