@@ -15,6 +15,7 @@ from datetime import datetime
 import requests
 import time
 from config import Config
+import argparse
 
 # Configure logging
 logging.basicConfig(level=getattr(logging, Config.LOG_LEVEL))
@@ -481,4 +482,14 @@ def stop_recording_api():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 if __name__ == '__main__':
-    socketio.run(app, host=Config.HOST, port=Config.PORT, debug=Config.DEBUG) 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--reload', action='store_true', help='Enable auto-reloader')
+    args = parser.parse_args()
+    
+    socketio.run(
+        app, 
+        host=Config.HOST, 
+        port=Config.PORT, 
+        debug=Config.DEBUG,
+        use_reloader=args.reload
+    ) 

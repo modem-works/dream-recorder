@@ -62,7 +62,13 @@ start_flask_app() {
         log "Flask app is already running"
     else
         source "$SCRIPT_DIR/venv/bin/activate"
-        nohup python "$SCRIPT_DIR/app.py" > "$SCRIPT_DIR/flask_app.log" 2>&1 &
+        # Check if we're in development mode
+        if [ "$FLASK_ENV" = "development" ]; then
+            log "Development mode detected - enabling auto-reloader"
+            nohup python "$SCRIPT_DIR/app.py" --reload > "$SCRIPT_DIR/flask_app.log" 2>&1 &
+        else
+            nohup python "$SCRIPT_DIR/app.py" > "$SCRIPT_DIR/flask_app.log" 2>&1 &
+        fi
         APP_PID=$!
         log "Flask app started with PID: $APP_PID"
     fi

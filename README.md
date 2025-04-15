@@ -13,6 +13,50 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
    ```
 3. Update your API keys in the `.env` file.
 
+### Development Setup
+
+For local development, follow these steps:
+
+1. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+2. Install development dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Set up development environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env and set:
+   FLASK_ENV=development
+   ```
+
+4. Create necessary directories:
+   ```bash
+   mkdir -p recordings videos
+   ```
+
+5. Start the application in development mode:
+   ```bash
+   # Terminal 1: Start the Flask app
+   FLASK_ENV=development python app.py --reload
+   
+   # Terminal 2: Start the GPIO service (if needed)
+   python gpio_service.py
+   ```
+
+The development mode provides:
+- Auto-reloading when Python files change
+- Direct console output for debugging
+- No background processes or log files
+- Easy process management (Ctrl+C to stop)
+
+Note: The GPIO service is optional during development if you're not testing hardware features.
+
 ### Running the Application
 
 To run the application manually:
