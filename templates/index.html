@@ -10,8 +10,7 @@
 <body>
     <div class="container">
         <div id="status" class="status">Status: Ready</div>
-        <button id="startBtn">Start Recording</button>
-        <button id="stopBtn">Stop Recording</button>
+        
         <div class="audio-visualizer">
             <canvas id="visualizer"></canvas>
         </div>
@@ -33,7 +32,20 @@
         <div id="error" class="error"></div>
     </div>
 
+    <div class="mode-selector">
+        <div class="input-simulator">
+            <h4>Input Simulator (Development Only)</h4>
+            <button id="tapBtn">Tap</button>
+            <button id="doubleTapBtn">Double Tap</button>
+            <button id="tripleTapBtn">Triple Tap</button>
+            <button id="holdStartBtn">Hold Start</button>
+            <button id="holdReleaseBtn">Hold Release</button>
+        </div>
+    </div>
+
+    <script src="/static/js/state-manager.js"></script>
     <script src="/static/js/recorder.js"></script>
     <script src="/static/js/sockets.js"></script>
+    <script src="/static/js/ui-controller.js"></script>
 </body>
 </html> 

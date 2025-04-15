@@ -27,20 +27,41 @@ body {
     z-index: 100;
 }
 
-.recording {
+/* State-based status styles */
+.status.idle {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.status.recording {
     background-color: #ffebee;
     color: #c62828;
 }
 
-.processing {
+.status.processing {
     background-color: #fff3e0;
     color: #ef6c00;
 }
 
-.complete {
+.status.playback {
     background-color: #e8f5e9;
     color: #2e7d32;
 }
+
+.status.error {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+/* Control buttons container */
+/*
+.control-buttons {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+}
+*/
 
 button {
     padding: 10px 20px;
@@ -49,29 +70,46 @@ button {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    z-index: 100;
 }
 
-#startBtn {
-    background-color: #4caf50;
-    color: white;
+/* Mode selector styles */
+.mode-selector {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 110;
+    width: 300px;
 }
 
-#startBtn:hover {
-    background-color: #45a049;
+/* Input simulator styles */
+.input-simulator {
+    background-color: #ffecb3;
+    padding: 10px;
+    border-radius: 4px;
 }
 
-#stopBtn {
-    background-color: #f44336;
-    color: white;
-    display: none;
+.input-simulator h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #333;
 }
 
-#stopBtn:hover {
-    background-color: #da190b;
+.input-simulator button {
+    padding: 6px 10px;
+    font-size: 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.input-simulator button:hover {
+    background-color: #e0a800;
 }
 
 .error {
@@ -170,4 +208,15 @@ canvas {
     right: auto;
     margin-top: 10px;
     display: none;
+}
+
+/* State-based container styles */
+.container.error .status {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 } 

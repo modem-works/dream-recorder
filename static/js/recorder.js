@@ -1,5 +1,3 @@
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
 const canvas = document.getElementById('visualizer');
 const ctx = canvas.getContext('2d');
 
@@ -93,6 +91,11 @@ window.startRecording = async function() {
     } catch (err) {
         window.errorDiv.textContent = `Error accessing microphone: ${err.message}`;
         console.error('Error accessing microphone:', err);
+        
+        // Update state manager if available
+        if (window.StateManager) {
+            window.StateManager.updateState(window.StateManager.STATES.ERROR, `Error accessing microphone: ${err.message}`);
+        }
     }
 };
 
@@ -115,8 +118,4 @@ window.stopRecording = function() {
             console.log('Sent stop_recording event to server');
         }
     }
-};
-
-// Local event listeners
-startBtn.addEventListener('click', window.startRecording);
-stopBtn.addEventListener('click', window.stopRecording); 
+}; 

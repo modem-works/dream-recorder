@@ -13,16 +13,35 @@ window.generateDreamBtn = document.getElementById('generateDreamBtn');
 window.socket.on('connect', () => {
     console.log('Connected to server');
     window.errorDiv.textContent = '';
+    if (window.StateManager) {
+        window.StateManager.updateState(window.StateManager.STATES.IDLE);
+    }
 });
 
 window.socket.on('disconnect', () => {
     console.log('Disconnected from server');
     window.errorDiv.textContent = 'Disconnected from server';
+    if (window.StateManager) {
+        window.StateManager.updateState(window.StateManager.STATES.ERROR, 'Disconnected from server');
+    }
 });
 
 window.socket.on('state_update', (state) => {
     console.log('Received state_update:', state);
     updateUI(state);
+    
+    // Update StateManager based on server state
+    if (window.StateManager) {
+        if (state.is_recording) {
+            window.StateManager.updateState(window.StateManager.STATES.RECORDING);
+        } else if (state.status === 'processing') {
+            window.StateManager.updateState(window.StateManager.STATES.PROCESSING);
+        } else if (state.video_url) {
+            window.StateManager.updateState(window.StateManager.STATES.PLAYBACK);
+        } else {
+            window.StateManager.updateState(window.StateManager.STATES.IDLE);
+        }
+    }
 });
 
 window.socket.on('transcription_update', (data) => {
@@ -52,49 +71,74 @@ window.socket.on('video_ready', (data) => {
     window.generatedVideo.src = data.url;
     window.loadingDiv.style.display = 'none';
     window.generateDreamBtn.disabled = false;
+    
+    if (window.StateManager) {
+        window.StateManager.updateState(window.StateManager.STATES.PLAYBACK);
+    }
+});
+
+window.socket.on('previous_video', (data) => {
+    console.log('Received previous_video:', data);
+    if (data.url) {
+        const transcriptionOutput = document.getElementById('transcriptionOutput');
+        const videoPromptOutput = document.getElementById('videoPromptOutput');
+        transcriptionOutput.style.display = 'none';
+        videoPromptOutput.style.display = 'none';
+        window.videoContainer.style.display = 'block';
+        window.generatedVideo.src = data.url;
+        window.loadingDiv.style.display = 'none';
+        
+        if (window.StateManager) {
+            window.StateManager.updateState(window.StateManager.STATES.PLAYBACK);
+        }
+    } else {
+        // No previous video available
+        window.errorDiv.textContent = 'No previous video available';
+        if (window.StateManager) {
+            window.StateManager.updateState(window.StateManager.STATES.ERROR, 'No previous video available');
+            // Auto-clear error after 3 seconds
+            setTimeout(() => {
+                if (window.StateManager.currentState === window.StateManager.STATES.ERROR) {
+                    window.StateManager.goToIdle();
+                    window.errorDiv.textContent = '';
+                }
+            }, 3000);
+        }
+    }
 });
 
 window.socket.on('error', (data) => {
     console.log('Received error message:', data);
     window.errorDiv.textContent = data.message;
+    
+    if (window.StateManager) {
+        window.StateManager.updateState(window.StateManager.STATES.ERROR, data.message);
+    }
 });
 
 window.socket.on('recording_state', (data) => {
     console.log('Received recording_state:', data);
-    if (window.startRecording) {
+    if (window.StateManager) {
+        window.StateManager.handleDeviceEvent('hold_start');
+    } else if (window.startRecording) {
         window.startRecording();
     }
 });
 
 window.socket.on('device_event', (data) => {
     console.log('Received device_event:', data);
-    if (window.stopRecording) {
+    if (window.StateManager) {
+        window.StateManager.handleDeviceEvent(data.event_type || 'hold_release');
+    } else if (window.stopRecording) {
         window.stopRecording();
     }
 });
 
 // UI update functions
 function updateUI(state) {
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    
-    startBtn.disabled = state.is_recording;
-    stopBtn.disabled = !state.is_recording;
-    window.statusDiv.textContent = state.status;
-    
-    // Update button visibility based on recording state
-    if (state.is_recording) {
-        startBtn.style.display = 'none';
-        stopBtn.style.display = 'inline-block';
-        window.loadingDiv.style.display = 'none';
-    } else {
-        startBtn.style.display = 'inline-block';
-        stopBtn.style.display = 'none';
-        if (state.status === 'processing') {
-            window.loadingDiv.style.display = 'block';
-        } else {
-            window.loadingDiv.style.display = 'none';
-        }
+    // Don't update status through this function since StateManager handles it
+    if (!window.StateManager) {
+        window.statusDiv.textContent = state.status;
     }
     
     // Update generate dream button visibility based on state
