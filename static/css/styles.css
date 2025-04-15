@@ -202,12 +202,19 @@ canvas {
     object-position: center;
 }
 
-#generateDreamBtn {
-    position: relative;
-    bottom: auto;
-    right: auto;
-    margin-top: 10px;
-    display: none;
+#stopRecordingBtn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 10px;
+}
+
+#stopRecordingBtn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
 }
 
 /* State-based container styles */

@@ -7,7 +7,7 @@ window.videoPromptDiv = document.getElementById('videoPrompt');
 window.loadingDiv = document.getElementById('loading');
 window.videoContainer = document.getElementById('videoContainer');
 window.generatedVideo = document.getElementById('generatedVideo');
-window.generateDreamBtn = document.getElementById('generateDreamBtn');
+window.videoPrompt = document.getElementById('videoPrompt');
 
 // Socket event handlers
 window.socket.on('connect', () => {
@@ -70,7 +70,8 @@ window.socket.on('video_ready', (data) => {
     window.videoContainer.style.display = 'block';
     window.generatedVideo.src = data.url;
     window.loadingDiv.style.display = 'none';
-    window.generateDreamBtn.disabled = false;
+    window.stopRecordingBtn.disabled = false;
+    window.videoPrompt.textContent = 'Dream generation complete!';
     
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.PLAYBACK);
@@ -140,19 +141,4 @@ function updateUI(state) {
     if (!window.StateManager) {
         window.statusDiv.textContent = state.status;
     }
-    
-    // Update generate dream button visibility based on state
-    if (state.video_prompt && !state.video_url) {
-        window.generateDreamBtn.style.display = 'block';
-    } else {
-        window.generateDreamBtn.style.display = 'none';
-    }
 }
-
-// Event listeners
-window.generateDreamBtn.addEventListener('click', () => {
-    window.generateDreamBtn.disabled = true;
-    window.loadingDiv.style.display = 'block';
-    console.log('Sending generate_video with prompt:', window.videoPromptDiv.textContent);
-    window.socket.emit('generate_video', { prompt: window.videoPromptDiv.textContent });
-}); 
