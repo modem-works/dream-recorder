@@ -3,7 +3,7 @@
 {% block title %}Dream Library{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="//cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css">
 <style>
     .modal-body p {
         white-space: pre-wrap;
@@ -50,7 +50,7 @@
                             <a href="/recordings/{{ dream.audio_path.split('/')[-1] }}" class="btn btn-sm btn-info" target="_blank">
                                 <i class="bi bi-music-note"></i> Audio
                             </a>
-                            <a href="{{ dream.video_path }}" class="btn btn-sm btn-secondary" target="_blank">
+                            <a href="{{ dream.video_path }}" class="btn btn-sm btn-info" target="_blank">
                                 <i class="bi bi-download"></i> Video
                             </a>
                         </td>
@@ -94,8 +94,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="//cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
 <script>
 $(document).ready(function() {
     // Initialize DataTable
