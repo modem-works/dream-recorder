@@ -117,6 +117,34 @@ def generate_video_prompt(transcription):
         logger.error(f"Error generating video prompt: {str(e)}")
         return None
 
+def process_video(input_path):
+    """Process the video using FFmpeg with specific filters."""
+    try:
+        # Create a temporary file for the processed video
+        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
+            temp_path = temp_file.name
+
+        # Apply FFmpeg filters using environment variables
+        stream = ffmpeg.input(input_path)
+        stream = ffmpeg.filter(stream, 'eq', brightness=float(os.getenv('FFMPEG_BRIGHTNESS', 0.2)))
+        stream = ffmpeg.filter(stream, 'vibrance', intensity=float(os.getenv('FFMPEG_VIBRANCE', 2)))
+        stream = ffmpeg.filter(stream, 'vaguedenoiser', threshold=float(os.getenv('FFMPEG_DENOISE_THRESHOLD', 300)))
+        stream = ffmpeg.filter(stream, 'bilateral', sigmaS=float(os.getenv('FFMPEG_BILATERAL_SIGMA', 100)))
+        stream = ffmpeg.filter(stream, 'noise', all_strength=float(os.getenv('FFMPEG_NOISE_STRENGTH', 40)))
+        stream = ffmpeg.output(stream, temp_path)
+        
+        # Run FFmpeg
+        ffmpeg.run(stream, overwrite_output=True, quiet=True)
+        
+        # Replace the original file with the processed one
+        os.replace(temp_path, input_path)
+        
+        logger.info(f"Processed video saved to {input_path}")
+        return input_path
+    except Exception as e:
+        logger.error(f"Error processing video: {str(e)}")
+        raise
+
 def generate_video(prompt, filename=None):
     """Generate a video using Luma Labs API."""
     try:
@@ -216,7 +244,12 @@ def generate_video(prompt, filename=None):
                         f.write(chunk)
                 
                 logger.info(f"Saved video to {video_path}")
-                return video_path
+                
+                # Process the video with FFmpeg
+                processed_video_path = process_video(video_path)
+                logger.info(f"Processed video saved to {processed_video_path}")
+                
+                return processed_video_path
                 
             elif state in ['failed', 'error']:
                 error_msg = status_data.get('failure_reason') or status_data.get('error') or "Unknown error"

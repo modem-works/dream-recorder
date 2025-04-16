@@ -111,7 +111,7 @@ flowchart TD
     LUMA_CLIENT -- "Downloaded Video" --> VIDEO_STORAGE
     STATE_MANAGER -- "Process Video" --> VIDEO_PROCESSOR
     VIDEO_STORAGE -- "Raw Video File" --> VIDEO_PROCESSOR
-    VIDEO_PROCESSOR -- "Processes Video - (FFmpeg)" --> VIDEO_PROCESSOR
+    VIDEO_PROCESSOR -- "Processes Video - (FFmpeg: brightness=.2, vibrance=2, denoise, bilateral, noise)" --> VIDEO_PROCESSOR
     VIDEO_PROCESSOR -- "Processed Video" --> VIDEO_STORAGE
     VIDEO_PROCESSOR -- "Processing Complete" --> STATE_MANAGER
     
