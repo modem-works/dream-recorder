@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 import argparse
 from env_check import check_required_env_vars
 from dream_db import DreamDB
+from pydub import AudioSegment
+import ffmpeg
 
 # Load environment variables and check they're all set
 load_dotenv()
@@ -32,7 +34,7 @@ app = Flask(__name__)
 app.config.update(
     DEBUG=os.getenv('FLASK_ENV') == 'development',
     HOST=os.getenv('HOST'),
-    PORT=int(os.getenv('PORT'))
+    PORT=int(os.getenv('PORT').split('#')[0].strip())  # Strip any comments from the value
 )
 
 # Initialize OpenAI client
@@ -78,14 +80,25 @@ def save_wav_file(audio_data, filename=None):
     os.makedirs(os.getenv('RECORDINGS_DIR'), exist_ok=True)
     filepath = os.path.join(os.getenv('RECORDINGS_DIR'), filename)
     
-    with wave.open(filepath, 'wb') as wf:
-        wf.setnchannels(int(os.getenv('AUDIO_CHANNELS')))
-        wf.setsampwidth(int(os.getenv('AUDIO_SAMPLE_WIDTH')))
-        wf.setframerate(int(os.getenv('AUDIO_FRAME_RATE')))
-        wf.writeframes(audio_data)
+    # Create a temporary file for the WebM data
+    with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_webm:
+        temp_webm.write(audio_data)
+        temp_webm_path = temp_webm.name
     
-    logger.info(f"Saved WAV file to {filepath}")
-    return filepath
+    try:
+        # Convert WebM to WAV using ffmpeg
+        stream = ffmpeg.input(temp_webm_path)
+        stream = ffmpeg.output(stream, filepath, acodec='pcm_s16le', ac=1, ar=44100)
+        ffmpeg.run(stream, overwrite_output=True, quiet=True)
+        
+        logger.info(f"Saved WAV file to {filepath}")
+        return filepath
+    finally:
+        # Clean up temporary file
+        try:
+            os.unlink(temp_webm_path)
+        except:
+            pass
 
 def generate_video_prompt(transcription):
     """Generate an enhanced video prompt from the transcription using GPT."""
@@ -380,17 +393,15 @@ def handle_stop_recording():
 
 @socketio.on('audio_data')
 def handle_audio_data(data):
-    if recording_state['is_recording'] and wav_file:
+    if recording_state['is_recording']:
         try:
             # Convert the received data to bytes
             audio_bytes = bytes(data['data'])
             # Store the chunk
             audio_chunks.append(audio_bytes)
-            # Write to the WAV file
-            wav_file.writeframes(audio_bytes)
         except Exception as e:
-            logger.error(f"Error writing audio data: {str(e)}")
-            emit('error', {'message': f"Error writing audio data: {str(e)}"})
+            logger.error(f"Error handling audio data: {str(e)}")
+            emit('error', {'message': f"Error handling audio data: {str(e)}"})
 
 @app.route('/videos/<filename>')
 def serve_video(filename):

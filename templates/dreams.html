@@ -24,7 +24,6 @@
                         <th>ID</th>
                         <th>Created</th>
                         <th>User Prompt</th>
-                        <th>Generated Prompt</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -35,7 +34,6 @@
                         <td>{{ dream.id }}</td>
                         <td>{{ dream.created_at }}</td>
                         <td>{{ dream.user_prompt[:50] }}{% if dream.user_prompt|length > 50 %}...{% endif %}</td>
-                        <td>{{ dream.generated_prompt[:50] }}{% if dream.generated_prompt|length > 50 %}...{% endif %}</td>
                         <td>
                             <span class="badge {% if dream.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
                                 {{ dream.status }}

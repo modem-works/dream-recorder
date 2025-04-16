@@ -66,7 +66,8 @@ window.startRecording = async function() {
             } 
         });
         mediaRecorder = new MediaRecorder(stream, {
-            mimeType: 'audio/webm;codecs=opus'
+            mimeType: 'audio/webm;codecs=opus',
+            audioBitsPerSecond: 128000
         });
         
         // Set up audio context and analyser for visualization
