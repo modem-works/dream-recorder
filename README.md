@@ -125,3 +125,32 @@ If the kiosk mode doesn't start automatically:
 - USB microphone
 - Display connected via HDMI
 - Internet connection for API access 
+
+## Features
+
+### Dream Recording
+- Record your dreams using the built-in microphone
+- Automatic transcription using OpenAI's Whisper
+- AI-powered video generation from your dream descriptions
+- Real-time audio visualization
+
+### Dreams Library
+- View all your recorded dreams in one place
+- Search and sort through your dream history
+- Access audio and video recordings
+- View detailed information about each dream
+- Paginated interface for easy navigation
+
+## Database
+
+Dream Recorder uses SQLite to store all your dreams and their associated data. The database includes:
+- User prompts (transcriptions)
+- Generated prompts
+- Audio file paths
+- Video file paths
+- Creation timestamps
+- Duration information
+- Status tracking
+- Additional metadata
+
+The database is automatically created and managed by the application. All dreams are stored locally on your device. 

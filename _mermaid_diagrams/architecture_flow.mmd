@@ -17,6 +17,8 @@ sequenceDiagram
         participant GPIO_SVC as GPIO Service
         participant GP as GPIO Controller
         participant FFMPEG as FFmpeg Processor
+        participant DB as Dream Database
+        participant DH as Dream Handler
     end
     
     box External Services
@@ -70,17 +72,25 @@ sequenceDiagram
     BE ->> BE: Downloads video from URL
     BE ->> FFMPEG: Sends video for post-processing
     FFMPEG -->> BE: Returns processed video file
-    BE ->> FE: Updates UI (processing video)
     
-    Note over BE,SCRN: Step 7: Video Playback
+    Note over BE,DB: Step 7: Dream Storage
+    BE ->> DH: Sends dream data for storage
+    DH ->> DB: Stores dream record
+    DH -->> BE: Confirms storage
+    
+    Note over BE,SCRN: Step 8: Video Playback
     BE ->> FE: Sends processed video location
     FE ->> FE: Loads processed video
     FE ->> SCRN: Displays video on screen
     
-    Note over TS,SCRN: Step 8: User Interactions
+    Note over TS,SCRN: Step 9: User Interactions
     TS ->> GP: User double taps sensor
     GP ->> GPIO_SVC: Detects double tap pattern
     GPIO_SVC ->> BE: Sends show previous dream request
+    BE ->> DH: Requests previous dream
+    DH ->> DB: Retrieves dream data
+    DB -->> DH: Returns dream data
+    DH -->> BE: Returns dream data
     BE ->> FE: Notifies to load previous dream
     FE ->> SCRN: Displays previous dream video
     

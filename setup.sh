@@ -41,6 +41,15 @@ pip install -r requirements.txt
 log "Creating necessary directories..."
 mkdir -p data/audio videos recordings
 
+# Initialize database if it doesn't exist
+if [ ! -f "dreams.db" ]; then
+    log "Initializing database..."
+    python3 -c "from dream_db import DreamDB; DreamDB()._init_db()"
+    log "Database initialized successfully"
+else
+    log "Database already exists"
+fi
+
 # Check for .env file
 if [ ! -f ".env" ]; then
     log "Creating .env file from .env.example..."
@@ -48,7 +57,7 @@ if [ ! -f ".env" ]; then
         cp .env.example .env
         log "Created .env file. Please update it with your API keys"
     else
-        log "Error: .env.example file not found"
+        log "ERROR: .env.example file not found!"
         exit 1
     fi
 fi

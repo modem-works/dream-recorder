@@ -17,6 +17,7 @@ import time
 from dotenv import load_dotenv
 import argparse
 from env_check import check_required_env_vars
+from dream_db import DreamDB
 
 # Load environment variables and check they're all set
 load_dotenv()
@@ -56,6 +57,9 @@ recording_state = {
 audio_buffer = io.BytesIO()
 wav_file = None
 audio_chunks = []
+
+# Initialize DreamDB
+dream_db = DreamDB()
 
 def create_wav_file():
     global wav_file
@@ -100,7 +104,7 @@ def generate_video_prompt(transcription):
         logger.error(f"Error generating video prompt: {str(e)}")
         return None
 
-def generate_video(prompt):
+def generate_video(prompt, filename=None):
     """Generate a video using Luma Labs API."""
     try:
         # Create the generation request
@@ -187,9 +191,12 @@ def generate_video(prompt):
                 video_response.raise_for_status()
                 
                 # Save the video locally
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                if filename is None:
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    filename = f"generated_{timestamp}.mp4"
+                
                 os.makedirs(os.getenv('VIDEOS_DIR'), exist_ok=True)
-                video_path = os.path.join(os.getenv('VIDEOS_DIR'), f"generated_{timestamp}.mp4")
+                video_path = os.path.join(os.getenv('VIDEOS_DIR'), filename)
                 
                 with open(video_path, 'wb') as f:
                     for chunk in video_response.iter_content(chunk_size=8192):
@@ -211,22 +218,23 @@ def generate_video(prompt):
         raise
 
 def process_audio(sid):
-    global audio_buffer, wav_file, audio_chunks
+    """Process the recorded audio and generate video."""
     try:
-        # Close the WAV file properly
-        if wav_file:
-            wav_file.close()
-            wav_file = None
-
-        # Combine all audio chunks
-        combined_audio = b''.join(audio_chunks)
+        global recording_state, audio_buffer, wav_file, audio_chunks
         
-        # Save the WAV file locally for debugging
-        wav_filepath = save_wav_file(combined_audio)
+        # Save the WAV file
+        audio_data = b''.join(audio_chunks)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        wav_filename = f"recording_{timestamp}.wav"
+        wav_path = save_wav_file(audio_data, wav_filename)
+        
+        # Get duration of the audio
+        with wave.open(wav_path, 'rb') as wf:
+            duration = wf.getnframes() / wf.getframerate()
         
         # Create a temporary file for the audio
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-            temp_file.write(combined_audio)
+            temp_file.write(audio_data)
             temp_file_path = temp_file.name
 
         # Transcribe the audio using OpenAI's Whisper API
@@ -239,65 +247,66 @@ def process_audio(sid):
         # Update the transcription in the global state
         recording_state['transcription'] = transcription.text
 
-        # Emit the transcription using the session ID if available
+        # Emit the transcription
         if sid:
             socketio.emit('transcription_update', {'text': transcription.text}, room=sid)
         else:
-            # Broadcast to all connected clients if no specific session
             socketio.emit('transcription_update', {'text': transcription.text})
 
         # Generate video prompt
         video_prompt = generate_video_prompt(transcription.text)
-        if video_prompt:
-            recording_state['video_prompt'] = video_prompt
-            if sid:
-                socketio.emit('video_prompt_update', {'text': video_prompt}, room=sid)
-            else:
-                socketio.emit('video_prompt_update', {'text': video_prompt})
-            
-            # Generate video
-            try:
-                video_path = generate_video(video_prompt)
-                recording_state['video_url'] = f'/videos/{os.path.basename(video_path)}'
-                if sid:
-                    socketio.emit('video_ready', {'url': recording_state['video_url']}, room=sid)
-                else:
-                    socketio.emit('video_ready', {'url': recording_state['video_url']})
-            except Exception as e:
-                if sid:
-                    socketio.emit('error', {'message': f"Error generating video: {str(e)}"}, room=sid)
-                else:
-                    socketio.emit('error', {'message': f"Error generating video: {str(e)}"})
+        if not video_prompt:
+            raise Exception("Failed to generate video prompt")
+        
+        recording_state['video_prompt'] = video_prompt
+        if sid:
+            socketio.emit('video_prompt_update', {'text': video_prompt}, room=sid)
         else:
-            error_msg = "Failed to generate video prompt"
-            logger.error(error_msg)
-            if sid:
-                socketio.emit('error', {'message': error_msg}, room=sid)
-            else:
-                socketio.emit('error', {'message': error_msg})
-
-        # Clean up the temporary file
-        os.unlink(temp_file_path)
-
-        # Set status to complete
+            socketio.emit('video_prompt_update', {'text': video_prompt})
+        
+        # Generate video
+        video_filename = f"dream_{timestamp}.mp4"
+        video_path = generate_video(video_prompt, video_filename)
+        
+        # Save to database
+        dream_data = {
+            'user_prompt': recording_state['transcription'],
+            'generated_prompt': recording_state['video_prompt'],
+            'audio_path': wav_path,
+            'video_path': video_path,
+            'duration': int(duration),
+            'status': 'completed',
+            'metadata': {
+                'sid': sid,
+                'timestamp': timestamp
+            }
+        }
+        dream_db.save_dream(dream_data)
+        
         recording_state['status'] = 'complete'
-        socketio.emit('state_update', recording_state)
-
+        recording_state['video_url'] = f"/videos/{video_filename}"
+        
+        # Emit the video ready event to trigger playback
+        if sid:
+            socketio.emit('video_ready', {'url': recording_state['video_url']}, room=sid)
+        else:
+            socketio.emit('video_ready', {'url': recording_state['video_url']})
+        
     except Exception as e:
         logger.error(f"Error processing audio: {str(e)}")
-        error_msg = f"Error processing audio: {str(e)}"
-        if sid:
-            socketio.emit('error', {'message': error_msg}, room=sid)
-        else:
-            socketio.emit('error', {'message': error_msg})
-            
-        # Set status to complete even on error
-        recording_state['status'] = 'complete'
-        socketio.emit('state_update', recording_state)
+        recording_state['status'] = 'error'
+        socketio.emit('error', {'message': str(e)})
     finally:
-        # Reset the buffer and chunks
+        # Clean up
         audio_buffer = io.BytesIO()
         audio_chunks = []
+        wav_file = None
+        # Remove temporary file if it exists
+        if 'temp_file_path' in locals():
+            try:
+                os.unlink(temp_file_path)
+            except:
+                pass
 
 @socketio.on('generate_video')
 def handle_generate_video(data):
@@ -386,6 +395,14 @@ def handle_audio_data(data):
 @app.route('/videos/<filename>')
 def serve_video(filename):
     return send_file(os.path.join(os.getenv('VIDEOS_DIR'), filename))
+
+@app.route('/recordings/<filename>')
+def serve_recording(filename):
+    """Serve audio recording files."""
+    try:
+        return send_file(os.path.join(os.getenv('RECORDINGS_DIR'), filename))
+    except FileNotFoundError:
+        return "Recording not found", 404
 
 @app.route('/api/trigger_recording', methods=['POST'])
 def trigger_recording():
@@ -489,6 +506,27 @@ def stop_recording_api():
     except Exception as e:
         logger.error(f"Error stopping recording: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/dreams')
+def dreams():
+    """Display the dreams library page."""
+    dreams = dream_db.get_all_dreams()
+    return render_template('dreams.html', dreams=dreams)
+
+@socketio.on('play_dream')
+def handle_play_dream(data):
+    """Handle request to play a specific dream video."""
+    try:
+        video_url = data.get('video_url')
+        if not video_url:
+            raise ValueError("No video URL provided")
+        
+        # Broadcast the play_dream event to all connected clients
+        socketio.emit('play_dream', {'url': video_url}, broadcast=True)
+        logger.info(f"Broadcasting play_dream event for video: {video_url}")
+    except Exception as e:
+        logger.error(f"Error playing dream video: {str(e)}")
+        socketio.emit('error', {'message': str(e)}, broadcast=True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

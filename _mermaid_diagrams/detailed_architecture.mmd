@@ -17,6 +17,8 @@ sequenceDiagram
     participant FE as Frontend<br>Web App 🖥️
     participant OpenAI as OpenAI API 🤖<br>(STT + LLM)
     participant LL as LumaLabs API 🤖<br>(Video Gen)
+    participant DB as Dream Database 💾<br>(SQLite)
+    participant DH as Dream Handler 📝<br>(Python)
     
     %% Setup and Initialization
     Note over RPI,FLASK: System Boot & Initialization
@@ -77,6 +79,12 @@ sequenceDiagram
     FLASK -->> FLASK: Poll for video completion
     LL -->> FLASK: Return video URL when ready
     
+    %% Video Processing and Storage
+    FLASK ->> FLASK: Download and process video
+    FLASK ->> DH: Send dream data for storage
+    DH ->> DB: Store dream record
+    DH -->> FLASK: Confirm storage
+    
     %% Video Playback
     FLASK ->> FE: Send video URL
     FE ->> DISP: Display video player UI
@@ -87,6 +95,10 @@ sequenceDiagram
     TS ->> GPIO: Send touch signal
     GPIO ->> GPIOSVC: Process GPIO interrupt
     GPIOSVC ->> FLASK: Send double tap event
+    FLASK ->> DH: Request previous dream
+    DH ->> DB: Retrieve dream data
+    DB -->> DH: Return dream data
+    DH -->> FLASK: Return dream data
     FLASK ->> FE: Notify show previous dream
     FE ->> DISP: Display previous dream video
     

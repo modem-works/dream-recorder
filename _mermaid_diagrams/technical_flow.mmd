@@ -2,7 +2,7 @@ flowchart TD
     %% Main System Components
     subgraph RaspberryPi["Raspberry Pi 5 System"]
         %% Hardware Input/Output
-        TS[Touch Sensor\nTTP223B]
+        TS[Touch Sensor - TTP223B]
         MIC[USB Microphone]
         SCRN[Display Screen]
         
@@ -33,6 +33,8 @@ flowchart TD
             VIDEO_STORAGE[Video File Storage]
             STATE_MANAGER[State Manager]
             POLLING_SERVICE[Luma Polling Service]
+            DREAM_DB[Dream Database - SQLite]
+            DREAM_HANDLER[Dream Handler]
         end
         
         %% Frontend Components
@@ -43,6 +45,7 @@ flowchart TD
             AUDIO_RECORDER[Audio Recorder]
             WS_CLIENT[WebSocket Client]
             VIDEO_PLAYER[Video Player]
+            DREAMS_UI[Dreams Library UI]
         end
     end
     
@@ -63,10 +66,10 @@ flowchart TD
     %% GPIO & Touch Handling
     TS -- "GPIO Signal" --> GPIO_HANDLER
     GPIO_HANDLER -- "Touch Event" --> TOUCH_DETECTOR
-    TOUCH_DETECTOR -- "Single Tap\n(Wake Device)" --> HTTP_CLIENT
-    TOUCH_DETECTOR -- "Double Tap\n(Show Previous Dream)" --> HTTP_CLIENT
-    TOUCH_DETECTOR -- "Long Press\n(Start Recording)" --> HTTP_CLIENT
-    TOUCH_DETECTOR -- "Long Press Release\n(Stop Recording)" --> HTTP_CLIENT
+    TOUCH_DETECTOR -- "Single Tap - (Wake Device)" --> HTTP_CLIENT
+    TOUCH_DETECTOR -- "Double Tap - (Show Previous Dream)" --> HTTP_CLIENT
+    TOUCH_DETECTOR -- "Long Press - (Start Recording)" --> HTTP_CLIENT
+    TOUCH_DETECTOR -- "Long Press Release - (Stop Recording)" --> HTTP_CLIENT
     HTTP_CLIENT -- "HTTP Request" --> FLASK
     
     %% State Management
@@ -82,7 +85,7 @@ flowchart TD
     %% Processing Flow
     STATE_MANAGER -- "Recording Complete" --> STT_CLIENT
     AUDIO_BUFFER -- "Complete Audio" --> STT_CLIENT
-    STT_CLIENT -- "Audio File\nwhistper-1" --> OPENAI_STT_API
+    STT_CLIENT -- "Audio File - whistper-1" --> OPENAI_STT_API
     OPENAI_STT_API -- "Transcribed Text" --> STT_CLIENT
     STT_CLIENT -- "Dream Text" --> STATE_MANAGER
     STATE_MANAGER -- "Update UI" --> FLASK
@@ -90,7 +93,7 @@ flowchart TD
     
     %% Prompt Enhancement
     STATE_MANAGER -- "Transcription Ready" --> PROMPT_CLIENT
-    PROMPT_CLIENT -- "User Dream Text\ngpt-4-turbo" --> OPENAI_CHAT_API
+    PROMPT_CLIENT -- "User Dream Text - gpt-4-turbo" --> OPENAI_CHAT_API
     OPENAI_CHAT_API -- "Enhanced Video Prompt" --> PROMPT_CLIENT
     PROMPT_CLIENT -- "Video Prompt" --> STATE_MANAGER
     
@@ -108,9 +111,15 @@ flowchart TD
     LUMA_CLIENT -- "Downloaded Video" --> VIDEO_STORAGE
     STATE_MANAGER -- "Process Video" --> VIDEO_PROCESSOR
     VIDEO_STORAGE -- "Raw Video File" --> VIDEO_PROCESSOR
-    VIDEO_PROCESSOR -- "Processes Video\n(FFmpeg)" --> VIDEO_PROCESSOR
+    VIDEO_PROCESSOR -- "Processes Video - (FFmpeg)" --> VIDEO_PROCESSOR
     VIDEO_PROCESSOR -- "Processed Video" --> VIDEO_STORAGE
     VIDEO_PROCESSOR -- "Processing Complete" --> STATE_MANAGER
+    
+    %% Dream Storage
+    STATE_MANAGER -- "Save Dream" --> DREAM_HANDLER
+    DREAM_HANDLER -- "Store Dream Data" --> DREAM_DB
+    DREAM_HANDLER -- "Retrieve Dreams" --> DREAMS_UI
+    FLASK -- "Load Dreams" --> DREAMS_UI
     
     %% Video Playback
     STATE_MANAGER -- "Video Ready" --> FLASK
@@ -127,13 +136,14 @@ flowchart TD
     classDef dataSpec fill:#f9f,stroke:#333,stroke-width:1px
     
     %% Define Key Data Transformations
-    RAW_AUDIO[("Raw Audio:\nBinary WebM/Opus")]:::dataSpec
-    TRANSCRIBED_TEXT[("Transcribed Text:\nJSON")]:::dataSpec
-    ENHANCED_PROMPT[("Enhanced Prompt:\nJSON")]:::dataSpec
-    VIDEO_URL_DATA[("Video URL:\nJSON")]:::dataSpec
-    RAW_VIDEO_DATA[("Raw Video:\nMP4 File")]:::dataSpec
-    PROCESSED_VIDEO_DATA[("Processed Video:\nMP4 File")]:::dataSpec
-    TOUCH_PATTERN[("Touch Pattern:\nHTTP Request")]:::dataSpec
+    RAW_AUDIO[("Raw Audio: - Binary WebM/Opus")]:::dataSpec
+    TRANSCRIBED_TEXT[("Transcribed Text: - JSON")]:::dataSpec
+    ENHANCED_PROMPT[("Enhanced Prompt: - JSON")]:::dataSpec
+    VIDEO_URL_DATA[("Video URL: - JSON")]:::dataSpec
+    RAW_VIDEO_DATA[("Raw Video: - MP4 File")]:::dataSpec
+    PROCESSED_VIDEO_DATA[("Processed Video: - MP4 File")]:::dataSpec
+    TOUCH_PATTERN[("Touch Pattern: - HTTP Request")]:::dataSpec
+    DREAM_DATA[("Dream Data: - SQLite Record")]:::dataSpec
     
     AUDIO_RECORDER --> RAW_AUDIO
     RAW_AUDIO --> WS_SERVER
@@ -148,4 +158,6 @@ flowchart TD
     VIDEO_PROCESSOR --> PROCESSED_VIDEO_DATA
     PROCESSED_VIDEO_DATA --> VIDEO_PLAYER
     TOUCH_DETECTOR --> TOUCH_PATTERN
-    TOUCH_PATTERN --> HTTP_CLIENT 
+    TOUCH_PATTERN --> HTTP_CLIENT
+    DREAM_HANDLER --> DREAM_DATA
+    DREAM_DATA --> DREAM_DB 

@@ -237,11 +237,15 @@ ENV/
 *.swp
 *.swo
 
-# Application specific
+# Project specific
+*.db
+dreams.db
 recordings/
 videos/
 *.wav
 *.mp4
+*.webm
+*.opus
 
 # Logs
 *.log

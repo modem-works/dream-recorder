@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Dream Library{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<style>
+    .modal-body p {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Dream Library</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <table id="dreamsTable" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Created</th>
+                        <th>User Prompt</th>
+                        <th>Generated Prompt</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dream in dreams %}
+                    <tr>
+                        <td>{{ dream.id }}</td>
+                        <td>{{ dream.created_at }}</td>
+                        <td>{{ dream.user_prompt[:50] }}{% if dream.user_prompt|length > 50 %}...{% endif %}</td>
+                        <td>{{ dream.generated_prompt[:50] }}{% if dream.generated_prompt|length > 50 %}...{% endif %}</td>
+                        <td>
+                            <span class="badge {% if dream.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ dream.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary view-dream" 
+                                    data-id="{{ dream.id }}"
+                                    data-user-prompt="{{ dream.user_prompt }}"
+                                    data-generated-prompt="{{ dream.generated_prompt }}"
+                                    data-created-at="{{ dream.created_at }}">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                            <a href="/recordings/{{ dream.audio_path.split('/')[-1] }}" class="btn btn-sm btn-info" target="_blank">
+                                <i class="bi bi-music-note"></i> Audio
+                            </a>
+                            <a href="{{ dream.video_path }}" class="btn btn-sm btn-secondary" target="_blank">
+                                <i class="bi bi-download"></i> Video
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Dream Details Modal -->
+<div class="modal fade" id="dreamModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dream Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>User Prompt</h6>
+                        <p id="modalUserPrompt"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Generated Prompt</h6>
+                        <p id="modalGeneratedPrompt"></p>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h6>Created At</h6>
+                        <p id="modalCreatedAt"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    $('#dreamsTable').DataTable({
+        order: [[1, 'desc']], // Sort by created date by default
+        pageLength: 10,
+        responsive: true
+    });
+
+    // Handle view dream button clicks
+    $('.view-dream').click(function() {
+        const dreamId = $(this).data('id');
+        const userPrompt = $(this).data('user-prompt');
+        const generatedPrompt = $(this).data('generated-prompt');
+        const createdAt = $(this).data('created-at');
+        
+        $('#modalUserPrompt').text(userPrompt);
+        $('#modalGeneratedPrompt').text(generatedPrompt);
+        $('#modalCreatedAt').text(createdAt);
+        
+        $('#dreamModal').modal('show');
+    });
+});
+</script>
+{% endblock %} 

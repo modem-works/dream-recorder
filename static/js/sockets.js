@@ -66,7 +66,6 @@ window.socket.on('video_ready', (data) => {
     window.videoContainer.style.display = 'block';
     window.generatedVideo.src = data.url;
     window.loadingDiv.style.display = 'none';
-    window.stopRecordingBtn.disabled = false;
     window.videoPrompt.textContent = 'Dream generation complete!';
     
     if (window.StateManager) {
