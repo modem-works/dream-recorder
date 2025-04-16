@@ -23,9 +23,18 @@ const StateManager = {
     error: null,
     previousState: null,
     stateChangeCallbacks: [],
+    playbackTimer: null,
+    playbackDuration: 120, // Default value, will be updated from config
 
     // Initialize state manager
-    init() {
+    async init() {
+        try {
+            const response = await fetch('/api/config');
+            const config = await response.json();
+            this.playbackDuration = config.playback_duration;
+        } catch (error) {
+            console.error('Failed to fetch config:', error);
+        }
         this.updateState(this.STATES.IDLE);
         this.updateStatus();
         console.log('State Manager initialized');
@@ -33,6 +42,12 @@ const StateManager = {
 
     // Update state
     updateState(newState, errorMessage = null) {
+        // Clear any existing playback timer
+        if (this.playbackTimer) {
+            clearTimeout(this.playbackTimer);
+            this.playbackTimer = null;
+        }
+
         this.previousState = this.currentState;
         this.currentState = newState;
         this.error = errorMessage;
@@ -48,6 +63,13 @@ const StateManager = {
         } else {
             // Hide icons for all other states (IDLE, PLAYBACK, etc.)
             IconAnimations.hideAll();
+        }
+        
+        // Set up playback timer if entering playback state
+        if (this.currentState === this.STATES.PLAYBACK) {
+            this.playbackTimer = setTimeout(() => {
+                this.goToIdle();
+            }, this.playbackDuration * 1000); // Convert to milliseconds
         }
         
         // Notify all registered callbacks

@@ -384,7 +384,7 @@ def index():
 def get_config():
     return jsonify({
         'is_development': app.config['DEBUG'],
-        'api_keys_configured': bool(os.getenv('OPENAI_API_KEY') and os.getenv('LUMALABS_API_KEY'))
+        'playback_duration': int(os.getenv('PLAYBACK_DURATION', '120'))
     })
 
 @socketio.on('connect')
