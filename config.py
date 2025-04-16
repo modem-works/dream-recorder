@@ -48,7 +48,7 @@ Format the response as a single paragraph."""
     # --- Luma Labs Settings ---
     LUMA_API_URL = os.getenv('LUMA_API_URL', 'https://api.lumalabs.ai/dream-machine/v1')
     LUMA_GENERATIONS_ENDPOINT = f"{LUMA_API_URL}/generations"
-    LUMA_MODEL = os.getenv('LUMA_MODEL', 'ray-2')
+    LUMA_MODEL = os.getenv('LUMA_MODEL', 'ray-flash-2')
     LUMA_RESOLUTION = os.getenv('LUMA_RESOLUTION', '540p')
     LUMA_DURATION = os.getenv('LUMA_DURATION', '5s')
     LUMA_ASPECT_RATIO = os.getenv('LUMA_ASPECT_RATIO', '21:9')

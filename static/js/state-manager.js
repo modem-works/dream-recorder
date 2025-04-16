@@ -46,7 +46,8 @@ const StateManager = {
         } else if (this.currentState === this.STATES.ERROR) {
             IconAnimations.show(IconAnimations.TYPES.ERROR);
         } else {
-            IconAnimations.hide();
+            // Hide icons for all other states (IDLE, PLAYBACK, etc.)
+            IconAnimations.hideAll();
         }
         
         // Notify all registered callbacks
@@ -67,7 +68,6 @@ const StateManager = {
     updateStatus() {
         const statusDiv = document.getElementById('status');
         if (!statusDiv) return;
-        
         let statusText = `${this.currentState.charAt(0).toUpperCase() + this.currentState.slice(1)}`;
         
         if (this.currentState === this.STATES.ERROR && this.error) {
@@ -95,8 +95,9 @@ const StateManager = {
         console.log('Playing latest video');
         // Request the latest video from server
         if (window.socket) {
-            window.socket.emit('show_latest_dream');
-            this.updateState(this.STATES.PROCESSING);
+            window.socket.emit('show_previous_dream');
+            // window.socket.emit('show_latest_dream');
+            this.updateState(this.STATES.PLAYBACK);
         }
     },
 
@@ -106,7 +107,7 @@ const StateManager = {
         // Request the previous video from server
         if (window.socket) {
             window.socket.emit('show_previous_dream');
-            this.updateState(this.STATES.PROCESSING);
+            this.updateState(this.STATES.PLAYBACK);
         }
     },
 
