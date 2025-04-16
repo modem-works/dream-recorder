@@ -14,11 +14,14 @@ import argparse
 import os
 import sys
 from enum import Enum
-from config import Config
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(
-    level=getattr(logging, Config.LOG_LEVEL),
+    level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper()),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -42,19 +45,19 @@ class GPIOController:
             debounce_time (float): Minimum time between state changes
             sampling_rate (float): How often to sample the pin state
         """
-        self.pin = pin or Config.GPIO_PIN
-        self.debounce_time = debounce_time or Config.GPIO_DEBOUNCE_TIME
-        self.sampling_rate = sampling_rate or Config.GPIO_SAMPLING_RATE
+        self.pin = pin or int(os.getenv('GPIO_PIN', 4))
+        self.debounce_time = debounce_time or float(os.getenv('GPIO_DEBOUNCE_TIME', 0.05))
+        self.sampling_rate = sampling_rate or float(os.getenv('GPIO_SAMPLING_RATE', 0.01))
         self.is_running = False
         self.callbacks = {}
         
         # Touch detection state
-        self.last_state = False
+        self.last_state = None
         self.last_change_time = 0
         self.press_start_time = 0
         self.last_tap_time = 0
         self.tap_count = 0
-        self.long_press_triggered = False
+        self.press_released = False
         
         # Import GPIO here for better error handling
         import RPi.GPIO as GPIO
@@ -85,78 +88,54 @@ class GPIOController:
             double_tap_max_interval (float): Maximum interval between taps for a double tap
             long_press_min (float): Minimum duration for a long press
         """
+        self.single_tap_max = single_tap_max or float(os.getenv('GPIO_SINGLE_TAP_MAX_DURATION', 0.5))
+        self.double_tap_max_interval = double_tap_max_interval or float(os.getenv('GPIO_DOUBLE_TAP_MAX_INTERVAL', 0.7))
+        self.long_press_min = long_press_min or float(os.getenv('GPIO_LONG_PRESS_MIN_DURATION', 1.5))
         self.is_running = True
         logger.info("Starting GPIO monitoring loop")
-        
-        single_tap_max = single_tap_max or Config.GPIO_SINGLE_TAP_MAX_DURATION
-        double_tap_max_interval = double_tap_max_interval or Config.GPIO_DOUBLE_TAP_MAX_INTERVAL
-        long_press_min = long_press_min or Config.GPIO_LONG_PRESS_MIN_DURATION
         
         try:
             while self.is_running:
                 current_state = self.GPIO.input(self.pin) == self.GPIO.HIGH
                 current_time = time.time()
                 
-                # State changed from LOW to HIGH (touch started)
-                if current_state and not self.last_state:
-                    # Debounce
-                    if current_time - self.last_change_time > self.debounce_time:
-                        self.press_start_time = current_time
-                        self.last_change_time = current_time
-                        self.long_press_triggered = False
-                        logger.debug("Touch started")
-                
-                # Check for long press while finger is still down
-                elif current_state and self.last_state:
-                    press_duration = current_time - self.press_start_time
-                    # Long press threshold reached and not yet triggered
-                    if press_duration >= long_press_min and not self.long_press_triggered:
-                        logger.info("Long press detected!")
-                        self.long_press_triggered = True
-                        if TouchPattern.LONG_PRESS in self.callbacks:
-                            self.callbacks[TouchPattern.LONG_PRESS]()
-                
-                # State changed from HIGH to LOW (touch ended)
-                elif not current_state and self.last_state:
-                    # Debounce
+                if current_state != self.last_state:
                     if current_time - self.last_change_time > self.debounce_time:
                         self.last_change_time = current_time
-                        press_duration = current_time - self.press_start_time
-                        logger.debug(f"Touch ended, duration: {press_duration:.2f}s")
-                        
-                        # If we had a long press and now releasing, call the release callback
-                        if self.long_press_triggered:
-                            logger.info("Long press released!")
-                            if TouchPattern.LONG_PRESS_RELEASE in self.callbacks:
-                                self.callbacks[TouchPattern.LONG_PRESS_RELEASE]()
-                        # Check if it was a short tap (and not part of a long press)
-                        elif press_duration < single_tap_max:
-                            # Check for potential double tap
-                            if current_time - self.last_tap_time < double_tap_max_interval:
-                                # Double tap detected
-                                logger.info("Double tap detected!")
+                        self.last_state = current_state
+
+                        if current_state:  # Button pressed
+                            self.press_start_time = current_time
+                            self.press_released = False
+                        else:  # Button released
+                            press_duration = current_time - self.press_start_time
+                            self.press_released = True
+
+                            if press_duration <= self.single_tap_max:
+                                self.tap_count += 1
+                                if self.tap_count == 1:
+                                    self.last_tap_time = current_time
+                                elif self.tap_count == 2:
+                                    if current_time - self.last_tap_time <= self.double_tap_max_interval:
+                                        if TouchPattern.DOUBLE_TAP in self.callbacks:
+                                            self.callbacks[TouchPattern.DOUBLE_TAP]()
+                                    self.tap_count = 0
+                            elif press_duration >= self.long_press_min:
+                                if TouchPattern.LONG_PRESS in self.callbacks:
+                                    self.callbacks[TouchPattern.LONG_PRESS]()
                                 self.tap_count = 0
-                                self.last_tap_time = 0
-                                if TouchPattern.DOUBLE_TAP in self.callbacks:
-                                    self.callbacks[TouchPattern.DOUBLE_TAP]()
-                            else:
-                                # First tap of potential double tap
-                                self.last_tap_time = current_time
-                                self.tap_count = 1
-                                # Schedule a single tap with delay to allow for double tap
-                                self.single_tap_scheduled = True
-                                self.single_tap_time = current_time
-                
-                # Check for scheduled single tap that wasn't part of a double tap
-                if self.tap_count == 1 and current_time - self.last_tap_time > double_tap_max_interval:
-                    logger.info("Single tap detected!")
-                    self.tap_count = 0
-                    self.last_tap_time = 0
+
+                # Check for single tap timeout
+                if self.tap_count == 1 and current_time - self.last_tap_time > self.double_tap_max_interval:
                     if TouchPattern.SINGLE_TAP in self.callbacks:
                         self.callbacks[TouchPattern.SINGLE_TAP]()
-                
-                # Update the last state
-                self.last_state = current_state
+                    self.tap_count = 0
+
+                # Check for long press release
+                if self.press_released and current_time - self.press_start_time >= self.long_press_min:
+                    if TouchPattern.LONG_PRESS_RELEASE in self.callbacks:
+                        self.callbacks[TouchPattern.LONG_PRESS_RELEASE]()
+                    self.press_released = False
                 
                 # Sleep for a bit to reduce CPU usage
                 time.sleep(self.sampling_rate)
@@ -184,30 +163,30 @@ class GPIOController:
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='GPIO Service for Dream Recorder')
-    parser.add_argument('--flask-url', default=Config.GPIO_FLASK_URL, 
-                        help=f'Base URL of the Flask application (default: {Config.GPIO_FLASK_URL})')
-    parser.add_argument('--single-tap-endpoint', default=Config.GPIO_SINGLE_TAP_ENDPOINT,
-                        help=f'Endpoint for single tap (default: {Config.GPIO_SINGLE_TAP_ENDPOINT})')
-    parser.add_argument('--double-tap-endpoint', default=Config.GPIO_DOUBLE_TAP_ENDPOINT,
-                        help=f'Endpoint for double tap (default: {Config.GPIO_DOUBLE_TAP_ENDPOINT})')
-    parser.add_argument('--long-press-endpoint', default=Config.GPIO_LONG_PRESS_ENDPOINT,
-                        help=f'Endpoint for long press (default: {Config.GPIO_LONG_PRESS_ENDPOINT})')
-    parser.add_argument('--long-press-release-endpoint', default=Config.GPIO_LONG_PRESS_RELEASE_ENDPOINT,
-                        help=f'Endpoint for long press release (default: {Config.GPIO_LONG_PRESS_RELEASE_ENDPOINT})')
-    parser.add_argument('--pin', type=int, default=Config.GPIO_PIN,
-                        help=f'GPIO pin for touch sensor (default: {Config.GPIO_PIN})')
-    parser.add_argument('--single-tap-max', type=float, default=Config.GPIO_SINGLE_TAP_MAX_DURATION,
-                        help=f'Maximum duration for a single tap in seconds (default: {Config.GPIO_SINGLE_TAP_MAX_DURATION})')
-    parser.add_argument('--double-tap-max-interval', type=float, default=Config.GPIO_DOUBLE_TAP_MAX_INTERVAL,
-                        help=f'Maximum interval between taps for a double tap in seconds (default: {Config.GPIO_DOUBLE_TAP_MAX_INTERVAL})')
-    parser.add_argument('--long-press-min', type=float, default=Config.GPIO_LONG_PRESS_MIN_DURATION,
-                        help=f'Minimum duration for a long press in seconds (default: {Config.GPIO_LONG_PRESS_MIN_DURATION})')
-    parser.add_argument('--debounce-time', type=float, default=Config.GPIO_DEBOUNCE_TIME,
-                        help=f'Debounce time in seconds (default: {Config.GPIO_DEBOUNCE_TIME})')
-    parser.add_argument('--sampling-rate', type=float, default=Config.GPIO_SAMPLING_RATE,
-                        help=f'Sampling rate in seconds (default: {Config.GPIO_SAMPLING_RATE})')
-    parser.add_argument('--startup-delay', type=int, default=Config.GPIO_STARTUP_DELAY,
-                        help=f'Delay in seconds before starting (default: {Config.GPIO_STARTUP_DELAY})')
+    parser.add_argument('--flask-url', default=os.getenv('GPIO_FLASK_URL', 'http://localhost:5000'), 
+                        help=f'Base URL of the Flask application (default: {os.getenv("GPIO_FLASK_URL", "http://localhost:5000")})')
+    parser.add_argument('--single-tap-endpoint', default=os.getenv('GPIO_SINGLE_TAP_ENDPOINT', '/api/wake_device'),
+                        help=f'Endpoint for single tap (default: {os.getenv("GPIO_SINGLE_TAP_ENDPOINT", "/api/wake_device")})')
+    parser.add_argument('--double-tap-endpoint', default=os.getenv('GPIO_DOUBLE_TAP_ENDPOINT', '/api/show_previous_dream'),
+                        help=f'Endpoint for double tap (default: {os.getenv("GPIO_DOUBLE_TAP_ENDPOINT", "/api/show_previous_dream")})')
+    parser.add_argument('--long-press-endpoint', default=os.getenv('GPIO_LONG_PRESS_ENDPOINT', '/api/trigger_recording'),
+                        help=f'Endpoint for long press (default: {os.getenv("GPIO_LONG_PRESS_ENDPOINT", "/api/trigger_recording")})')
+    parser.add_argument('--long-press-release-endpoint', default=os.getenv('GPIO_LONG_PRESS_RELEASE_ENDPOINT', '/api/stop_recording'),
+                        help=f'Endpoint for long press release (default: {os.getenv("GPIO_LONG_PRESS_RELEASE_ENDPOINT", "/api/stop_recording")})')
+    parser.add_argument('--pin', type=int, default=os.getenv('GPIO_PIN', 4),
+                        help=f'GPIO pin for touch sensor (default: {os.getenv("GPIO_PIN", 4)})')
+    parser.add_argument('--single-tap-max', type=float, default=os.getenv('GPIO_SINGLE_TAP_MAX_DURATION', 0.5),
+                        help=f'Maximum duration for a single tap in seconds (default: {os.getenv("GPIO_SINGLE_TAP_MAX_DURATION", 0.5)})')
+    parser.add_argument('--double-tap-max-interval', type=float, default=os.getenv('GPIO_DOUBLE_TAP_MAX_INTERVAL', 0.7),
+                        help=f'Maximum interval between taps for a double tap in seconds (default: {os.getenv("GPIO_DOUBLE_TAP_MAX_INTERVAL", 0.7)})')
+    parser.add_argument('--long-press-min', type=float, default=os.getenv('GPIO_LONG_PRESS_MIN_DURATION', 1.5),
+                        help=f'Minimum duration for a long press in seconds (default: {os.getenv("GPIO_LONG_PRESS_MIN_DURATION", 1.5)})')
+    parser.add_argument('--debounce-time', type=float, default=os.getenv('GPIO_DEBOUNCE_TIME', 0.05),
+                        help=f'Debounce time in seconds (default: {os.getenv("GPIO_DEBOUNCE_TIME", 0.05)})')
+    parser.add_argument('--sampling-rate', type=float, default=os.getenv('GPIO_SAMPLING_RATE', 0.01),
+                        help=f'Sampling rate in seconds (default: {os.getenv("GPIO_SAMPLING_RATE", 0.01)})')
+    parser.add_argument('--startup-delay', type=int, default=int(os.getenv('GPIO_STARTUP_DELAY', 5)),
+                        help=f'Delay in seconds before starting (default: {os.getenv("GPIO_STARTUP_DELAY", 5)})')
     args = parser.parse_args()
     
     # Add a small delay at startup to let system initialize

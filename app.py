@@ -14,20 +14,27 @@ import numpy as np
 from datetime import datetime
 import requests
 import time
-from config import Config
+from dotenv import load_dotenv
 import argparse
 
+# Load environment variables
+load_dotenv()
+
 # Configure logging
-logging.basicConfig(level=getattr(logging, Config.LOG_LEVEL))
+logging.basicConfig(level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper()))
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-app.config.from_object(Config)
+app.config.update(
+    DEBUG=os.getenv('FLASK_ENV', 'production') == 'development',
+    HOST=os.getenv('HOST', '0.0.0.0'),
+    PORT=int(os.getenv('PORT', 5000))
+)
 
 # Initialize OpenAI client
 client = OpenAI(
-    api_key=Config.OPENAI_API_KEY,
+    api_key=os.getenv('OPENAI_API_KEY'),
     http_client=None  # This prevents the client from creating its own HTTP client
 )
 
@@ -51,9 +58,9 @@ audio_chunks = []
 def create_wav_file():
     global wav_file
     wav_file = wave.open(audio_buffer, 'wb')
-    wav_file.setnchannels(Config.AUDIO_CHANNELS)
-    wav_file.setsampwidth(Config.AUDIO_SAMPLE_WIDTH)
-    wav_file.setframerate(Config.AUDIO_FRAME_RATE)
+    wav_file.setnchannels(int(os.getenv('AUDIO_CHANNELS', 1)))
+    wav_file.setsampwidth(int(os.getenv('AUDIO_SAMPLE_WIDTH', 2)))
+    wav_file.setframerate(int(os.getenv('AUDIO_FRAME_RATE', 44100)))
 
 def save_wav_file(audio_data, filename=None):
     """Save the WAV file locally for debugging."""
@@ -62,13 +69,13 @@ def save_wav_file(audio_data, filename=None):
         filename = f"recording_{timestamp}.wav"
     
     # Ensure the recordings directory exists
-    os.makedirs(Config.RECORDINGS_DIR, exist_ok=True)
-    filepath = os.path.join(Config.RECORDINGS_DIR, filename)
+    os.makedirs(os.getenv('RECORDINGS_DIR', 'recordings'), exist_ok=True)
+    filepath = os.path.join(os.getenv('RECORDINGS_DIR', 'recordings'), filename)
     
     with wave.open(filepath, 'wb') as wf:
-        wf.setnchannels(Config.AUDIO_CHANNELS)
-        wf.setsampwidth(Config.AUDIO_SAMPLE_WIDTH)
-        wf.setframerate(Config.AUDIO_FRAME_RATE)
+        wf.setnchannels(int(os.getenv('AUDIO_CHANNELS', 1)))
+        wf.setsampwidth(int(os.getenv('AUDIO_SAMPLE_WIDTH', 2)))
+        wf.setframerate(int(os.getenv('AUDIO_FRAME_RATE', 44100)))
         wf.writeframes(audio_data)
     
     logger.info(f"Saved WAV file to {filepath}")
@@ -78,13 +85,13 @@ def generate_video_prompt(transcription):
     """Generate an enhanced video prompt from the transcription using GPT."""
     try:
         response = client.chat.completions.create(
-            model=Config.GPT_MODEL,
+            model=os.getenv('GPT_MODEL', 'gpt-3.5-turbo'),
             messages=[
-                {"role": "system", "content": Config.GPT_SYSTEM_PROMPT},
+                {"role": "system", "content": os.getenv('GPT_SYSTEM_PROMPT', 'You are a helpful assistant.')},
                 {"role": "user", "content": f"Transform this dream description into a detailed video prompt: {transcription}"}
             ],
-            temperature=Config.GPT_TEMPERATURE,
-            max_tokens=Config.GPT_MAX_TOKENS
+            temperature=float(os.getenv('GPT_TEMPERATURE', 0.7)),
+            max_tokens=int(os.getenv('GPT_MAX_TOKENS', 100))
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
@@ -96,18 +103,18 @@ def generate_video(prompt):
     try:
         # Create the generation request
         response = requests.post(
-            Config.LUMA_GENERATIONS_ENDPOINT,
+            os.getenv('LUMA_GENERATIONS_ENDPOINT', 'https://api.luma.ai/v1/generations'),
             headers={
                 'accept': 'application/json',
-                'authorization': f'Bearer {Config.LUMALABS_API_KEY}',
+                'authorization': f'Bearer {os.getenv("LUMALABS_API_KEY", "")}',
                 'content-type': 'application/json'
             },
             json={
                 'prompt': prompt,
-                'model': Config.LUMA_MODEL,
-                'resolution': Config.LUMA_RESOLUTION,
-                'duration': Config.LUMA_DURATION,
-                "aspect_ratio": Config.LUMA_ASPECT_RATIO,
+                'model': os.getenv('LUMA_MODEL', 'luma-1'),
+                'resolution': os.getenv('LUMA_RESOLUTION', '1080p'),
+                'duration': os.getenv('LUMA_DURATION', '10s'),
+                "aspect_ratio": os.getenv('LUMA_ASPECT_RATIO', '16:9'),
             }
         )
         
@@ -125,15 +132,15 @@ def generate_video(prompt):
         logger.info(f"Started video generation with ID: {generation_id}")
         
         # Poll for completion with more detailed status checking
-        max_attempts = Config.LUMA_MAX_POLL_ATTEMPTS
-        poll_interval = Config.LUMA_POLL_INTERVAL
+        max_attempts = int(os.getenv('LUMA_MAX_POLL_ATTEMPTS', 10))
+        poll_interval = float(os.getenv('LUMA_POLL_INTERVAL', 1))
         
         for attempt in range(max_attempts):
             status_response = requests.get(
-                f'{Config.LUMA_API_URL}/generations/{generation_id}',
+                f'{os.getenv("LUMA_API_URL", "https://api.luma.ai")}/generations/{generation_id}',
                 headers={
                     'accept': 'application/json',
-                    'authorization': f'Bearer {Config.LUMALABS_API_KEY}'
+                    'authorization': f'Bearer {os.getenv("LUMALABS_API_KEY", "")}'
                 }
             )
             
@@ -179,8 +186,8 @@ def generate_video(prompt):
                 
                 # Save the video locally
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                os.makedirs(Config.VIDEOS_DIR, exist_ok=True)
-                video_path = os.path.join(Config.VIDEOS_DIR, f"generated_{timestamp}.mp4")
+                os.makedirs(os.getenv('VIDEOS_DIR', 'videos'), exist_ok=True)
+                video_path = os.path.join(os.getenv('VIDEOS_DIR', 'videos'), f"generated_{timestamp}.mp4")
                 
                 with open(video_path, 'wb') as f:
                     for chunk in video_response.iter_content(chunk_size=8192):
@@ -223,7 +230,7 @@ def process_audio(sid):
         # Transcribe the audio using OpenAI's Whisper API
         with open(temp_file_path, 'rb') as audio_file:
             transcription = client.audio.transcriptions.create(
-                model=Config.WHISPER_MODEL,
+                model=os.getenv('WHISPER_MODEL', 'whisper-1'),
                 file=audio_file
             )
 
@@ -314,13 +321,13 @@ def handle_generate_video(data):
 
 @app.route('/')
 def index():
-    return render_template('index.html', is_development=Config.DEBUG)
+    return render_template('index.html', is_development=app.config['DEBUG'])
 
 @app.route('/api/config')
 def get_config():
     return jsonify({
-        'is_development': Config.DEBUG,
-        'api_keys_configured': bool(Config.OPENAI_API_KEY and Config.LUMALABS_API_KEY)
+        'is_development': app.config['DEBUG'],
+        'api_keys_configured': bool(os.getenv('OPENAI_API_KEY') and os.getenv('LUMALABS_API_KEY'))
     })
 
 @socketio.on('connect')
@@ -376,7 +383,7 @@ def handle_audio_data(data):
 
 @app.route('/videos/<filename>')
 def serve_video(filename):
-    return send_file(os.path.join(Config.VIDEOS_DIR, filename))
+    return send_file(os.path.join(os.getenv('VIDEOS_DIR', 'videos'), filename))
 
 @app.route('/api/trigger_recording', methods=['POST'])
 def trigger_recording():
@@ -420,7 +427,7 @@ def show_previous_dream():
     """API endpoint to show the most recent dream (double tap)."""
     try:
         # Find the most recent video
-        videos_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), Config.VIDEOS_DIR)
+        videos_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.getenv('VIDEOS_DIR', 'videos'))
         if os.path.exists(videos_dir):
             # Get all mp4 files sorted by modification time (newest first)
             video_files = [f for f in os.listdir(videos_dir) if f.endswith('.mp4')]
@@ -488,8 +495,8 @@ if __name__ == '__main__':
     
     socketio.run(
         app, 
-        host=Config.HOST, 
-        port=Config.PORT, 
-        debug=Config.DEBUG,
+        host=app.config['HOST'], 
+        port=app.config['PORT'], 
+        debug=app.config['DEBUG'],
         use_reloader=args.reload
     ) 
