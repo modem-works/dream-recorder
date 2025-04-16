@@ -174,25 +174,15 @@ const StateManager = {
         
         switch (eventType) {
             case 'tap':
-                // tap
-                // - if idle, do nothing
-                // - if recording, do nothing
-                // - if procsesing, do nothing
-                // - if playback, go to idle
-                // - if error, go to idle
                 if (this.currentState === this.STATES.PLAYBACK || 
                     this.currentState === this.STATES.ERROR) {
                     this.goToIdle();
+                } else if (this.currentState === this.STATES.RECORDING) {
+                    this.stopRecording();
                 }
                 break;
                 
             case 'double_tap':
-                // double_tap
-                // - if idle, play latest video
-                // - if recording, do nothing
-                // - if procsesing, do nothing
-                // - if playback, play previous video
-                // - if error, play latest video
                 if (this.currentState === this.STATES.IDLE || 
                     this.currentState === this.STATES.ERROR) {
                     this.playLatestVideo();
@@ -202,18 +192,11 @@ const StateManager = {
                 break;
                 
             case 'triple_tap':
-                // triple_tap
-                // - for now, do nothing at all
+                // For now, do nothing at all
                 console.log('Triple tap - no action assigned');
                 break;
                 
             case 'hold_start':
-                // hold_start
-                // - if idle, start recording
-                // - if recording, do nothing
-                // - if procsesing, do nothing
-                // - if playback, start recording
-                // - if error, do nothing
                 if (this.currentState === this.STATES.IDLE ||
                     this.currentState === this.STATES.PLAYBACK) {
                     this.startRecording();
@@ -221,12 +204,6 @@ const StateManager = {
                 break;
                 
             case 'hold_release':
-                // hold_release
-                // - if idle, do nothing
-                // - if recording, stop recording
-                // - if procsesing, do nothing
-                // - if playback, do nothing
-                // - if error, do nothing
                 if (this.currentState === this.STATES.RECORDING) {
                     this.stopRecording();
                 }
