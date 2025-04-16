@@ -14,7 +14,6 @@ const StateManager = {
         TAP_AND_HOLD: 'tap_and_hold',
         SINGLE_TAP: 'single_tap',
         DOUBLE_TAP: 'double_tap',
-        TRIPLE_TAP: 'triple_tap'
     },
 
     // Current state and mode
@@ -189,11 +188,6 @@ const StateManager = {
                 } else if (this.currentState === this.STATES.PLAYBACK) {
                     this.playPreviousVideo();
                 }
-                break;
-                
-            case 'triple_tap':
-                // For now, do nothing at all
-                console.log('Triple tap - no action assigned');
                 break;
                 
             case 'hold_start':

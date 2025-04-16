@@ -3,14 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Input simulator buttons
     const tapBtn = document.getElementById('tapBtn');
     const doubleTapBtn = document.getElementById('doubleTapBtn');
-    const tripleTapBtn = document.getElementById('tripleTapBtn');
     const holdStartBtn = document.getElementById('holdStartBtn');
     const holdReleaseBtn = document.getElementById('holdReleaseBtn');
     
     // Input simulator handlers
     tapBtn.addEventListener('click', () => simulateInput('tap'));
     doubleTapBtn.addEventListener('click', () => simulateInput('double_tap'));
-    tripleTapBtn.addEventListener('click', () => simulateInput('triple_tap'));
     holdStartBtn.addEventListener('click', () => simulateInput('hold_start'));
     holdReleaseBtn.addEventListener('click', () => simulateInput('hold_release'));
     
