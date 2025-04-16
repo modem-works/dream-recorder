@@ -15,13 +15,15 @@ import os
 import sys
 from enum import Enum
 from dotenv import load_dotenv
+from env_check import check_required_env_vars
 
-# Load environment variables
+# Load environment variables and check they're all set
 load_dotenv()
+check_required_env_vars()
 
 # Configure logging
 logging.basicConfig(
-    level=getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper()),
+    level=getattr(logging, os.getenv('LOG_LEVEL')),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -45,9 +47,9 @@ class GPIOController:
             debounce_time (float): Minimum time between state changes
             sampling_rate (float): How often to sample the pin state
         """
-        self.pin = pin or int(os.getenv('GPIO_PIN', 4))
-        self.debounce_time = debounce_time or float(os.getenv('GPIO_DEBOUNCE_TIME', 0.05))
-        self.sampling_rate = sampling_rate or float(os.getenv('GPIO_SAMPLING_RATE', 0.01))
+        self.pin = pin or int(os.getenv('GPIO_PIN'))
+        self.debounce_time = debounce_time or float(os.getenv('GPIO_DEBOUNCE_TIME'))
+        self.sampling_rate = sampling_rate or float(os.getenv('GPIO_SAMPLING_RATE'))
         self.is_running = False
         self.callbacks = {}
         
@@ -88,9 +90,9 @@ class GPIOController:
             double_tap_max_interval (float): Maximum interval between taps for a double tap
             long_press_min (float): Minimum duration for a long press
         """
-        self.single_tap_max = single_tap_max or float(os.getenv('GPIO_SINGLE_TAP_MAX_DURATION', 0.5))
-        self.double_tap_max_interval = double_tap_max_interval or float(os.getenv('GPIO_DOUBLE_TAP_MAX_INTERVAL', 0.7))
-        self.long_press_min = long_press_min or float(os.getenv('GPIO_LONG_PRESS_MIN_DURATION', 1.5))
+        self.single_tap_max = single_tap_max or float(os.getenv('GPIO_SINGLE_TAP_MAX_DURATION'))
+        self.double_tap_max_interval = double_tap_max_interval or float(os.getenv('GPIO_DOUBLE_TAP_MAX_INTERVAL'))
+        self.long_press_min = long_press_min or float(os.getenv('GPIO_LONG_PRESS_MIN_DURATION'))
         self.is_running = True
         logger.info("Starting GPIO monitoring loop")
         
@@ -163,30 +165,30 @@ class GPIOController:
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='GPIO Service for Dream Recorder')
-    parser.add_argument('--flask-url', default=os.getenv('GPIO_FLASK_URL', 'http://localhost:5000'), 
-                        help=f'Base URL of the Flask application (default: {os.getenv("GPIO_FLASK_URL", "http://localhost:5000")})')
-    parser.add_argument('--single-tap-endpoint', default=os.getenv('GPIO_SINGLE_TAP_ENDPOINT', '/api/wake_device'),
-                        help=f'Endpoint for single tap (default: {os.getenv("GPIO_SINGLE_TAP_ENDPOINT", "/api/wake_device")})')
-    parser.add_argument('--double-tap-endpoint', default=os.getenv('GPIO_DOUBLE_TAP_ENDPOINT', '/api/show_previous_dream'),
-                        help=f'Endpoint for double tap (default: {os.getenv("GPIO_DOUBLE_TAP_ENDPOINT", "/api/show_previous_dream")})')
-    parser.add_argument('--long-press-endpoint', default=os.getenv('GPIO_LONG_PRESS_ENDPOINT', '/api/trigger_recording'),
-                        help=f'Endpoint for long press (default: {os.getenv("GPIO_LONG_PRESS_ENDPOINT", "/api/trigger_recording")})')
-    parser.add_argument('--long-press-release-endpoint', default=os.getenv('GPIO_LONG_PRESS_RELEASE_ENDPOINT', '/api/stop_recording'),
-                        help=f'Endpoint for long press release (default: {os.getenv("GPIO_LONG_PRESS_RELEASE_ENDPOINT", "/api/stop_recording")})')
-    parser.add_argument('--pin', type=int, default=os.getenv('GPIO_PIN', 4),
-                        help=f'GPIO pin for touch sensor (default: {os.getenv("GPIO_PIN", 4)})')
-    parser.add_argument('--single-tap-max', type=float, default=os.getenv('GPIO_SINGLE_TAP_MAX_DURATION', 0.5),
-                        help=f'Maximum duration for a single tap in seconds (default: {os.getenv("GPIO_SINGLE_TAP_MAX_DURATION", 0.5)})')
-    parser.add_argument('--double-tap-max-interval', type=float, default=os.getenv('GPIO_DOUBLE_TAP_MAX_INTERVAL', 0.7),
-                        help=f'Maximum interval between taps for a double tap in seconds (default: {os.getenv("GPIO_DOUBLE_TAP_MAX_INTERVAL", 0.7)})')
-    parser.add_argument('--long-press-min', type=float, default=os.getenv('GPIO_LONG_PRESS_MIN_DURATION', 1.5),
-                        help=f'Minimum duration for a long press in seconds (default: {os.getenv("GPIO_LONG_PRESS_MIN_DURATION", 1.5)})')
-    parser.add_argument('--debounce-time', type=float, default=os.getenv('GPIO_DEBOUNCE_TIME', 0.05),
-                        help=f'Debounce time in seconds (default: {os.getenv("GPIO_DEBOUNCE_TIME", 0.05)})')
-    parser.add_argument('--sampling-rate', type=float, default=os.getenv('GPIO_SAMPLING_RATE', 0.01),
-                        help=f'Sampling rate in seconds (default: {os.getenv("GPIO_SAMPLING_RATE", 0.01)})')
-    parser.add_argument('--startup-delay', type=int, default=int(os.getenv('GPIO_STARTUP_DELAY', 5)),
-                        help=f'Delay in seconds before starting (default: {os.getenv("GPIO_STARTUP_DELAY", 5)})')
+    parser.add_argument('--flask-url', default=os.getenv('GPIO_FLASK_URL'), 
+                        help=f'Base URL of the Flask application (default: {os.getenv("GPIO_FLASK_URL")})')
+    parser.add_argument('--single-tap-endpoint', default=os.getenv('GPIO_SINGLE_TAP_ENDPOINT'),
+                        help=f'Endpoint for single tap (default: {os.getenv("GPIO_SINGLE_TAP_ENDPOINT")})')
+    parser.add_argument('--double-tap-endpoint', default=os.getenv('GPIO_DOUBLE_TAP_ENDPOINT'),
+                        help=f'Endpoint for double tap (default: {os.getenv("GPIO_DOUBLE_TAP_ENDPOINT")})')
+    parser.add_argument('--long-press-endpoint', default=os.getenv('GPIO_LONG_PRESS_ENDPOINT'),
+                        help=f'Endpoint for long press (default: {os.getenv("GPIO_LONG_PRESS_ENDPOINT")})')
+    parser.add_argument('--long-press-release-endpoint', default=os.getenv('GPIO_LONG_PRESS_RELEASE_ENDPOINT'),
+                        help=f'Endpoint for long press release (default: {os.getenv("GPIO_LONG_PRESS_RELEASE_ENDPOINT")})')
+    parser.add_argument('--pin', type=int, default=os.getenv('GPIO_PIN'),
+                        help=f'GPIO pin for touch sensor (default: {os.getenv("GPIO_PIN")})')
+    parser.add_argument('--single-tap-max', type=float, default=os.getenv('GPIO_SINGLE_TAP_MAX_DURATION'),
+                        help=f'Maximum duration for a single tap in seconds (default: {os.getenv("GPIO_SINGLE_TAP_MAX_DURATION")})')
+    parser.add_argument('--double-tap-max-interval', type=float, default=os.getenv('GPIO_DOUBLE_TAP_MAX_INTERVAL'),
+                        help=f'Maximum interval between taps for a double tap in seconds (default: {os.getenv("GPIO_DOUBLE_TAP_MAX_INTERVAL")})')
+    parser.add_argument('--long-press-min', type=float, default=os.getenv('GPIO_LONG_PRESS_MIN_DURATION'),
+                        help=f'Minimum duration for a long press in seconds (default: {os.getenv("GPIO_LONG_PRESS_MIN_DURATION")})')
+    parser.add_argument('--debounce-time', type=float, default=os.getenv('GPIO_DEBOUNCE_TIME'),
+                        help=f'Debounce time in seconds (default: {os.getenv("GPIO_DEBOUNCE_TIME")})')
+    parser.add_argument('--sampling-rate', type=float, default=os.getenv('GPIO_SAMPLING_RATE'),
+                        help=f'Sampling rate in seconds (default: {os.getenv("GPIO_SAMPLING_RATE")})')
+    parser.add_argument('--startup-delay', type=int, default=int(os.getenv('GPIO_STARTUP_DELAY')),
+                        help=f'Delay in seconds before starting (default: {os.getenv("GPIO_STARTUP_DELAY")})')
     args = parser.parse_args()
     
     # Add a small delay at startup to let system initialize
