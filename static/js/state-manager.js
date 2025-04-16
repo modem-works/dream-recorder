@@ -118,7 +118,6 @@ const StateManager = {
         // Request the latest video from server
         if (window.socket) {
             window.socket.emit('show_previous_dream');
-            // window.socket.emit('show_latest_dream');
             this.updateState(this.STATES.PLAYBACK);
         }
     },

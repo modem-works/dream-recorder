@@ -9,6 +9,9 @@ window.videoContainer = document.getElementById('videoContainer');
 window.generatedVideo = document.getElementById('generatedVideo');
 window.videoPrompt = document.getElementById('videoPrompt');
 
+// Initialize video player
+window.generatedVideo.loop = true;
+
 // Socket event handlers
 window.socket.on('connect', () => {
     console.log('Connected to server');
@@ -123,6 +126,33 @@ window.socket.on('device_event', (data) => {
         window.StateManager.handleDeviceEvent(data.event_type || 'hold_release');
     } else if (window.stopRecording) {
         window.stopRecording();
+    }
+});
+
+window.socket.on('play_video', (data) => {
+    console.log('Received play_video:', data);
+    if (data.video_url) {
+        window.videoContainer.style.display = 'block';
+        window.generatedVideo.src = data.video_url;
+        window.generatedVideo.loop = data.loop || false;
+        window.loadingDiv.style.display = 'none';
+        
+        if (window.StateManager) {
+            window.StateManager.updateState(window.StateManager.STATES.PLAYBACK);
+        }
+    } else {
+        // No video available
+        window.errorDiv.textContent = 'No video available';
+        if (window.StateManager) {
+            window.StateManager.updateState(window.StateManager.STATES.ERROR, 'No video available');
+            // Auto-clear error after 3 seconds
+            setTimeout(() => {
+                if (window.StateManager.currentState === window.StateManager.STATES.ERROR) {
+                    window.StateManager.goToIdle();
+                    window.errorDiv.textContent = '';
+                }
+            }, 3000);
+        }
     }
 });
 
