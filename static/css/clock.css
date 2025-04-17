@@ -1,25 +1,45 @@
-#clockDisplay {
+.clock-display {
     display: none;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-family: 'Arial', sans-serif;
-    font-size: 5rem;
-    font-weight: bold;
-    color: white;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     text-align: center;
     z-index: 10;
 }
 
-/* Add a subtle animation for the clock text */
-@keyframes clockGlow {
-    0% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
-    50% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.7); }
-    100% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+.clock-digits {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
-#clockDisplay {
+.digit-container, .colon-container {
+    width: 80px;
+    height: 120px;
+    position: relative;
+    overflow: hidden;
+}
+
+.digit, .colon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
+}
+
+.colon.hidden {
+    opacity: 0;
+}
+
+/* Add a subtle animation for the clock */
+@keyframes clockGlow {
+    0% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5)); }
+    50% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.7)); }
+    100% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5)); }
+}
+
+.clock-display {
     animation: clockGlow 2s infinite;
 } 

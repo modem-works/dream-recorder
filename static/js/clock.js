@@ -2,34 +2,55 @@
 const Clock = {
     clockInterval: null,
     colonVisible: true,
+    digitElements: null,
+    colonElement: null,
 
     // Initialize the clock
     init() {
+        // Cache DOM elements
+        this.digitElements = document.querySelectorAll('.digit');
+        this.colonElement = document.querySelector('.colon');
+        
+        // Preload all number images
+        this.preloadImages();
+        
+        // Start the clock
         this.updateClock();
         this.clockInterval = setInterval(() => {
             this.updateClock();
         }, 1000);
     },
 
+    // Preload all number images
+    preloadImages() {
+        // Preload numbers
+        for (let i = 0; i <= 9; i++) {
+            const img = new Image();
+            img.src = `/static/images/clock/${i}.png`;
+        }
+        // Preload colon
+        const colonImg = new Image();
+        colonImg.src = '/static/images/clock/colon.png';
+    },
+
     // Update the clock display
     updateClock() {
-        const clockDisplay = document.getElementById('clockDisplay');
-        if (!clockDisplay) return;
-
         const now = new Date();
-        let hours = now.getHours();
-        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
         
         // Toggle colon visibility
         this.colonVisible = !this.colonVisible;
-        const colon = this.colonVisible ? ':' : ' ';
+        this.colonElement.classList.toggle('hidden', !this.colonVisible);
         
-        // Format hours (12-hour format)
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12; // Convert 0 to 12
+        // Format time as string with leading zeros
+        const timeStr = `${hours.toString().padStart(2, '0')}${minutes.toString().padStart(2, '0')}`;
         
-        clockDisplay.textContent = `${hours}${colon}${minutes} ${ampm}`;
+        // Update each digit
+        for (let i = 0; i < 4; i++) {
+            const digit = timeStr[i];
+            this.digitElements[i].src = `/static/images/clock/${digit}.png`;
+        }
     },
 
     // Clean up when clock is no longer needed
