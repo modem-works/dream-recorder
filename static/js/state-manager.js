@@ -6,7 +6,8 @@ const StateManager = {
         RECORDING: 'recording',
         PROCESSING: 'processing',
         PLAYBACK: 'playback',
-        ERROR: 'error'
+        ERROR: 'error',
+        CLOCK: 'clock'
     },
 
     // Input modes (kept for input simulator compatibility)
@@ -23,7 +24,9 @@ const StateManager = {
     previousState: null,
     stateChangeCallbacks: [],
     playbackTimer: null,
+    idleTimer: null,
     playbackDuration: 120, // Default value, will be updated from config
+    idleTimeout: 30, // Default value, will be updated from config
 
     // Initialize state manager
     async init() {
@@ -31,6 +34,7 @@ const StateManager = {
             const response = await fetch('/api/config');
             const config = await response.json();
             this.playbackDuration = config.playback_duration;
+            this.idleTimeout = config.idle_timeout;
         } catch (error) {
             console.error('Failed to fetch config:', error);
         }
@@ -41,10 +45,19 @@ const StateManager = {
 
     // Update state
     updateState(newState, errorMessage = null) {
-        // Clear any existing playback timer
+        // Clear any existing timers
         if (this.playbackTimer) {
             clearTimeout(this.playbackTimer);
             this.playbackTimer = null;
+        }
+        if (this.idleTimer) {
+            clearTimeout(this.idleTimer);
+            this.idleTimer = null;
+        }
+
+        // Stop clock if transitioning from clock state
+        if (this.currentState === this.STATES.CLOCK && newState !== this.STATES.CLOCK) {
+            this.stopClock();
         }
 
         this.previousState = this.currentState;
@@ -69,6 +82,13 @@ const StateManager = {
             this.playbackTimer = setTimeout(() => {
                 this.goToIdle();
             }, this.playbackDuration * 1000); // Convert to milliseconds
+        }
+        
+        // Set up idle timer if entering idle state
+        if (this.currentState === this.STATES.IDLE) {
+            this.idleTimer = setTimeout(() => {
+                this.goToClock();
+            }, this.idleTimeout * 1000); // Convert to milliseconds
         }
         
         // Notify all registered callbacks
@@ -108,7 +128,33 @@ const StateManager = {
             }
         }
         
+        // Hide clock if it's showing
+        if (this.currentState === this.STATES.CLOCK) {
+            const clockDisplay = document.getElementById('clockDisplay');
+            if (clockDisplay) {
+                clockDisplay.style.display = 'none';
+            }
+        }
+        
         this.updateState(this.STATES.IDLE);
+    },
+
+    // Stop the clock
+    stopClock() {
+        const clockDisplay = document.getElementById('clockDisplay');
+        if (clockDisplay) {
+            clockDisplay.style.display = 'none';
+        }
+        // Don't call cleanup() here as we want the clock to keep running
+    },
+
+    // Go to clock state
+    goToClock() {
+        const clockDisplay = document.getElementById('clockDisplay');
+        if (clockDisplay) {
+            clockDisplay.style.display = 'block';
+        }
+        this.updateState(this.STATES.CLOCK);
     },
 
     // Play latest video
@@ -171,6 +217,19 @@ const StateManager = {
     handleDeviceEvent(eventType) {
         console.log(`Handling device event: ${eventType}`);
         
+        // Reset idle timer on any user interaction
+        if (this.idleTimer) {
+            clearTimeout(this.idleTimer);
+            this.idleTimer = null;
+        }
+        
+        // Set up new idle timer if we're in idle state
+        if (this.currentState === this.STATES.IDLE) {
+            this.idleTimer = setTimeout(() => {
+                this.goToClock();
+            }, this.idleTimeout * 1000);
+        }
+        
         switch (eventType) {
             case 'tap':
                 if (this.currentState === this.STATES.PLAYBACK || 
@@ -178,12 +237,17 @@ const StateManager = {
                     this.goToIdle();
                 } else if (this.currentState === this.STATES.RECORDING) {
                     this.stopRecording();
+                } else if (this.currentState === this.STATES.IDLE) {
+                    this.goToClock();
+                } else if (this.currentState === this.STATES.CLOCK) {
+                    this.goToIdle();
                 }
                 break;
                 
             case 'double_tap':
                 if (this.currentState === this.STATES.IDLE || 
-                    this.currentState === this.STATES.ERROR) {
+                    this.currentState === this.STATES.ERROR ||
+                    this.currentState === this.STATES.CLOCK) {
                     this.playLatestVideo();
                 } else if (this.currentState === this.STATES.PLAYBACK) {
                     this.playPreviousVideo();
@@ -192,7 +256,8 @@ const StateManager = {
                 
             case 'hold_start':
                 if (this.currentState === this.STATES.IDLE ||
-                    this.currentState === this.STATES.PLAYBACK) {
+                    this.currentState === this.STATES.PLAYBACK ||
+                    this.currentState === this.STATES.CLOCK) {
                     this.startRecording();
                 }
                 break;
