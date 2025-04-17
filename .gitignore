@@ -2,7 +2,7 @@
 *.db
 dreams.db
 media/
-logs/*
+logs/
 *.wav
 *.mp4
 *.webm
