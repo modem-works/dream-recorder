@@ -9,6 +9,17 @@
         white-space: pre-wrap;
         word-wrap: break-word;
     }
+    .dream-thumbnail {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .dream-thumbnail:hover {
+        transform: scale(1.05);
+    }
 </style>
 {% endblock %}
 
@@ -19,6 +30,7 @@
             <table id="dreamsTable" class="table table-striped">
                 <thead>
                     <tr>
+                        <th>Thumbnail</th>
                         <th>ID</th>
                         <th>Created</th>
                         <th>User Prompt</th>
@@ -29,6 +41,18 @@
                 <tbody>
                     {% for dream in dreams %}
                     <tr>
+                        <td>
+                            {% if dream.thumb_filename %}
+                            <a href="/media/video/{{ dream.video_filename }}" target="_blank">
+                                <img src="/media/thumbs/{{ dream.thumb_filename }}" 
+                                     alt="Dream thumbnail" 
+                                     class="dream-thumbnail"
+                                     title="Click to view video">
+                            </a>
+                            {% else %}
+                            <div class="text-muted">No thumbnail</div>
+                            {% endif %}
+                        </td>
                         <td>{{ dream.id }}</td>
                         <td>{{ dream.created_at }}</td>
                         <td>{{ dream.user_prompt[:50] }}{% if dream.user_prompt|length > 50 %}...{% endif %}</td>
@@ -97,7 +121,7 @@
 $(document).ready(function() {
     // Initialize DataTable
     $('#dreamsTable').DataTable({
-        order: [[1, 'desc']], // Sort by created date by default
+        order: [[2, 'desc']], // Sort by created date by default (column index updated)
         pageLength: 10,
         responsive: true
     });

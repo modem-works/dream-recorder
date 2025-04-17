@@ -2,6 +2,9 @@ import sqlite3
 import json
 from datetime import datetime
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DreamDB:
     def __init__(self, db_path='dreams.db'):
@@ -19,6 +22,7 @@ class DreamDB:
                     generated_prompt TEXT NOT NULL,
                     audio_filename TEXT NOT NULL,
                     video_filename TEXT NOT NULL,
+                    thumb_filename TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     status TEXT
                 )
@@ -37,13 +41,14 @@ class DreamDB:
             cursor.execute('''
                 INSERT INTO dreams (
                     user_prompt, generated_prompt, audio_filename, video_filename,
-                    status
-                ) VALUES (?, ?, ?, ?, ?)
+                    thumb_filename, status
+                ) VALUES (?, ?, ?, ?, ?, ?)
             ''', (
                 dream_data['user_prompt'],
                 dream_data['generated_prompt'],
                 dream_data['audio_filename'],
                 dream_data['video_filename'],
+                dream_data.get('thumb_filename'),
                 dream_data.get('status', 'completed')
             ))
             conn.commit()
@@ -73,20 +78,30 @@ class DreamDB:
         if not updates:
             return
         
-        set_clauses = []
-        values = []
-        for key, value in updates.items():
-            set_clauses.append(f"{key} = ?")
-            values.append(value)
-        
-        values.append(dream_id)
-        query = f"UPDATE dreams SET {', '.join(set_clauses)} WHERE id = ?"
-        
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute(query, values)
-            conn.commit()
-            return cursor.rowcount > 0
+        try:
+            set_clauses = []
+            values = []
+            for key, value in updates.items():
+                set_clauses.append(f"{key} = ?")
+                values.append(value)
+            
+            values.append(dream_id)
+            query = f"UPDATE dreams SET {', '.join(set_clauses)} WHERE id = ?"
+            
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                try:
+                    cursor.execute(query, values)
+                    conn.commit()
+                    return cursor.rowcount > 0
+                except sqlite3.Error as e:
+                    logger.error(f"Database error: {str(e)}")
+                    logger.error(f"Query: {query}")
+                    logger.error(f"Values: {values}")
+                    raise
+        except Exception as e:
+            logger.error(f"Error updating dream {dream_id}: {str(e)}")
+            raise
     
     def delete_dream(self, dream_id):
         """Delete a dream from the database."""

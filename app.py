@@ -146,9 +146,62 @@ def process_video(input_path):
         os.replace(temp_path, input_path)
         
         logger.info(f"Processed video saved to {input_path}")
+        
+        # Generate thumbnail after video processing
+        process_thumbnail(input_path)
         return input_path
     except Exception as e:
         logger.error(f"Error processing video: {str(e)}")
+        raise
+
+def process_thumbnail(video_path):
+    """Create a square thumbnail from the video at 1 second in."""
+    try:
+        # Get video dimensions using ffprobe
+        probe = ffmpeg.probe(video_path)
+        video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
+        width = int(video_info['width'])
+        height = int(video_info['height'])
+        
+        # Calculate square crop dimensions based on the smaller dimension
+        crop_size = min(width, height)
+        
+        # Calculate offsets to center the crop
+        x_offset = (width - crop_size) // 2
+        y_offset = (height - crop_size) // 2
+        
+        # Create output directory if it doesn't exist
+        thumbs_dir = os.getenv('THUMBS_DIR')
+        os.makedirs(thumbs_dir, exist_ok=True)
+        
+        # Generate simple timestamp-based filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        thumb_filename = f"thumb_{timestamp}.png"
+        thumb_path = os.path.join(thumbs_dir, thumb_filename)
+        
+        # Log the FFmpeg command for debugging
+        logger.info(f"Generating thumbnail for video: {video_path}")
+        logger.info(f"Video dimensions: {width}x{height}")
+        logger.info(f"Output path: {thumb_path}")
+        logger.info(f"Crop dimensions: {crop_size}x{crop_size} at offset ({x_offset}, {y_offset})")
+        
+        # Use FFmpeg to extract frame at 1 second and crop to square
+        stream = ffmpeg.input(video_path, ss=1)  # Seek to 1 second
+        stream = ffmpeg.filter(stream, 'crop', crop_size, crop_size, x_offset, y_offset)
+        stream = ffmpeg.output(stream, thumb_path, vframes=1)  # Only extract one frame
+        
+        # Run FFmpeg with stderr capture
+        try:
+            ffmpeg.run(stream, overwrite_output=True, capture_stderr=True)
+        except ffmpeg.Error as e:
+            logger.error(f"FFmpeg error: {e.stderr.decode()}")
+            raise
+        
+        logger.info(f"Generated thumbnail saved to {thumb_path}")
+        return thumb_filename
+        
+    except Exception as e:
+        logger.error(f"Error generating thumbnail: {str(e)}")
         raise
 
 def generate_video(prompt, filename=None):
@@ -318,8 +371,7 @@ def process_audio(sid):
             socketio.emit('video_prompt_update', {'text': video_prompt})
         
         # Generate video
-        video_filename = f"dream_{timestamp}.mp4"
-        video_filename = generate_video(video_prompt, video_filename)
+        video_filename = generate_video(video_prompt)
         
         # Save to database
         dream_data = {
@@ -451,6 +503,14 @@ def serve_media(filename):
         return send_file(os.path.join('media', filename))
     except FileNotFoundError:
         return "File not found", 404
+
+@app.route('/media/thumbs/<path:filename>')
+def serve_thumbnail(filename):
+    """Serve thumbnail files from the thumbs directory."""
+    try:
+        return send_file(os.path.join(os.getenv('THUMBS_DIR'), filename))
+    except FileNotFoundError:
+        return "Thumbnail not found", 404
 
 @app.route('/api/trigger_recording', methods=['POST'])
 def trigger_recording():
