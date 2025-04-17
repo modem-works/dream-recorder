@@ -1,7 +1,7 @@
 # Custom
 recordings/*
 videos/*
-
+logs/*
 
 # Node.js
 node_modules/

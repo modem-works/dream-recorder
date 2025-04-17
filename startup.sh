@@ -65,9 +65,9 @@ start_flask_app() {
         # Check if we're in development mode
         if [ "$FLASK_ENV" = "development" ]; then
             log "Development mode detected - enabling auto-reloader"
-            nohup python "$SCRIPT_DIR/app.py" --reload > "$SCRIPT_DIR/flask_app.log" 2>&1 &
+            nohup python "$SCRIPT_DIR/app.py" --reload > "$SCRIPT_DIR/logs/flask_app.log" 2>&1 &
         else
-            nohup python "$SCRIPT_DIR/app.py" > "$SCRIPT_DIR/flask_app.log" 2>&1 &
+            nohup python "$SCRIPT_DIR/app.py" > "$SCRIPT_DIR/logs/flask_app.log" 2>&1 &
         fi
         APP_PID=$!
         log "Flask app started with PID: $APP_PID"
@@ -115,6 +115,6 @@ start_flask_app
 start_gpio_service
 
 log "Both applications started successfully!"
-log "Flask app log: tail -f $SCRIPT_DIR/flask_app.log"
-log "GPIO service log: tail -f $SCRIPT_DIR/gpio_service.log"
+log "Flask app log: tail -f $SCRIPT_DIR/logs/flask_app.log"
+log "GPIO service log: tail -f $SCRIPT_DIR/logs/gpio_service.log"
 log "To stop them, use: pkill -f 'python.*app.py|python.*gpio'" 
