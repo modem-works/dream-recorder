@@ -1,7 +1,12 @@
-# Custom
-recordings/*
-videos/*
+# Project specific
+*.db
+dreams.db
+media/
 logs/*
+*.wav
+*.mp4
+*.webm
+*.opus
 
 # Node.js
 node_modules/
@@ -236,16 +241,6 @@ ENV/
 .vscode/
 *.swp
 *.swo
-
-# Project specific
-*.db
-dreams.db
-recordings/
-videos/
-*.wav
-*.mp4
-*.webm
-*.opus
 
 # Logs
 *.log
