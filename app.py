@@ -98,7 +98,7 @@ def save_wav_file(audio_data, filename=None):
         ffmpeg.run(stream, overwrite_output=True, quiet=True)
         
         logger.info(f"Saved WAV file to {filepath}")
-        return filepath
+        return filename  # Return only the filename
     finally:
         # Clean up temporary file
         try:
@@ -255,7 +255,7 @@ def generate_video(prompt, filename=None):
                 processed_video_path = process_video(video_path)
                 logger.info(f"Processed video saved to {processed_video_path}")
                 
-                return processed_video_path
+                return filename  # Return only the filename
                 
             elif state in ['failed', 'error']:
                 error_msg = status_data.get('failure_reason') or status_data.get('error') or "Unknown error"
@@ -278,9 +278,10 @@ def process_audio(sid):
         audio_data = b''.join(audio_chunks)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         wav_filename = f"recording_{timestamp}.wav"
-        wav_path = save_wav_file(audio_data, wav_filename)
+        wav_filename = save_wav_file(audio_data, wav_filename)
         
         # Get duration of the audio
+        wav_path = os.path.join(os.getenv('RECORDINGS_DIR'), wav_filename)
         with wave.open(wav_path, 'rb') as wf:
             duration = wf.getnframes() / wf.getframerate()
         
@@ -318,14 +319,14 @@ def process_audio(sid):
         
         # Generate video
         video_filename = f"dream_{timestamp}.mp4"
-        video_path = generate_video(video_prompt, video_filename)
+        video_filename = generate_video(video_prompt, video_filename)
         
         # Save to database
         dream_data = {
             'user_prompt': recording_state['transcription'],
             'generated_prompt': recording_state['video_prompt'],
-            'audio_path': wav_path,
-            'video_path': video_path,
+            'audio_filename': wav_filename,
+            'video_filename': video_filename,
             'duration': int(duration),
             'status': 'completed',
             'metadata': {
@@ -336,7 +337,7 @@ def process_audio(sid):
         dream_db.save_dream(dream_data)
         
         recording_state['status'] = 'complete'
-        recording_state['video_url'] = f"/videos/{video_filename}"
+        recording_state['video_url'] = f"/media/video/{video_filename}"
         
         # Emit the video ready event to trigger playback
         if sid:
@@ -368,8 +369,8 @@ def handle_generate_video(data):
         socketio.emit('state_update', recording_state)
         
         # Generate video
-        video_path = generate_video(data['prompt'])
-        recording_state['video_url'] = f'/videos/{os.path.basename(video_path)}'
+        video_filename = generate_video(data['prompt'])
+        recording_state['video_url'] = f'/media/video/{video_filename}'
         socketio.emit('video_ready', {'url': recording_state['video_url']})
         
         # Update state to complete
@@ -442,17 +443,13 @@ def handle_audio_data(data):
             logger.error(f"Error handling audio data: {str(e)}")
             emit('error', {'message': f"Error handling audio data: {str(e)}"})
 
-@app.route('/videos/<filename>')
-def serve_video(filename):
-    return send_file(os.path.join(os.getenv('VIDEOS_DIR'), filename))
-
-@app.route('/recordings/<filename>')
-def serve_recording(filename):
-    """Serve audio recording files."""
+@app.route('/media/<path:filename>')
+def serve_media(filename):
+    """Serve media files (audio and video) from the media directory."""
     try:
-        return send_file(os.path.join(os.getenv('RECORDINGS_DIR'), filename))
+        return send_file(os.path.join('media', filename))
     except FileNotFoundError:
-        return "Recording not found", 404
+        return "File not found", 404
 
 @app.route('/api/trigger_recording', methods=['POST'])
 def trigger_recording():
@@ -517,7 +514,7 @@ def show_previous_dream():
         
         # Emit the video URL to the client
         socketio.emit('play_video', {
-            'video_url': f"/videos/{os.path.basename(dream['video_path'])}",
+            'video_url': f"/media/video/{dream['video_filename']}",
             'loop': True  # Enable looping for the video
         })
         
@@ -597,7 +594,7 @@ def handle_show_previous_dream():
         
         # Emit the video URL to the client
         socketio.emit('play_video', {
-            'video_url': f"/videos/{os.path.basename(dream['video_path'])}",
+            'video_url': f"/media/video/{dream['video_filename']}",
             'loop': True  # Enable looping for the video
         })
         

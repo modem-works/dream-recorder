@@ -14,8 +14,6 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Dream Library</h1>
-    
     <div class="card">
         <div class="card-body">
             <table id="dreamsTable" class="table table-striped">
@@ -47,10 +45,10 @@
                                     data-created-at="{{ dream.created_at }}">
                                 <i class="bi bi-eye"></i> View
                             </button>
-                            <a href="/recordings/{{ dream.audio_path.split('/')[-1] }}" class="btn btn-sm btn-info" target="_blank">
+                            <a href="/media/audio/{{ dream.audio_filename }}" class="btn btn-sm btn-info" target="_blank">
                                 <i class="bi bi-music-note"></i> Audio
                             </a>
-                            <a href="{{ dream.video_path }}" class="btn btn-sm btn-info" target="_blank">
+                            <a href="/media/video/{{ dream.video_filename }}" class="btn btn-sm btn-info" target="_blank">
                                 <i class="bi bi-download"></i> Video
                             </a>
                         </td>

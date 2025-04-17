@@ -17,8 +17,8 @@ class DreamDB:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_prompt TEXT NOT NULL,
                     generated_prompt TEXT NOT NULL,
-                    audio_path TEXT NOT NULL,
-                    video_path TEXT NOT NULL,
+                    audio_filename TEXT NOT NULL,
+                    video_filename TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     status TEXT
                 )
@@ -27,7 +27,7 @@ class DreamDB:
     
     def save_dream(self, dream_data):
         """Save a new dream record to the database."""
-        required_fields = ['user_prompt', 'generated_prompt', 'audio_path', 'video_path']
+        required_fields = ['user_prompt', 'generated_prompt', 'audio_filename', 'video_filename']
         for field in required_fields:
             if field not in dream_data:
                 raise ValueError(f"Missing required field: {field}")
@@ -36,14 +36,14 @@ class DreamDB:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO dreams (
-                    user_prompt, generated_prompt, audio_path, video_path,
+                    user_prompt, generated_prompt, audio_filename, video_filename,
                     status
                 ) VALUES (?, ?, ?, ?, ?)
             ''', (
                 dream_data['user_prompt'],
                 dream_data['generated_prompt'],
-                dream_data['audio_path'],
-                dream_data['video_path'],
+                dream_data['audio_filename'],
+                dream_data['video_filename'],
                 dream_data.get('status', 'completed')
             ))
             conn.commit()
