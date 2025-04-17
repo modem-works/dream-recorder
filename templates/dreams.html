@@ -1,144 +1,93 @@
-{% extends "base.html" %}
-
-{% block title %}Dream Library{% endblock %}
-
-{% block head %}
-<link rel="stylesheet" href="//cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css">
-<style>
-    .modal-body p {
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-    .dream-thumbnail {
-        width: 100px;
-        height: 100px;
-        object-fit: cover;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: transform 0.2s;
-    }
-    .dream-thumbnail:hover {
-        transform: scale(1.05);
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-body">
-            <table id="dreamsTable" class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Thumbnail</th>
-                        <th>ID</th>
-                        <th>Created</th>
-                        <th>User Prompt</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for dream in dreams %}
-                    <tr>
-                        <td>
-                            {% if dream.thumb_filename %}
-                            <a href="/media/video/{{ dream.video_filename }}" target="_blank">
-                                <img src="/media/thumbs/{{ dream.thumb_filename }}" 
-                                     alt="Dream thumbnail" 
-                                     class="dream-thumbnail"
-                                     title="Click to view video">
-                            </a>
-                            {% else %}
-                            <div class="text-muted">No thumbnail</div>
-                            {% endif %}
-                        </td>
-                        <td>{{ dream.id }}</td>
-                        <td>{{ dream.created_at }}</td>
-                        <td>{{ dream.user_prompt[:50] }}{% if dream.user_prompt|length > 50 %}...{% endif %}</td>
-                        <td>
-                            <span class="badge {% if dream.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
-                                {{ dream.status }}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-primary view-dream" 
-                                    data-id="{{ dream.id }}"
-                                    data-user-prompt="{{ dream.user_prompt }}"
-                                    data-generated-prompt="{{ dream.generated_prompt }}"
-                                    data-created-at="{{ dream.created_at }}">
-                                <i class="bi bi-eye"></i> View
-                            </button>
-                            <a href="/media/audio/{{ dream.audio_filename }}" class="btn btn-sm btn-info" target="_blank">
-                                <i class="bi bi-music-note"></i> Audio
-                            </a>
-                            <a href="/media/video/{{ dream.video_filename }}" class="btn btn-sm btn-info" target="_blank">
-                                <i class="bi bi-download"></i> Video
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream Library</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/dreams.css">
+</head>
+<body>
+    <div class="dreams-grid">
+        {% for dream in dreams %}
+        <div class="dream-card" data-id="{{ dream.id }}"
+             data-user-prompt="{{ dream.user_prompt }}"
+             data-generated-prompt="{{ dream.generated_prompt }}"
+             data-created-at="{{ dream.created_at }}"
+             data-video-url="/media/video/{{ dream.video_filename }}"
+             data-audio-url="/media/audio/{{ dream.audio_filename }}">
+            <img src="/media/thumbs/{{ dream.thumb_filename }}" 
+                 alt="Dream thumbnail" 
+                 class="dream-thumbnail">
+            <div class="status-badge {% if dream.status == 'completed' %}status-completed{% else %}status-pending{% endif %}">
+                {{ dream.status }}
+            </div>
+            <div class="dream-info">
+                <div class="dream-date">{{ dream.created_at }}</div>
+                {{ dream.user_prompt[:50] }}{% if dream.user_prompt|length > 50 %}...{% endif %}
+            </div>
         </div>
+        {% endfor %}
     </div>
-</div>
 
-<!-- Dream Details Modal -->
-<div class="modal fade" id="dreamModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <!-- Dream Details Modal -->
+    <div class="modal" id="dreamModal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Dream Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button class="modal-close">&times;</button>
+            <div class="modal-section">
+                <h3>Your dream</h3>
+                <p id="modalUserPrompt"></p>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>User Prompt</h6>
-                        <p id="modalUserPrompt"></p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Generated Prompt</h6>
-                        <p id="modalGeneratedPrompt"></p>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Created At</h6>
-                        <p id="modalCreatedAt"></p>
-                    </div>
-                </div>
+            <div class="modal-section">
+                <h3>The prompt</h3>
+                <p id="modalGeneratedPrompt"></p>
+            </div>
+            <div class="modal-section">
+                <h3>Created at</h3>
+                <p id="modalCreatedAt"></p>
+            </div>
+            <div class="modal-actions">
+                <a href="#" id="modalAudioLink" target="_blank">
+                    <i class="bi bi-music-note"></i> Listen to Audio
+                </a>
+                <a href="#" id="modalVideoLink" target="_blank">
+                    <i class="bi bi-play-circle"></i> Watch Video
+                </a>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script src="//cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
-<script>
-$(document).ready(function() {
-    // Initialize DataTable
-    $('#dreamsTable').DataTable({
-        order: [[2, 'desc']], // Sort by created date by default (column index updated)
-        pageLength: 10,
-        responsive: true
-    });
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('dreamModal');
+            const dreamCards = document.querySelectorAll('.dream-card');
+            const modalClose = document.querySelector('.modal-close');
 
-    // Handle view dream button clicks
-    $('.view-dream').click(function() {
-        const dreamId = $(this).data('id');
-        const userPrompt = $(this).data('user-prompt');
-        const generatedPrompt = $(this).data('generated-prompt');
-        const createdAt = $(this).data('created-at');
-        
-        $('#modalUserPrompt').text(userPrompt);
-        $('#modalGeneratedPrompt').text(generatedPrompt);
-        $('#modalCreatedAt').text(createdAt);
-        
-        $('#dreamModal').modal('show');
-    });
-});
-</script>
-{% endblock %} 
+            dreamCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const data = this.dataset;
+                    
+                    document.getElementById('modalUserPrompt').textContent = data.userPrompt;
+                    document.getElementById('modalGeneratedPrompt').textContent = data.generatedPrompt;
+                    document.getElementById('modalCreatedAt').textContent = data.createdAt;
+                    
+                    document.getElementById('modalAudioLink').href = data.audioUrl;
+                    document.getElementById('modalVideoLink').href = data.videoUrl;
+                    
+                    modal.classList.add('show');
+                });
+            });
+
+            modalClose.addEventListener('click', function() {
+                modal.classList.remove('show');
+            });
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
