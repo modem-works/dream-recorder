@@ -106,7 +106,7 @@ window.startRecording = async function() {
             console.log('Sent start_recording event to server');
         }
     } catch (err) {
-        window.errorDiv.textContent = `Error accessing microphone: ${err.message}`;
+        window.messageDiv.textContent = `Error accessing microphone: ${err.message}`;
         console.error('Error accessing microphone:', err);
         
         // Update state manager if available

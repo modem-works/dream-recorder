@@ -1,7 +1,7 @@
 // Make socket and DOM elements available globally
 window.socket = io();
 window.statusDiv = document.getElementById('status');
-window.errorDiv = document.getElementById('error');
+window.messageDiv = document.getElementById('message');
 window.transcriptionDiv = document.getElementById('transcription');
 window.videoPromptDiv = document.getElementById('videoPrompt');
 window.loadingDiv = document.getElementById('loading');
@@ -15,7 +15,7 @@ window.generatedVideo.loop = true;
 // Socket event handlers
 window.socket.on('connect', () => {
     console.log('Connected to server');
-    window.errorDiv.textContent = '';
+    window.messageDiv.textContent = '';
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.IDLE);
     } else {
@@ -25,7 +25,7 @@ window.socket.on('connect', () => {
 
 window.socket.on('disconnect', () => {
     console.log('Disconnected from server');
-    window.errorDiv.textContent = 'Disconnected from server';
+    window.messageDiv.textContent = 'Disconnected from server';
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.ERROR, 'Disconnected from server');
     } else {
@@ -69,7 +69,7 @@ window.socket.on('video_ready', (data) => {
     window.videoContainer.style.display = 'block';
     window.generatedVideo.src = data.url;
     window.loadingDiv.style.display = 'none';
-    window.videoPrompt.textContent = 'Dream generation complete!';
+    window.messageDiv.textContent = 'Dream generation complete';
     
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.PLAYBACK);
@@ -88,14 +88,14 @@ window.socket.on('previous_video', (data) => {
         }
     } else {
         // No previous video available
-        window.errorDiv.textContent = 'No previous video available';
+        window.messageDiv.textContent = 'No previous video available';
         if (window.StateManager) {
             window.StateManager.updateState(window.StateManager.STATES.ERROR, 'No previous video available');
             // Auto-clear error after 3 seconds
             setTimeout(() => {
                 if (window.StateManager.currentState === window.StateManager.STATES.ERROR) {
                     window.StateManager.goToIdle();
-                    window.errorDiv.textContent = '';
+                    window.messageDiv.textContent = '';
                 }
             }, 3000);
         }
@@ -104,7 +104,7 @@ window.socket.on('previous_video', (data) => {
 
 window.socket.on('error', (data) => {
     console.log('Received error message:', data);
-    window.errorDiv.textContent = data.message;
+    window.messageDiv.textContent = data.message;
     
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.ERROR, data.message);
@@ -142,14 +142,14 @@ window.socket.on('play_video', (data) => {
         }
     } else {
         // No video available
-        window.errorDiv.textContent = 'No video available';
+        window.messageDiv.textContent = 'No video available';
         if (window.StateManager) {
             window.StateManager.updateState(window.StateManager.STATES.ERROR, 'No video available');
             // Auto-clear error after 3 seconds
             setTimeout(() => {
                 if (window.StateManager.currentState === window.StateManager.STATES.ERROR) {
                     window.StateManager.goToIdle();
-                    window.errorDiv.textContent = '';
+                    window.messageDiv.textContent = '';
                 }
             }, 3000);
         }
