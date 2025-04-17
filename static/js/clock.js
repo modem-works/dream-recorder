@@ -49,6 +49,8 @@ const Clock = {
         // Update each digit
         for (let i = 0; i < 4; i++) {
             const digit = timeStr[i];
+            const container = this.digitElements[i].parentElement;
+            container.setAttribute('data-digit', digit);
             this.digitElements[i].src = `/static/images/clock/${digit}.png`;
         }
     },

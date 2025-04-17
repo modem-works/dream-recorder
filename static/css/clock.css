@@ -15,13 +15,35 @@
     gap: 0.5rem;
 }
 
+/* Container for all digits and colon */
 .digit-container, .colon-container {
-    width: 80px;
-    height: 120px;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
 }
 
+/* Individual digit dimensions */
+.digit-container[data-digit="0"] { --width: 186px; --height: 201px; }
+.digit-container[data-digit="1"] { --width: 321px; --height: 202px; }
+.digit-container[data-digit="2"] { --width: 228px; --height: 202px; }
+.digit-container[data-digit="3"] { --width: 314px; --height: 316px; }
+.digit-container[data-digit="4"] { --width: 245px; --height: 304px; }
+.digit-container[data-digit="5"] { --width: 352px; --height: 315px; }
+.digit-container[data-digit="6"] { --width: 316px; --height: 309px; }
+.digit-container[data-digit="7"] { --width: 312px; --height: 329px; }
+.digit-container[data-digit="8"] { --width: 275px; --height: 304px; }
+.digit-container[data-digit="9"] { --width: 307px; --height: 313px; }
+.colon-container { --width: 141px; --height: 170px; }
+
+/* Apply dimensions to containers */
+.digit-container, .colon-container {
+    width: var(--width);
+    height: var(--height);
+}
+
+/* Scale images to fit their containers while maintaining aspect ratio */
 .digit, .colon {
     width: 100%;
     height: 100%;
