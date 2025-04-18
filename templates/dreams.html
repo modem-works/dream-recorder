@@ -50,6 +50,9 @@
                 <a href="#" id="modalVideoLink" target="_blank">
                     <i class="bi bi-play-circle"></i> Watch Video
                 </a>
+                <button id="modalDeleteButton" class="delete-button">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
             </div>
         </div>
     </div>
@@ -71,6 +74,9 @@
                     document.getElementById('modalAudioLink').href = data.audioUrl;
                     document.getElementById('modalVideoLink').href = data.videoUrl;
                     
+                    // Store the dream ID for deletion
+                    document.getElementById('modalDeleteButton').dataset.dreamId = data.id;
+                    
                     modal.classList.add('show');
                 });
             });
@@ -82,6 +88,35 @@
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
                     modal.classList.remove('show');
+                }
+            });
+
+            // Add delete button click handler
+            document.getElementById('modalDeleteButton').addEventListener('click', async function() {
+                const dreamId = this.dataset.dreamId;
+                if (!dreamId) return;
+
+                if (confirm('Are you sure you want to delete this dream? This action cannot be undone.')) {
+                    try {
+                        const response = await fetch(`/api/dreams/${dreamId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response.ok) {
+                            // Remove the card from the grid
+                            const card = document.querySelector(`.dream-card[data-id="${dreamId}"]`);
+                            if (card) {
+                                card.remove();
+                            }
+                            // Close the modal
+                            modal.classList.remove('show');
+                        } else {
+                            alert('Failed to delete dream. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error deleting dream:', error);
+                        alert('An error occurred while deleting the dream.');
+                    }
                 }
             });
         });

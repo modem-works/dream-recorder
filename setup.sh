@@ -39,7 +39,7 @@ pip install -r requirements.txt
 
 # Create necessary directories
 log "Creating necessary directories..."
-mkdir -p data/audio videos recordings
+mkdir -p media media/audio media/video media/thumbs
 
 # Initialize database if it doesn't exist
 if [ ! -f "dreams.db" ]; then

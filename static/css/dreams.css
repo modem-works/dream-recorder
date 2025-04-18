@@ -128,20 +128,44 @@ body {
 
 .modal-actions {
     display: flex;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.modal-actions a,
+.modal-actions button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .modal-actions a {
-    padding: 10px 20px;
-    text-decoration: none;
+    background-color: #4a90e2;
     color: white;
-    background: #333;
-    transition: background 0.2s;
 }
 
 .modal-actions a:hover {
-    background: #444;
+    background-color: #357abd;
+}
+
+.delete-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.delete-button:hover {
+    background-color: #c0392b;
+}
+
+.delete-button i {
+    font-size: 1rem;
 }
 
 .status-badge {

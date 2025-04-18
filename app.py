@@ -649,6 +649,44 @@ def handle_show_previous_dream():
         logger.error(f"Error showing previous dream: {str(e)}")
         socketio.emit('error', {'message': str(e)})
 
+@app.route('/api/dreams/<int:dream_id>', methods=['DELETE'])
+def delete_dream(dream_id):
+    """Delete a dream and its associated files."""
+    try:
+        # Get the dream details before deletion
+        dream = dream_db.get_dream(dream_id)
+        if not dream:
+            return jsonify({'success': False, 'message': 'Dream not found'}), 404
+
+        # Delete the dream from the database
+        if dream_db.delete_dream(dream_id):
+            # Delete associated files
+            try:
+                # Delete video file
+                video_path = os.path.join(os.getenv('VIDEOS_DIR'), dream['video_filename'])
+                if os.path.exists(video_path):
+                    os.remove(video_path)
+
+                # Delete thumbnail file
+                thumb_path = os.path.join(os.getenv('THUMBS_DIR'), dream['thumb_filename'])
+                if os.path.exists(thumb_path):
+                    os.remove(thumb_path)
+
+                # Delete audio file
+                audio_path = os.path.join(os.getenv('RECORDINGS_DIR'), dream['audio_filename'])
+                if os.path.exists(audio_path):
+                    os.remove(audio_path)
+            except Exception as e:
+                logger.error(f"Error deleting files for dream {dream_id}: {str(e)}")
+                # Continue even if file deletion fails
+
+            return jsonify({'success': True, 'message': 'Dream deleted successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to delete dream'}), 500
+    except Exception as e:
+        logger.error(f"Error deleting dream {dream_id}: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--reload', action='store_true', help='Enable auto-reloader')

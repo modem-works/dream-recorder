@@ -36,7 +36,7 @@ fi
 
 # Create necessary directories
 log "Creating necessary directories..."
-mkdir -p recordings videos
+mkdir -p media media/audio media/video media/thumbs
 
 # Check for .env file
 if [ ! -f ".env" ]; then
