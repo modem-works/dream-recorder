@@ -146,9 +146,6 @@ def process_video(input_path):
         os.replace(temp_path, input_path)
         
         logger.info(f"Processed video saved to {input_path}")
-        
-        # Generate thumbnail after video processing
-        process_thumbnail(input_path)
         return input_path
     except Exception as e:
         logger.error(f"Error processing video: {str(e)}")
@@ -308,7 +305,10 @@ def generate_video(prompt, filename=None):
                 processed_video_path = process_video(video_path)
                 logger.info(f"Processed video saved to {processed_video_path}")
                 
-                return filename  # Return only the filename
+                # Generate thumbnail for the processed video
+                thumb_filename = process_thumbnail(processed_video_path)
+                
+                return filename, thumb_filename
                 
             elif state in ['failed', 'error']:
                 error_msg = status_data.get('failure_reason') or status_data.get('error') or "Unknown error"
@@ -370,8 +370,8 @@ def process_audio(sid):
         else:
             socketio.emit('video_prompt_update', {'text': video_prompt})
         
-        # Generate video
-        video_filename = generate_video(video_prompt)
+        # Generate video and get the processed video path and thumbnail filename
+        video_filename, thumb_filename = generate_video(video_prompt)
         
         # Save to database
         dream_data = {
@@ -379,6 +379,7 @@ def process_audio(sid):
             'generated_prompt': recording_state['video_prompt'],
             'audio_filename': wav_filename,
             'video_filename': video_filename,
+            'thumb_filename': thumb_filename,
             'duration': int(duration),
             'status': 'completed',
             'metadata': {
@@ -413,27 +414,17 @@ def process_audio(sid):
             except:
                 pass
 
-@socketio.on('generate_video')
-def handle_generate_video(data):
-    """Handle video generation request."""
-    try:
-        recording_state['status'] = 'generating'
-        socketio.emit('state_update', recording_state)
-        
-        # Generate video
-        video_filename = generate_video(data['prompt'])
-        recording_state['video_url'] = f'/media/video/{video_filename}'
-        socketio.emit('video_ready', {'url': recording_state['video_url']})
-        
-        # Update state to complete
-        recording_state['status'] = 'complete'
-        socketio.emit('state_update', recording_state)
-        
-    except Exception as e:
-        logger.error(f"Error generating video: {str(e)}")
-        socketio.emit('error', {'message': f"Error generating video: {str(e)}"})
-        recording_state['status'] = 'complete'
-        socketio.emit('state_update', recording_state)
+@socketio.on('audio_data')
+def handle_audio_data(data):
+    if recording_state['is_recording']:
+        try:
+            # Convert the received data to bytes
+            audio_bytes = bytes(data['data'])
+            # Store the chunk
+            audio_chunks.append(audio_bytes)
+        except Exception as e:
+            logger.error(f"Error handling audio data: {str(e)}")
+            emit('error', {'message': f"Error handling audio data: {str(e)}"})
 
 @app.route('/')
 def index():
@@ -488,18 +479,6 @@ def handle_stop_recording():
         
         # Process the audio in a background task
         gevent.spawn(process_audio, sid)
-
-@socketio.on('audio_data')
-def handle_audio_data(data):
-    if recording_state['is_recording']:
-        try:
-            # Convert the received data to bytes
-            audio_bytes = bytes(data['data'])
-            # Store the chunk
-            audio_chunks.append(audio_bytes)
-        except Exception as e:
-            logger.error(f"Error handling audio data: {str(e)}")
-            emit('error', {'message': f"Error handling audio data: {str(e)}"})
 
 @app.route('/media/<path:filename>')
 def serve_media(filename):
