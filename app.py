@@ -132,11 +132,11 @@ def process_video(input_path):
 
         # Apply FFmpeg filters using environment variables
         stream = ffmpeg.input(input_path)
-        stream = ffmpeg.filter(stream, 'eq', brightness=float(os.getenv('FFMPEG_BRIGHTNESS', 0.2)))
-        stream = ffmpeg.filter(stream, 'vibrance', intensity=float(os.getenv('FFMPEG_VIBRANCE', 2)))
-        stream = ffmpeg.filter(stream, 'vaguedenoiser', threshold=float(os.getenv('FFMPEG_DENOISE_THRESHOLD', 300)))
-        stream = ffmpeg.filter(stream, 'bilateral', sigmaS=float(os.getenv('FFMPEG_BILATERAL_SIGMA', 100)))
-        stream = ffmpeg.filter(stream, 'noise', all_strength=float(os.getenv('FFMPEG_NOISE_STRENGTH', 40)))
+        stream = ffmpeg.filter(stream, 'eq', brightness=float(os.getenv('FFMPEG_BRIGHTNESS')))
+        stream = ffmpeg.filter(stream, 'vibrance', intensity=float(os.getenv('FFMPEG_VIBRANCE')))
+        stream = ffmpeg.filter(stream, 'vaguedenoiser', threshold=float(os.getenv('FFMPEG_DENOISE_THRESHOLD')))
+        stream = ffmpeg.filter(stream, 'bilateral', sigmaS=float(os.getenv('FFMPEG_BILATERAL_SIGMA')))
+        stream = ffmpeg.filter(stream, 'noise', all_strength=float(os.getenv('FFMPEG_NOISE_STRENGTH')))
         stream = ffmpeg.output(stream, temp_path)
         
         # Run FFmpeg
@@ -441,9 +441,15 @@ def index():
 
 @app.route('/api/config')
 def get_config():
+    """Get application configuration"""
     return jsonify({
         'is_development': app.config['DEBUG'],
         'playback_duration': int(os.getenv('PLAYBACK_DURATION')),
+        'logo_fade_in_duration': int(os.getenv('LOGO_FADE_IN_DURATION')),
+        'logo_fade_out_duration': int(os.getenv('LOGO_FADE_OUT_DURATION')),
+        'clock_fade_in_duration': int(os.getenv('CLOCK_FADE_IN_DURATION')),
+        'clock_fade_out_duration': int(os.getenv('CLOCK_FADE_OUT_DURATION')),
+        'transition_delay': int(os.getenv('TRANSITION_DELAY'))
     })
 
 @socketio.on('connect')

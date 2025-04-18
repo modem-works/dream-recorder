@@ -130,9 +130,9 @@ window.stopRecording = function() {
         }
         // Hide visualizer
         // document.querySelector('.audio-visualizer').style.display = 'none';
-        // if (window.socket) {
-        //     window.socket.emit('stop_recording');
-        //     console.log('Sent stop_recording event to server');
-        // }
+        if (window.socket) {
+            window.socket.emit('stop_recording');
+            console.log('Sent stop_recording event to server');
+        }
     }
 }; 

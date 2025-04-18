@@ -10,13 +10,8 @@ const StateManager = {
         ERROR: 'error'
     },
 
-    // Configuration
+    // Configuration (will be populated from server)
     config: {
-        logoFadeInDuration: 1000,    // 1 second
-        logoDisplayDuration: 2000,    // 2 seconds
-        logoFadeOutDuration: 1000,    // 1 second
-        clockFadeDuration: 500,       // 0.5 seconds
-        transitionDelay: 500          // 0.5 seconds
     },
 
     // Input modes (kept for input simulator compatibility)
@@ -33,47 +28,39 @@ const StateManager = {
     previousState: null,
     stateChangeCallbacks: [],
     playbackTimer: null,
-    playbackDuration: 120, // Default value, will be updated from config
 
     // Initialize state manager
     async init() {
-        console.log(`[${new Date().toISOString()}] StateManager.init() called`);
         try {
             const response = await fetch('/api/config');
             const config = await response.json();
-            this.playbackDuration = config.playback_duration;
-            console.log(`[${new Date().toISOString()}] Config loaded:`, config);
+            this.config.playbackDuration = config.playback_duration;
+            this.config.logoFadeInDuration = config.logo_fade_in_duration;
+            this.config.logoFadeOutDuration = config.logo_fade_out_duration;
+            this.config.clockFadeInDuration = config.clock_fade_in_duration;
+            this.config.clockFadeOutDuration = config.clock_fade_out_duration;
+            this.config.transitionDelay = config.transition_delay;
         } catch (error) {
             console.error('Failed to fetch config:', error);
         }
 
         // Set initial state to STARTUP
-        console.log(`[${new Date().toISOString()}] Setting initial state to STARTUP`);
         this.currentState = this.STATES.STARTUP;
         this.updateStatus();
 
         // Start the startup sequence
-        console.log(`[${new Date().toISOString()}] Starting startup sequence`);
         this.startStartupSequence();
     },
 
     // Handle startup sequence
     startStartupSequence() {
-        console.log(`[${new Date().toISOString()}] startStartupSequence() called`);
         const logo = document.querySelector('.startup-logo');
         const clockDisplay = document.getElementById('clockDisplay');
-        if (!logo || !clockDisplay) {
-            console.error('Startup elements not found');
-            this.updateState(this.STATES.CLOCK);
-            return;
-        }
 
-        console.log(`[${new Date().toISOString()}] Hiding clock display`);
         // Ensure clock is hidden
         clockDisplay.style.display = 'none';
         clockDisplay.style.opacity = '0';
 
-        console.log(`[${new Date().toISOString()}] Resetting logo styles`);
         // Reset logo styles
         logo.style.opacity = '0';
         logo.style.display = 'block';
@@ -83,36 +70,29 @@ const StateManager = {
         logo.offsetHeight;
         
         // Start the sequence
-        console.log(`[${new Date().toISOString()}] Starting logo fade in`);
         this.fadeInLogo(logo);
     },
 
     // Fade in the logo
     fadeInLogo(logo) {
-        console.log(`[${new Date().toISOString()}] fadeInLogo() called`);
         // Set up transition for fade in
         logo.style.transition = `opacity ${this.config.logoFadeInDuration}ms ease-out`;
         logo.style.opacity = '1';
 
         // After fade in, wait and then fade out
-        console.log(`[${new Date().toISOString()}] Scheduling fade out in ${this.config.logoFadeInDuration + this.config.logoDisplayDuration}ms`);
         setTimeout(() => {
-            console.log(`[${new Date().toISOString()}] Starting logo fade out`);
             this.fadeOutLogo(logo);
-        }, this.config.logoFadeInDuration + this.config.logoDisplayDuration);
+        }, this.config.logoFadeInDuration + this.config.transitionDelay);
     },
 
     // Fade out the logo
     fadeOutLogo(logo) {
-        console.log(`[${new Date().toISOString()}] fadeOutLogo() called`);
         // Set up transition for fade out
         logo.style.transition = `opacity ${this.config.logoFadeOutDuration}ms ease-out`;
         logo.style.opacity = '0';
 
         // After fade out completes, transition to CLOCK state
-        console.log(`[${new Date().toISOString()}] Scheduling CLOCK state transition in ${this.config.logoFadeOutDuration}ms`);
         setTimeout(() => {
-            console.log(`[${new Date().toISOString()}] Transitioning to CLOCK state`);
             logo.style.display = 'none';
             this.updateState(this.STATES.CLOCK);
         }, this.config.logoFadeOutDuration);
@@ -120,11 +100,8 @@ const StateManager = {
 
     // Update state
     updateState(newState, errorMessage = null) {
-        console.log(`[${new Date().toISOString()}] updateState() called - Current: ${this.currentState}, New: ${newState}`);
-        
         // Don't allow state changes during startup sequence
         if (this.currentState === this.STATES.STARTUP && newState !== this.STATES.CLOCK) {
-            console.log(`[${new Date().toISOString()}] Ignoring state change during startup sequence`);
             return;
         }
 
@@ -135,15 +112,12 @@ const StateManager = {
         }
 
         // Handle transitions
-        console.log(`[${new Date().toISOString()}] Handling state transition`);
         this.handleStateTransition(newState);
 
         this.previousState = this.currentState;
         this.currentState = newState;
         this.error = errorMessage;
         this.updateStatus();
-        
-        console.log(`[${new Date().toISOString()}] State updated to ${this.currentState}`);
         
         // Handle icon animations based on state
         if (this.currentState === this.STATES.RECORDING) {
@@ -161,7 +135,7 @@ const StateManager = {
         if (this.currentState === this.STATES.PLAYBACK) {
             this.playbackTimer = setTimeout(() => {
                 this.updateState(this.STATES.CLOCK);
-            }, this.playbackDuration * 1000); // Convert to milliseconds
+            }, this.config.playbackDuration * 1000); // Convert to milliseconds
         }
         
         // Notify all registered callbacks
@@ -204,7 +178,7 @@ const StateManager = {
                             video.play().catch(error => console.error('Error playing video:', error));
                         }
                     }
-                }, 100); // Small delay to ensure container is visible first
+                }, this.config.transitionDelay);
             } else if (this.currentState === this.STATES.PLAYBACK) {
                 // Fade out video first
                 if (video) {
@@ -221,7 +195,7 @@ const StateManager = {
                             video.currentTime = 0;
                         }
                     }
-                }, this.config.clockFadeDuration);
+                }, this.config.logoFadeOutDuration);
             }
         }
 
@@ -229,7 +203,7 @@ const StateManager = {
         if (clockDisplay) {
             if (newState === this.STATES.CLOCK) {
                 // Fade in clock
-                clockDisplay.style.transition = `opacity ${this.config.clockFadeDuration}ms ease-out`;
+                clockDisplay.style.transition = `opacity ${this.config.clockFadeInDuration}ms ease-out`;
                 clockDisplay.style.display = 'block';
                 // Force reflow
                 clockDisplay.offsetHeight;
@@ -242,13 +216,13 @@ const StateManager = {
                 }
             } else if (this.currentState === this.STATES.CLOCK) {
                 // Fade out clock
-                clockDisplay.style.transition = `opacity ${this.config.clockFadeDuration}ms ease-out`;
+                clockDisplay.style.transition = `opacity ${this.config.clockFadeOutDuration}ms ease-out`;
                 clockDisplay.style.opacity = '0';
                 setTimeout(() => {
                     if (this.currentState !== this.STATES.CLOCK) {
                         clockDisplay.style.display = 'none';
                     }
-                }, this.config.clockFadeDuration);
+                }, this.config.clockFadeOutDuration);
             }
         }
     },
