@@ -78,8 +78,8 @@ window.startRecording = async function() {
         source.connect(analyser);
         
         // Show visualizer and start drawing
-        document.querySelector('.audio-visualizer').style.display = 'block';
-        drawVisualizer();
+        // document.querySelector('.audio-visualizer').style.display = 'block';
+        // drawVisualizer();
 
         // Handle audio data
         mediaRecorder.ondataavailable = (event) => {
@@ -129,10 +129,10 @@ window.stopRecording = function() {
             animationFrame = null;
         }
         // Hide visualizer
-        document.querySelector('.audio-visualizer').style.display = 'none';
-        if (window.socket) {
-            window.socket.emit('stop_recording');
-            console.log('Sent stop_recording event to server');
-        }
+        // document.querySelector('.audio-visualizer').style.display = 'none';
+        // if (window.socket) {
+        //     window.socket.emit('stop_recording');
+        //     console.log('Sent stop_recording event to server');
+        // }
     }
 }; 
