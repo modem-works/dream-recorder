@@ -428,7 +428,9 @@ def handle_audio_data(data):
 
 @app.route('/')
 def index():
-    return render_template('index.html', is_development=app.config['DEBUG'])
+    return render_template('index.html', 
+                         is_development=app.config['DEBUG'],
+                         total_background_images=int(os.getenv('TOTAL_BACKGROUND_IMAGES', 1119)))
 
 @app.route('/api/config')
 def get_config():

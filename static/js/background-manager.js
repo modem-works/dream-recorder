@@ -2,18 +2,11 @@ class BackgroundManager {
     constructor() {
         this.container = document.getElementById('container');
         this.currentImage = null;
-        this.fadeDuration = 5000; // 5 seconds in milliseconds
+        this.fadeDuration = 5000;
         this.updateInterval = 60000; // 1 minute in milliseconds
         this.isLoading = false;
+        this.totalImages = parseInt(document.body.dataset.totalBackgroundImages);
         
-        // Time segments configuration
-        this.timeSegments = {
-            '0000-0559': { start: 0, end: 559, folder: '0000-0559', minImage: 3000, maxImage: 3287 },
-            '0600-1159': { start: 600, end: 1159, folder: '0600-1159', minImage: 4000, maxImage: 4254 },
-            '1200-1759': { start: 1200, end: 1759, folder: '1200-1759', minImage: 2000, maxImage: 2287 },
-            '1800-2359': { start: 1800, end: 2359, folder: '1800-2359', minImage: 1000, maxImage: 1287 }
-        };
-
         // Preload the first image
         this.preloadNextImage().then(() => {
             this.start();
@@ -34,37 +27,19 @@ class BackgroundManager {
         });
     }
 
-    getCurrentTimeSegment() {
-        const now = new Date();
-        const currentTime = now.getHours() * 100 + now.getMinutes();
-        
-        for (const [segment, config] of Object.entries(this.timeSegments)) {
-            if (currentTime >= config.start && currentTime <= config.end) {
-                return config;
-            }
-        }
-        return this.timeSegments['0000-0559']; // Default to first segment if no match
-    }
-
     getImageNumberForTime() {
-        const segment = this.getCurrentTimeSegment();
         const now = new Date();
         const minutesInDay = now.getHours() * 60 + now.getMinutes();
-        const segmentStartMinutes = Math.floor(segment.start / 100) * 60 + (segment.start % 100);
-        const segmentEndMinutes = Math.floor(segment.end / 100) * 60 + (segment.end % 100);
-        const segmentDuration = segmentEndMinutes - segmentStartMinutes;
-        const positionInSegment = minutesInDay - segmentStartMinutes;
+        const totalMinutes = 24 * 60;
         
-        const range = segment.maxImage - segment.minImage;
-        const imageNumber = Math.floor((positionInSegment / segmentDuration) * range) + segment.minImage;
-        
-        return Math.min(Math.max(imageNumber, segment.minImage), segment.maxImage);
+        // Calculate which image to show based on time of day
+        const imageNumber = Math.floor((minutesInDay / totalMinutes) * this.totalImages);
+        return Math.min(Math.max(imageNumber, 0), this.totalImages - 1);
     }
 
     getImagePath() {
-        const segment = this.getCurrentTimeSegment();
         const imageNumber = this.getImageNumberForTime();
-        return `/static/images/backgrounds/${segment.folder}/DR-BG-${imageNumber}.jpg`;
+        return `/static/images/background/${imageNumber}.jpg`;
     }
 
     async changeBackground() {
