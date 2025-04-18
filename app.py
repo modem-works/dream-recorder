@@ -444,7 +444,6 @@ def get_config():
     return jsonify({
         'is_development': app.config['DEBUG'],
         'playback_duration': int(os.getenv('PLAYBACK_DURATION')),
-        'idle_timeout': int(os.getenv('IDLE_TIMEOUT'))
     })
 
 @socketio.on('connect')

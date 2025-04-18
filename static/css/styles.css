@@ -186,6 +186,9 @@ canvas {
     display: none;
     background-color: black;
     overflow: hidden;
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
 }
 
 #generatedVideo {
@@ -193,6 +196,9 @@ canvas {
     height: 100%;
     object-fit: cover;
     object-position: center;
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+    will-change: opacity;
 }
 
 #stopRecordingBtn {
@@ -333,35 +339,12 @@ canvas {
     transform: translate(-50%, -50%);
     z-index: 100;
     opacity: 0;
-    animation: logoFadeIn 3s ease-out forwards;
     pointer-events: none;
     width: 100%;
     text-align: center;
 }
 
 .startup-logo img {
-    max-width: 75%;
+    max-width: 80%;
     height: auto;
-    filter: brightness(1.2) drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
-}
-
-@keyframes logoFadeIn {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.95);
-        filter: brightness(0);
-    }
-    50% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-        filter: brightness(1.2);
-    }
-    85% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-    }
-    100% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(1.05);
-    }
 } 

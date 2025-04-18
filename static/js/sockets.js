@@ -17,7 +17,12 @@ window.socket.on('connect', () => {
     console.log('Connected to server');
     window.messageDiv.textContent = '';
     if (window.StateManager) {
-        window.StateManager.updateState(window.StateManager.STATES.IDLE);
+        // Don't update state if we're in startup sequence
+        if (window.StateManager.currentState === window.StateManager.STATES.STARTUP) {
+            console.log('Ignoring connect state update during startup sequence');
+            return;
+        }
+        window.StateManager.updateState(window.StateManager.STATES.CLOCK);
     } else {
         window.statusDiv.textContent = 'Connected';
     }
@@ -39,6 +44,12 @@ window.socket.on('state_update', (state) => {
     
     // Update StateManager based on server state
     if (window.StateManager) {
+        // Don't update state if we're in startup sequence
+        if (window.StateManager.currentState === window.StateManager.STATES.STARTUP) {
+            console.log('Ignoring state_update during startup sequence');
+            return;
+        }
+
         if (state.is_recording) {
             window.StateManager.updateState(window.StateManager.STATES.RECORDING);
         } else if (state.status === 'processing') {
@@ -46,7 +57,7 @@ window.socket.on('state_update', (state) => {
         } else if (state.video_url) {
             window.StateManager.updateState(window.StateManager.STATES.PLAYBACK);
         } else {
-            window.StateManager.updateState(window.StateManager.STATES.IDLE);
+            window.StateManager.updateState(window.StateManager.STATES.CLOCK);
         }
     } else {
         window.statusDiv.textContent = `${state.status}`;
@@ -94,7 +105,7 @@ window.socket.on('previous_video', (data) => {
             // Auto-clear error after 3 seconds
             setTimeout(() => {
                 if (window.StateManager.currentState === window.StateManager.STATES.ERROR) {
-                    window.StateManager.goToIdle();
+                    window.StateManager.goToClock();
                     window.messageDiv.textContent = '';
                 }
             }, 3000);
@@ -148,7 +159,7 @@ window.socket.on('play_video', (data) => {
             // Auto-clear error after 3 seconds
             setTimeout(() => {
                 if (window.StateManager.currentState === window.StateManager.STATES.ERROR) {
-                    window.StateManager.goToIdle();
+                    window.StateManager.updateState(window.StateManager.STATES.CLOCK);
                     window.messageDiv.textContent = '';
                 }
             }, 3000);
