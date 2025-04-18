@@ -19,9 +19,6 @@
             <img src="/media/thumbs/{{ dream.thumb_filename }}" 
                  alt="Dream thumbnail" 
                  class="dream-thumbnail">
-            <div class="status-badge {% if dream.status == 'completed' %}status-completed{% else %}status-pending{% endif %}">
-                {{ dream.status }}
-            </div>
             <div class="dream-info">
                 <div class="dream-date">{{ dream.created_at }}</div>
                 {{ dream.user_prompt[:50] }}{% if dream.user_prompt|length > 50 %}...{% endif %}
