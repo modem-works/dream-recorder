@@ -12,7 +12,7 @@ body {
     width: 1280px;
     height: 400px;
     margin: 0 auto;
-    background-color: white;
+    background-color: #000000;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     background-size: cover;
     background-position: center;
