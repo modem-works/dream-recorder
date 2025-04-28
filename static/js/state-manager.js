@@ -16,14 +16,13 @@ const StateManager = {
 
     // Input modes (kept for input simulator compatibility)
     MODES: {
-        TAP_AND_HOLD: 'tap_and_hold',
-        SINGLE_TAP: 'single_tap',
-        DOUBLE_TAP: 'double_tap',
+        TAP: 'tap',
+        DOUBLE_TAP: 'double_tap'
     },
 
     // Current state and mode
     currentState: 'startup',
-    currentMode: 'tap_and_hold', // Default to TAP_AND_HOLD
+    currentMode: 'tap', // Default to TAP
     error: null,
     previousState: null,
     stateChangeCallbacks: [],
@@ -294,35 +293,27 @@ const StateManager = {
         
         switch (eventType) {
             case 'tap':
-                if (this.currentState === this.STATES.PLAYBACK || 
-                    this.currentState === this.STATES.ERROR) {
-                    this.updateState(this.STATES.CLOCK);
-                } else if (this.currentState === this.STATES.RECORDING) {
+                if (this.currentState === this.STATES.RECORDING) {
+                    // Any tap during recording stops it
                     this.stopRecording();
+                } else if (this.currentState === this.STATES.PLAYBACK) {
+                    // Single tap during playback shows previous video
+                    this.playPreviousVideo();
                 } else if (this.currentState === this.STATES.CLOCK) {
+                    // Single tap in clock state plays most recent video
+                    this.playLatestVideo();
+                } else if (this.currentState === this.STATES.ERROR) {
                     this.updateState(this.STATES.CLOCK);
                 }
                 break;
                 
             case 'double_tap':
-                if (this.currentState === this.STATES.ERROR ||
-                    this.currentState === this.STATES.CLOCK) {
-                    this.playLatestVideo();
-                } else if (this.currentState === this.STATES.PLAYBACK) {
-                    this.playPreviousVideo();
-                }
-                break;
-                
-            case 'hold_start':
-                if (this.currentState === this.STATES.PLAYBACK ||
-                    this.currentState === this.STATES.CLOCK) {
+                if (this.currentState === this.STATES.CLOCK) {
+                    // Double tap in clock state starts recording
                     this.startRecording();
-                }
-                break;
-                
-            case 'hold_release':
-                if (this.currentState === this.STATES.RECORDING) {
-                    this.stopRecording();
+                } else if (this.currentState === this.STATES.PLAYBACK) {
+                    // Double tap during playback returns to clock
+                    this.updateState(this.STATES.CLOCK);
                 }
                 break;
                 

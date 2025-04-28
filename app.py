@@ -500,10 +500,10 @@ def serve_thumbnail(filename):
 
 @app.route('/api/trigger_recording', methods=['POST'])
 def trigger_recording():
-    """API endpoint to trigger recording from GPIO controller (long press)."""
+    """API endpoint to trigger recording from GPIO controller (double tap)."""
     try:
         if recording_state['status'] == 'ready':
-            # Simulate a start_recording event
+            # Start recording
             recording_state['is_recording'] = True
             recording_state['status'] = 'recording'
             
@@ -515,7 +515,7 @@ def trigger_recording():
             
             # Broadcast the recording state change to all clients
             socketio.emit('recording_state', {'status': 'recording'})
-            logger.info("Recording triggered via GPIO long press")
+            logger.info("Recording triggered via GPIO double tap")
             return jsonify({'success': True, 'message': 'Recording started'})
         else:
             return jsonify({'success': False, 'message': f'Cannot start recording in current state: {recording_state["status"]}'})
@@ -523,65 +523,21 @@ def trigger_recording():
         logger.error(f"Error triggering recording: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/api/wake_device', methods=['POST'])
-def wake_device():
-    """API endpoint to wake the device (single tap)."""
-    try:
-        # If device is sleeping, wake it up by sending a wake event to clients
-        socketio.emit('device_event', {'action': 'wake'})
-        logger.info("Device wake triggered via GPIO single tap")
-        return jsonify({'success': True, 'message': 'Device woken up'})
-    except Exception as e:
-        logger.error(f"Error waking device: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)}), 500
-
 @app.route('/api/show_previous_dream', methods=['POST'])
 def show_previous_dream():
-    """Handle double-tap to show previous dream or cycle through recent dreams."""
+    """Handle single tap to show previous dream."""
     try:
         # Get the most recent dreams, limited by VIDEO_HISTORY_LIMIT
         dreams = dream_db.get_all_dreams()
         if not dreams:
             return jsonify({'status': 'error', 'message': 'No dreams found'}), 404
-        
-        # If we're not currently playing a video, start with the most recent
-        if not video_playback_state['is_playing']:
-            video_playback_state['current_index'] = 0
-            video_playback_state['is_playing'] = True
-        else:
-            # Move to the next video in the sequence
-            video_playback_state['current_index'] += 1
-            
-            # If we've reached the limit, wrap around to the most recent
-            if video_playback_state['current_index'] >= int(os.getenv('VIDEO_HISTORY_LIMIT')):
-                video_playback_state['current_index'] = 0
-        
-        # Get the video at the current index
-        dream = dreams[video_playback_state['current_index']]
-        
-        # Emit the video URL to the client
-        socketio.emit('play_video', {
-            'video_url': f"/media/video/{dream['video_filename']}",
-            'loop': True  # Enable looping for the video
-        })
-        
-        return jsonify({'status': 'success'})
-    except Exception as e:
-        logger.error(f"Error showing previous dream: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
 
-@app.route('/api/stop_recording', methods=['POST'])
-def stop_recording_api():
-    """API endpoint to stop recording from GPIO controller (long press release)."""
-    try:
-        if recording_state['is_recording'] and recording_state['status'] == 'recording':
-            # Set recording state to processing
+        # If we're recording, stop recording
+        if recording_state['is_recording']:
             recording_state['is_recording'] = False
             recording_state['status'] = 'processing'
-            
-            # Broadcast the state change to all clients
             socketio.emit('recording_state', {'status': 'processing'})
-            logger.info("Recording stopped via GPIO long press release")
+            logger.info("Recording stopped via GPIO tap")
             
             # Get the first available client session ID
             sessions = list(socketio.server.environ.keys())
@@ -595,11 +551,30 @@ def stop_recording_api():
                 gevent.spawn(process_audio, None)
             
             return jsonify({'success': True, 'message': 'Recording stopped and processing started'})
+        
+        # If we're currently playing a video, show the next one in sequence
+        if video_playback_state['is_playing']:
+            video_playback_state['current_index'] += 1
+            if video_playback_state['current_index'] >= len(dreams):
+                video_playback_state['current_index'] = 0
         else:
-            return jsonify({'success': False, 'message': f'Cannot stop recording in current state: {recording_state["status"]}'})
+            # If not playing, start with the most recent dream
+            video_playback_state['current_index'] = 0
+            video_playback_state['is_playing'] = True
+        
+        # Get the dream at the current index
+        dream = dreams[video_playback_state['current_index']]
+        
+        # Emit the video URL to the client
+        socketio.emit('play_video', {
+            'video_url': f"/media/video/{dream['video_filename']}",
+            'loop': True  # Enable looping for the video
+        })
+        
+        return jsonify({'status': 'success'})
     except Exception as e:
-        logger.error(f"Error stopping recording: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)}), 500
+        logger.error(f"Error showing previous dream: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/dreams')
 def dreams():

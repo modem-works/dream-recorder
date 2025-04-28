@@ -4,14 +4,26 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
 
 ## Setup
 
-### Basic Setup
+### Hardware Setup
 
-1. Clone this repository to your Raspberry Pi.
-2. Run the setup script:
-   ```
-   ./setup.sh
-   ```
-3. Update your API keys in the `.env` file.
+1. Install Raspberry Pi Imager
+   - Set up configuration in Pi Imager
+2. Find device IP (?)
+3. SSH into device (dreamer@IP)
+   - sudo raspi-config
+      - Interface Options -> VNC -> Yes -> OK
+      - Localisation Options -> Configure time zone -> Choose your country & city
+      - <Finish>
+4. VNC connect
+   - Start menu -> Preferences -> Screen Configuration
+      - Right click on screen -> Orientation -> Left
+      - Drag window a bit to the left and click Apply, then click OK
+5. Use SSH connection
+   - git clone <repo_url>
+   - cd dream-recorder
+6. Update your API keys in the `.env` file.
+7. Run setup and startup
+8. Push button and use VNC to allow microphone access
 
 ### Development Setup
 
