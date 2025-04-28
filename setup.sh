@@ -33,6 +33,10 @@ fi
 # Activate virtual environment
 source venv/bin/activate
 
+# Install system dependencies (like ffmpeg)
+log "Checking and installing system dependencies (ffmpeg)..."
+sudo apt update && sudo apt install -y ffmpeg
+
 # Install requirements
 log "Installing requirements..."
 pip install -r requirements.txt

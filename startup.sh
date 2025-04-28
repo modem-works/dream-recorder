@@ -62,6 +62,8 @@ start_flask_app() {
         log "Flask app is already running"
     else
         source "$SCRIPT_DIR/venv/bin/activate"
+        # Ensure logs directory exists
+        mkdir -p "$SCRIPT_DIR/logs"
         # Check if we're in development mode
         if [ "$FLASK_ENV" = "development" ]; then
             log "Development mode detected - enabling auto-reloader"
