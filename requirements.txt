@@ -3,7 +3,7 @@ Werkzeug==2.3.7
 flask-socketio==5.1.1
 gevent==24.2.1
 python-dotenv==0.19.0
-openai==1.76.0
+openai[datalib,voice_helpers]==1.76.0
 numpy==2.2.5
 pydub==0.25.1
 ffmpeg-python==0.2.0

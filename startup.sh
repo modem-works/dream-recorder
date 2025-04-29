@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Script to start both Dream Recorder applications
-# Usage: ./startup.sh [--setup]
+# Usage: ./startup.sh [--setup] [--dev]
 #   --setup: Run setup before starting applications
+#   --dev: Run in development mode (Flask only, with auto-reload)
 
 # Get absolute path to the script directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -14,11 +15,15 @@ log() {
 
 # Parse arguments
 SETUP=false
+DEV_MODE=false
 
 for arg in "$@"; do
     case $arg in
         --setup)
             SETUP=true
+            ;;
+        --dev)
+            DEV_MODE=true
             ;;
     esac
 done
@@ -64,15 +69,15 @@ start_flask_app() {
         source "$SCRIPT_DIR/venv/bin/activate"
         # Ensure logs directory exists
         mkdir -p "$SCRIPT_DIR/logs"
-        # Check if we're in development mode
-        if [ "$FLASK_ENV" = "development" ]; then
-            log "Development mode detected - enabling auto-reloader"
-            nohup python "$SCRIPT_DIR/app.py" --reload > "$SCRIPT_DIR/logs/flask_app.log" 2>&1 &
+        
+        if [ "$DEV_MODE" = true ]; then
+            log "Development mode detected - starting Flask with auto-reloader..."
+            FLASK_ENV=development python "$SCRIPT_DIR/app.py" --reload
         else
             nohup python "$SCRIPT_DIR/app.py" > "$SCRIPT_DIR/logs/flask_app.log" 2>&1 &
+            APP_PID=$!
+            log "Flask app started with PID: $APP_PID"
         fi
-        APP_PID=$!
-        log "Flask app started with PID: $APP_PID"
     fi
 }
 
@@ -112,11 +117,15 @@ if [ "$SETUP" = true ] || [ ! -d "venv" ]; then
     run_setup
 fi
 
-# Start both applications
+# Start applications based on mode
 start_flask_app
-start_gpio_service
-
-log "Both applications started successfully!"
-log "Flask app log: tail -f $SCRIPT_DIR/logs/flask_app.log"
-log "GPIO service log: tail -f $SCRIPT_DIR/logs/gpio_service.log"
-log "To stop them, use: pkill -f 'python.*app.py|python.*gpio'" 
+if [ "$DEV_MODE" = false ]; then
+    start_gpio_service
+    log "Both applications started successfully!"
+    log "Flask app log: tail -f $SCRIPT_DIR/logs/flask_app.log"
+    log "GPIO service log: tail -f $SCRIPT_DIR/logs/gpio_service.log"
+    log "To stop them, use: pkill -f 'python.*app.py|python.*gpio'"
+else
+    log "Development mode: Flask app started with auto-reload enabled"
+    log "To stop it, use Ctrl+C"
+fi 
