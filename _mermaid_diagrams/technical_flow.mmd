@@ -66,10 +66,8 @@ flowchart TD
     %% GPIO & Touch Handling
     TS -- "GPIO Signal" --> GPIO_HANDLER
     GPIO_HANDLER -- "Touch Event" --> TOUCH_DETECTOR
-    TOUCH_DETECTOR -- "Single Tap - (Wake Device)" --> HTTP_CLIENT
-    TOUCH_DETECTOR -- "Double Tap - (Show Previous Dream)" --> HTTP_CLIENT
-    TOUCH_DETECTOR -- "Long Press - (Start Recording)" --> HTTP_CLIENT
-    TOUCH_DETECTOR -- "Long Press Release - (Stop Recording)" --> HTTP_CLIENT
+    TOUCH_DETECTOR -- "Single Tap - (Show/Navigate Dreams)" --> HTTP_CLIENT
+    TOUCH_DETECTOR -- "Double Tap - (Start Recording/Return to Clock)" --> HTTP_CLIENT
     HTTP_CLIENT -- "HTTP Request" --> FLASK
     
     %% State Management

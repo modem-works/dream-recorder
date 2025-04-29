@@ -96,10 +96,8 @@ graph TD
     TS -- "Touch Event" --> GPIO
     GPIO -- "Interrupt" --> GPIO_SVC
     GPIO_SVC -- "Detect Pattern" --> GPIO_SVC
-    GPIO_SVC -- "Single Tap Event" --> FLASK
-    GPIO_SVC -- "Double Tap Event" --> FLASK
-    GPIO_SVC -- "Long Press Event" --> FLASK
-    GPIO_SVC -- "Long Press Release Event" --> FLASK
+    GPIO_SVC -- "Single Tap (Show/Navigate Dreams)" --> FLASK
+    GPIO_SVC -- "Double Tap (Start Recording/Return to Clock)" --> FLASK
     
     %% Data Flow for Key Operations
     AUDIO_REC -- "Audio Stream" --> WS_CLIENT

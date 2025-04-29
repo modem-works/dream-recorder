@@ -1,6 +1,6 @@
-# Dream Recorder
+## Dream Recorder
 
-Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing you to record and visualize your dreams.
+Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing you to record and review your dreams with simple touch interactions.
 
 ## Setup
 
@@ -27,53 +27,90 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
 
 ### Development Setup
 
-For local development, simply run:
+1. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Copy `.env.example` to `.env` and update the configuration:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Start the application in development mode:
+   ```bash
+   ./startup.sh --dev
+   ```
+
+## Usage
+
+The Dream Recorder uses a simple touch interface with two interaction patterns:
+
+1. **Single Tap**: Shows the previous dream recording. If you're currently recording, it will stop the recording.
+   - During playback: Shows the next dream in sequence
+   - During clock view: Shows the most recent dream
+   - During recording: Stops the recording
+
+2. **Double Tap**: Starts a new recording when in clock view, or returns to clock view during playback
+   - During clock view: Starts recording
+   - During playback: Returns to clock view
+
+## Directory Structure
+
+```
+dream-recorder/
+├── app.py              # Main Flask application
+├── gpio_service.py     # GPIO interaction service
+├── static/            # Static assets (JS, CSS, etc.)
+├── templates/         # HTML templates
+├── scripts/          # Utility scripts
+├── media/            # Stored media files
+│   ├── audio/       # Audio recordings
+│   ├── video/       # Processed videos
+│   └── thumbs/      # Video thumbnails
+└── logs/            # Application logs
+```
+
+## Development
+
+To run the application in development mode with auto-reload:
+
 ```bash
-./dev.sh
+./startup.sh --dev
 ```
 
-This will:
-1. Create a virtual environment (if it doesn't exist)
-2. Install required dependencies
-3. Create necessary directories
-4. Start the Flask application in development mode
+For production deployment:
 
-Development mode provides:
-- Auto-reloading when Python files change
-- Input simulator for testing without hardware
-- Direct console output for debugging
-- Easy process management (Ctrl+C to stop)
-
-The development mode can be enabled in three ways (in order of precedence):
-1. Using the `dev.sh` script (recommended)
-2. Setting `FLASK_ENV=development` in your `.env` file
-3. Setting the `FLASK_ENV` environment variable
-
-Note: The GPIO service is not started in development mode by default. If you need to test hardware features, you can start it separately:
 ```bash
-python gpio_service.py
-```
-
-### Running the Application
-
-To run the application manually:
-```
 ./startup.sh
 ```
 
-Once running, open http://localhost:5000 in your browser.
+## Troubleshooting
 
-### Installing as a Service
+If you encounter issues:
 
-To install Dream Recorder as a service that starts automatically on boot:
-```
-./setup.sh --install-service
-```
+1. Check the logs:
+   ```bash
+   tail -f logs/flask_app.log
+   tail -f logs/gpio_service.log
+   ```
 
-This will create and enable a systemd service. To start it immediately:
-```
-sudo systemctl start dream-recorder.service
-```
+2. Ensure all required services are running:
+   ```bash
+   ps aux | grep python
+   ```
+
+3. Restart the application:
+   ```bash
+   pkill -f 'python.*app.py|python.*gpio'
+   ./startup.sh
+   ```
 
 ## Kiosk Mode Setup
 
