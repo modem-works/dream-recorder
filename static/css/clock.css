@@ -7,63 +7,24 @@
     z-index: 10;
     opacity: 0;
     display: none;
+    margin-top: 0.5rem;
 }
 
 .clock-digits {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
+    gap: var(--clock-spacing);
+    font-family: var(--clock-font-family);
+    font-size: var(--clock-font-size);
+    color: var(--clock-color);
 }
 
-/* Container for all digits and colon */
-.digit-container, .colon-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-/* Individual digit dimensions */
-.digit-container[data-digit="0"] { --width: 81px; --height: 88px; --margin-left: -15px; }
-.digit-container[data-digit="1"] { --width: 141px; --height: 89px; --margin-left: -15px; }
-.digit-container[data-digit="2"] { --width: 100px; --height: 89px; --margin-left: -15px; }
-.digit-container[data-digit="3"] { --width: 139px; --height: 139px; --margin-left: -15px; }
-.digit-container[data-digit="4"] { --width: 108px; --height: 134px; --margin-left: -15px; }
-.digit-container[data-digit="5"] { --width: 155px; --height: 139px; --margin-left: -15px; }
-.digit-container[data-digit="6"] { --width: 139px; --height: 136px; --margin-left: -15px; }
-.digit-container[data-digit="7"] { --width: 138px; --height: 145px; --margin-left: -15px; }
-.digit-container[data-digit="8"] { --width: 121px; --height: 134px; --margin-left: -15px; }
-.digit-container[data-digit="9"] { --width: 135px; --height: 138px; --margin-left: -15px; }
-.colon-container { --width: 62px; --height: 75px; --margin-left: -15px; }
-
-/* Apply dimensions to containers */
-.digit-container, .colon-container {
-    width: var(--width);
-    height: var(--height);
-    margin-left: var(--margin-left);
-}
-
-/* Scale images to fit their containers while maintaining aspect ratio */
 .digit, .colon {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    line-height: 1;
     transition: opacity 0.3s ease;
 }
 
 .colon.hidden {
     opacity: 0;
 }
-
-/* Add a subtle animation for the clock */
-@keyframes clockGlow {
-    0% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5)); }
-    50% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.7)); }
-    100% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5)); }
-}
-
-.clock-display {
-    animation: clockGlow 2s infinite;
-} 

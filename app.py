@@ -662,6 +662,14 @@ def delete_dream(dream_id):
         logger.error(f"Error deleting dream {dream_id}: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route('/api/clock-config-path')
+def clock_config_path():
+    """Return the clock configuration path from environment."""
+    config_path = os.getenv('CLOCK_CONFIG_PATH')
+    if not config_path:
+        return jsonify({'error': 'CLOCK_CONFIG_PATH not set in environment'}), 500
+    return jsonify({'configPath': config_path})
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--reload', action='store_true', help='Enable auto-reloader')

@@ -11,6 +11,11 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon/favicon-16x16.png">
     <link rel="shortcut icon" href="/static/favicon/favicon.ico">
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fleur+De+Leah&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="/static/css/icon-animations.css">
@@ -23,21 +28,11 @@
         </div>
         <div id="clockDisplay" class="clock-display">
             <div class="clock-digits">
-                <div class="digit-container" data-digit="1">
-                    <img class="digit" src="/static/images/clock/1.png" alt="1">
-                </div>
-                <div class="digit-container" data-digit="2">
-                    <img class="digit" src="/static/images/clock/2.png" alt="2">
-                </div>
-                <div class="colon-container">
-                    <img class="colon" src="/static/images/clock/colon.png" alt=":">
-                </div>
-                <div class="digit-container" data-digit="3">
-                    <img class="digit" src="/static/images/clock/3.png" alt="3">
-                </div>
-                <div class="digit-container" data-digit="4">
-                    <img class="digit" src="/static/images/clock/4.png" alt="4">
-                </div>
+                <span class="digit hour-tens">0</span>
+                <span class="digit hour-ones">0</span>
+                <span class="colon">:</span>
+                <span class="digit minute-tens">0</span>
+                <span class="digit minute-ones">0</span>
             </div>
         </div>
         

@@ -2,17 +2,50 @@
 const Clock = {
     clockInterval: null,
     colonVisible: true,
-    digitElements: null,
-    colonElement: null,
+    elements: {
+        hourTens: null,
+        hourOnes: null,
+        colon: null,
+        minuteTens: null,
+        minuteOnes: null
+    },
+
+    // Configuration options will be loaded from file
+    config: null,
+
+    // Load configuration from file
+    async loadConfig() {
+        try {
+            // Fetch config from server
+            const response = await fetch('/api/clock-config-path');
+            const { configPath } = await response.json();
+            
+            // Load the configuration
+            const configResponse = await fetch(configPath);
+            this.config = await configResponse.json();
+        } catch (error) {
+            console.error('Failed to load clock configuration:', error);
+            throw error;
+        }
+    },
 
     // Initialize the clock
-    init() {
-        // Cache DOM elements
-        this.digitElements = document.querySelectorAll('.digit');
-        this.colonElement = document.querySelector('.colon');
+    async init(config = {}) {
+        // Load config first
+        await this.loadConfig();
         
-        // Preload all number images
-        this.preloadImages();
+        // Override loaded config with any passed in options
+        this.config = { ...this.config, ...config };
+        
+        // Apply configuration
+        this.applyConfig();
+
+        // Cache DOM elements
+        this.elements.hourTens = document.querySelector('.hour-tens');
+        this.elements.hourOnes = document.querySelector('.hour-ones');
+        this.elements.colon = document.querySelector('.colon');
+        this.elements.minuteTens = document.querySelector('.minute-tens');
+        this.elements.minuteOnes = document.querySelector('.minute-ones');
         
         // Start the clock
         this.updateClock();
@@ -21,38 +54,37 @@ const Clock = {
         }, 1000);
     },
 
-    // Preload all number images
-    preloadImages() {
-        // Preload numbers
-        for (let i = 0; i <= 9; i++) {
-            const img = new Image();
-            img.src = `/static/images/clock/${i}.png`;
-        }
-        // Preload colon
-        const colonImg = new Image();
-        colonImg.src = '/static/images/clock/colon.png';
+    // Apply configuration to CSS variables
+    applyConfig() {
+        const root = document.documentElement;
+        root.style.setProperty('--clock-font-family', this.config.fontFamily);
+        root.style.setProperty('--clock-font-size', this.config.fontSize);
+        root.style.setProperty('--clock-color', this.config.color);
+        root.style.setProperty('--clock-glow-color', this.config.glowColor);
+        root.style.setProperty('--clock-spacing', this.config.spacing);
     },
 
     // Update the clock display
     updateClock() {
         const now = new Date();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        
+        // Update digits
+        this.elements.hourTens.textContent = hours[0];
+        this.elements.hourOnes.textContent = hours[1];
+        this.elements.minuteTens.textContent = minutes[0];
+        this.elements.minuteOnes.textContent = minutes[1];
         
         // Toggle colon visibility
         this.colonVisible = !this.colonVisible;
-        this.colonElement.classList.toggle('hidden', !this.colonVisible);
-        
-        // Format time as string with leading zeros
-        const timeStr = `${hours.toString().padStart(2, '0')}${minutes.toString().padStart(2, '0')}`;
-        
-        // Update each digit
-        for (let i = 0; i < 4; i++) {
-            const digit = timeStr[i];
-            const container = this.digitElements[i].parentElement;
-            container.setAttribute('data-digit', digit);
-            this.digitElements[i].src = `/static/images/clock/${digit}.png`;
-        }
+        this.elements.colon.classList.toggle('hidden', !this.colonVisible);
+    },
+
+    // Update configuration at runtime
+    updateConfig(newConfig) {
+        this.config = { ...this.config, ...newConfig };
+        this.applyConfig();
     },
 
     // Clean up when clock is no longer needed
@@ -66,6 +98,7 @@ const Clock = {
 
 // Initialize clock when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize with default config
     Clock.init();
 });
 

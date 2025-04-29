@@ -202,4 +202,35 @@ Dream Recorder uses SQLite to store all your dreams and their associated data. T
 - Status tracking
 - Additional metadata
 
-The database is automatically created and managed by the application. All dreams are stored locally on your device. 
+The database is automatically created and managed by the application. All dreams are stored locally on your device.
+
+## Configuration
+
+### Clock Customization
+
+The Dream Recorder's clock display can be customized by creating a JSON configuration file and specifying its path in your `.env` file:
+
+1. Create a JSON file anywhere on your system (e.g., `config/clock-custom.json`) with the following structure:
+```json
+{
+    "fontFamily": "Your Font, cursive",
+    "fontSize": "10rem",
+    "color": "#ffffff",
+    "glowColor": "rgba(255, 255, 255, 0.7)",
+    "spacing": "0.5rem"
+}
+```
+
+2. Add the path to your `.env` file:
+```bash
+CLOCK_CONFIG_PATH=/path/to/your/clock-custom.json
+```
+
+Available configuration options:
+- `fontFamily`: Any valid CSS font-family value (default: "Fleur De Leah, cursive")
+- `fontSize`: Size of the clock digits (default: "10rem")
+- `color`: Color of the clock digits (default: "#ffffff")
+- `glowColor`: Color of the clock's glow effect (default: "rgba(255, 255, 255, 0.7)")
+- `spacing`: Spacing between clock digits (default: "0.5rem")
+
+If no custom configuration is provided, the clock will use these default values. 
