@@ -48,13 +48,29 @@ const StateManager = {
         this.updateStatus();
 
         // Start the startup sequence
-        this.startStartupSequence();
+        await this.startStartupSequence();
     },
 
     // Handle startup sequence
-    startStartupSequence() {
+    async startStartupSequence() {
         const logo = document.querySelector('.startup-logo');
         const clockDisplay = document.getElementById('clockDisplay');
+
+        // Load logo configuration
+        try {
+            const response = await fetch('/static/config/logo-default.json');
+            const logoConfig = await response.json();
+            
+            // Apply logo configuration
+            const logoText = logo.querySelector('.logo-text');
+            logoText.style.fontFamily = logoConfig.fontFamily;
+            logoText.style.fontSize = logoConfig.fontSize;
+            logoText.style.color = logoConfig.color;
+            logoText.style.textShadow = `0 0 ${logoConfig.glowRadius} ${logoConfig.glowColor}`;
+            logoText.textContent = logoConfig.text;
+        } catch (error) {
+            console.error('Failed to load logo configuration:', error);
+        }
 
         // Ensure clock is hidden
         clockDisplay.style.display = 'none';
