@@ -33,7 +33,7 @@ fi
 # Activate virtual environment
 source venv/bin/activate
 
-# Install system dependencies (like ffmpeg)
+# Install system dependencies
 log "Checking and installing system dependencies (ffmpeg)..."
 sudo apt update && sudo apt install -y ffmpeg libportaudio2
 

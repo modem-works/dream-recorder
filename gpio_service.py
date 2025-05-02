@@ -188,7 +188,7 @@ def main():
             if response.status_code == 200:
                 logger.info("Single tap processed successfully")
             else:
-                logger.error(f"Failed to process single tap: {response.status_code}")
+                logger.error(f"Failed to process single tap: {response.status_code} - {single_tap_url}")
         except Exception as e:
             logger.error(f"Error sending single tap: {str(e)}")
     
@@ -199,7 +199,7 @@ def main():
             if response.status_code == 200:
                 logger.info("Double tap processed successfully")
             else:
-                logger.error(f"Failed to process double tap: {response.status_code}")
+                logger.error(f"Failed to process double tap: {response.status_code} - {double_tap_url}")
         except Exception as e:
             logger.error(f"Error sending double tap: {str(e)}")
     
