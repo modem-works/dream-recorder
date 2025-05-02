@@ -516,57 +516,48 @@ def trigger_recording():
         logger.error(f"Error triggering recording: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+def _cycle_and_play_dream():
+    """Fetches dreams, cycles to the next one, and emits play_video event."""
+    # Get the most recent dreams
+    dreams = dream_db.get_all_dreams()
+    if not dreams:
+        logger.warning("No dreams found to cycle through.")
+        return None  # Indicate no dreams found
+
+    # If we're currently playing a video, show the next one in sequence
+    if video_playback_state['is_playing']:
+        video_playback_state['current_index'] += 1
+        if video_playback_state['current_index'] >= len(dreams):
+            video_playback_state['current_index'] = 0  # Wrap around
+    else:
+        # If not playing, start with the most recent dream
+        video_playback_state['current_index'] = 0
+        video_playback_state['is_playing'] = True
+
+    # Get the dream at the current index
+    dream = dreams[video_playback_state['current_index']]
+
+    # Emit the video URL to the client
+    socketio.emit('play_video', {
+        'video_url': f"/media/video/{dream['video_filename']}",
+        'loop': True  # Enable looping for the video
+    })
+    
+    logger.info(f"Emitted play_video for dream index {video_playback_state['current_index']}: {dream['video_filename']}")
+    return dream  # Return the selected dream object
+
 @app.route('/api/show_previous_dream', methods=['POST'])
 def show_previous_dream():
-    """Handle single tap to show previous dream."""
+    """Handle single tap to show previous dream (API endpoint)."""
     try:
-        # Get the most recent dreams, limited by VIDEO_HISTORY_LIMIT
-        dreams = dream_db.get_all_dreams()
-        if not dreams:
+        dream = _cycle_and_play_dream()
+        if dream:
+            return jsonify({'status': 'success'})
+        else:
             return jsonify({'status': 'error', 'message': 'No dreams found'}), 404
 
-        # If we're recording, stop recording
-        if recording_state['is_recording']:
-            recording_state['is_recording'] = False
-            recording_state['status'] = 'processing'
-            socketio.emit('recording_state', {'status': 'processing'})
-            logger.info("Recording stopped via GPIO tap")
-            
-            # Get the first available client session ID
-            sessions = list(socketio.server.environ.keys())
-            if sessions:
-                sid = sessions[0]
-                # Process the audio in a background task
-                gevent.spawn(process_audio, sid)
-            else:
-                logger.warning("No active sessions found for audio processing")
-                # Process audio without a session
-                gevent.spawn(process_audio, None)
-            
-            return jsonify({'success': True, 'message': 'Recording stopped and processing started'})
-        
-        # If we're currently playing a video, show the next one in sequence
-        if video_playback_state['is_playing']:
-            video_playback_state['current_index'] += 1
-            if video_playback_state['current_index'] >= len(dreams):
-                video_playback_state['current_index'] = 0
-        else:
-            # If not playing, start with the most recent dream
-            video_playback_state['current_index'] = 0
-            video_playback_state['is_playing'] = True
-        
-        # Get the dream at the current index
-        dream = dreams[video_playback_state['current_index']]
-        
-        # Emit the video URL to the client
-        socketio.emit('play_video', {
-            'video_url': f"/media/video/{dream['video_filename']}",
-            'loop': True  # Enable looping for the video
-        })
-        
-        return jsonify({'status': 'success'})
     except Exception as e:
-        logger.error(f"Error showing previous dream: {str(e)}")
+        logger.error(f"Error in API show_previous_dream: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/dreams')
@@ -586,35 +577,12 @@ def handle_play_dream(data):
 def handle_show_previous_dream():
     """Socket event handler for showing previous dream."""
     try:
-        # Get the most recent dreams, limited by VIDEO_HISTORY_LIMIT
-        dreams = dream_db.get_all_dreams()
-        if not dreams:
+        dream = _cycle_and_play_dream()
+        if not dream:
             socketio.emit('error', {'message': 'No dreams found'})
-            return
-        
-        # If we're not currently playing a video, start with the most recent
-        if not video_playback_state['is_playing']:
-            video_playback_state['current_index'] = 0
-            video_playback_state['is_playing'] = True
-        else:
-            # Move to the next video in the sequence
-            video_playback_state['current_index'] += 1
-            
-            # If we've reached the end, wrap around to the most recent
-            if video_playback_state['current_index'] >= len(dreams):
-                video_playback_state['current_index'] = 0
-        
-        # Get the video at the current index
-        dream = dreams[video_playback_state['current_index']]
-        
-        # Emit the video URL to the client
-        socketio.emit('play_video', {
-            'video_url': f"/media/video/{dream['video_filename']}",
-            'loop': True  # Enable looping for the video
-        })
-        
+
     except Exception as e:
-        logger.error(f"Error showing previous dream: {str(e)}")
+        logger.error(f"Error in socket handle_show_previous_dream: {str(e)}")
         socketio.emit('error', {'message': str(e)})
 
 @app.route('/api/dreams/<int:dream_id>', methods=['DELETE'])
