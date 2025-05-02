@@ -338,45 +338,8 @@ canvas {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 100;
+    opacity: 0;
     pointer-events: none;
     width: 100%;
     text-align: center;
-    visibility: hidden;
-}
-
-.startup-logo.visible {
-    visibility: visible;
-}
-
-.logo-text {
-    font-family: "Fleur De Leah", cursive;
-    font-size: 12rem;
-    color: #ffffff;
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
-    line-height: 1;
-    display: inline-block;
-    white-space: nowrap;
-}
-
-.logo-letter {
-    display: inline-block;
-    opacity: 0;
-    transform: translateY(20px) rotate(-5deg);
-    transition: opacity 1s ease-out, transform 1s ease-out;
-}
-
-.logo-space {
-    display: inline-block;
-    width: 0.3em;
-}
-
-.visible .logo-letter.animated {
-    opacity: 1;
-    transform: translateY(0) rotate(0deg);
-}
-
-.fade-out .logo-letter {
-    opacity: 0;
-    transform: translateY(-20px) rotate(5deg);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
 }

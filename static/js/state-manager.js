@@ -67,15 +67,7 @@ const StateManager = {
             logoText.style.fontSize = logoConfig.fontSize;
             logoText.style.color = logoConfig.color;
             logoText.style.textShadow = `0 0 ${logoConfig.glowRadius} ${logoConfig.glowColor}`;
-            
-            // Split text into individual letters with spans
-            const words = logoConfig.text.split(' ');
-            const letters = words.map(word => 
-                word.split('').map((letter, index) => 
-                    `<span class="logo-letter" style="transition-delay: ${index * 100}ms;">${letter}</span>`
-                ).join('')
-            ).join('<span class="logo-space">&nbsp;</span>');
-            logoText.innerHTML = letters;
+            logoText.textContent = logoConfig.text;
         } catch (error) {
             console.error('Failed to load logo configuration:', error);
         }
@@ -84,8 +76,10 @@ const StateManager = {
         clockDisplay.style.display = 'none';
         clockDisplay.style.opacity = '0';
 
-        // Reset logo styles and ensure it's ready for animation
+        // Reset logo styles
+        logo.style.opacity = '0';
         logo.style.display = 'block';
+        logo.style.transition = 'none';
         
         // Force a reflow to ensure styles are applied
         logo.offsetHeight;
@@ -96,39 +90,24 @@ const StateManager = {
 
     // Fade in the logo
     fadeInLogo(logo) {
-        // Small delay to ensure everything is ready
+        // Set up transition for fade in
+        logo.style.transition = `opacity ${this.config.logoFadeInDuration}ms ease-out`;
+        logo.style.opacity = '1';
+
+        // After fade in, wait and then fade out
         setTimeout(() => {
-            // Make the logo visible
-            logo.classList.add('visible');
-            
-            // Force a reflow before starting transitions
-            logo.offsetHeight;
-            
-            // Add animated class to each letter with a delay
-            const letters = logo.querySelectorAll('.logo-letter');
-            letters.forEach(letter => {
-                letter.classList.add('animated');
-            });
-            
-            // Calculate total animation time
-            const lastLetter = letters[letters.length - 1];
-            const transitionDelay = parseFloat(lastLetter.style.transitionDelay) || 0;
-            const totalTime = transitionDelay + 1000; // transition-delay + 1s transition
-            
-            // Wait for animation to complete before starting fade out
-            setTimeout(() => {
-                this.fadeOutLogo(logo);
-            }, totalTime + this.config.transitionDelay);
-        }, 50);
+            this.fadeOutLogo(logo);
+        }, this.config.logoFadeInDuration + this.config.transitionDelay);
     },
 
     // Fade out the logo
     fadeOutLogo(logo) {
-        logo.classList.add('fade-out');
+        // Set up transition for fade out
+        logo.style.transition = `opacity ${this.config.logoFadeOutDuration}ms ease-out`;
+        logo.style.opacity = '0';
 
-        // After fade out completes, clean up and transition to CLOCK state
+        // After fade out completes, transition to CLOCK state
         setTimeout(() => {
-            logo.classList.remove('visible', 'fade-out');
             logo.style.display = 'none';
             this.updateState(this.STATES.CLOCK);
         }, this.config.logoFadeOutDuration);
