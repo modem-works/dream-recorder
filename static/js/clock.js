@@ -23,6 +23,13 @@ const Clock = {
             // Load the configuration
             const configResponse = await fetch(configPath);
             this.config = await configResponse.json();
+            // Dynamically inject font link if fontUrl is present
+            if (this.config.fontUrl) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = this.config.fontUrl;
+                document.head.appendChild(link);
+            }
         } catch (error) {
             console.error('Failed to load clock configuration:', error);
             throw error;

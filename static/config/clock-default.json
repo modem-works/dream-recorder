@@ -1,7 +1,8 @@
 {
-    "fontFamily": "Fleur De Leah, cursive",
-    "fontSize": "10rem",
+    "fontFamily": "Ballet, cursive",
+    "fontSize": "12rem",
     "color": "#ffffff",
-    "glowColor": "rgba(255, 255, 255, 0.7)",
-    "spacing": "0.5rem"
-} 
+    "fontWeight": "400",
+    "fontStyle": "normal",
+    "fontUrl": "https://fonts.googleapis.com/css2?family=Ballet&display=swap"
+}
