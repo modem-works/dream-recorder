@@ -1,3 +1,6 @@
+# =============================
+# Imports & Initial Setup
+# =============================
 from gevent import monkey
 monkey.patch_all()
 
@@ -21,6 +24,9 @@ from dream_db import DreamDB
 from pydub import AudioSegment
 import ffmpeg
 
+# =============================
+# Environment & Logging
+# =============================
 # Load environment variables and check they're all set
 load_dotenv()
 check_required_env_vars()
@@ -29,24 +35,10 @@ check_required_env_vars()
 logging.basicConfig(level=getattr(logging, os.getenv('LOG_LEVEL')))
 logger = logging.getLogger(__name__)
 
-# Initialize Flask app
-app = Flask(__name__)
-app.config.update(
-    DEBUG=os.getenv('FLASK_ENV') == 'development',
-    HOST=os.getenv('HOST'),
-    PORT=int(os.getenv('PORT').split('#')[0].strip())  # Strip any comments from the value
-)
-
-# Initialize OpenAI client
-client = OpenAI(
-    api_key=os.getenv('OPENAI_API_KEY'),
-    http_client=None  # This prevents the client from creating its own HTTP client
-)
-
-# Initialize SocketIO
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
-
-# Global state
+# =============================
+# Global Variables & Constants
+# =============================
+# Global state for recording
 recording_state = {
     'is_recording': False,
     'status': 'ready',  # ready, recording, processing, generating, complete
@@ -64,12 +56,36 @@ video_playback_state = {
 # Audio buffer for storing chunks
 audio_buffer = io.BytesIO()
 wav_file = None
+# List to store incoming audio chunks
 audio_chunks = []
 
+# =============================
+# Flask App & Extensions Initialization
+# =============================
+# Initialize Flask app
+app = Flask(__name__)
+app.config.update(
+    DEBUG=os.getenv('FLASK_ENV') == 'development',
+    HOST=os.getenv('HOST'),
+    PORT=int(os.getenv('PORT').split('#')[0].strip())
+)
+
+# Initialize OpenAI client
+client = OpenAI(
+    api_key=os.getenv('OPENAI_API_KEY'),
+    http_client=None
+)
+
+# Initialize SocketIO
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
 # Initialize DreamDB
 dream_db = DreamDB()
 
+# =============================
+# Core Logic / Helper Functions
+# =============================
 def create_wav_file():
+    """Create a new WAV file in the audio buffer with the correct format."""
     global wav_file
     wav_file = wave.open(audio_buffer, 'wb')
     wav_file.setnchannels(int(os.getenv('AUDIO_CHANNELS')))
@@ -77,28 +93,24 @@ def create_wav_file():
     wav_file.setframerate(int(os.getenv('AUDIO_FRAME_RATE')))
 
 def save_wav_file(audio_data, filename=None):
-    """Save the WAV file locally for debugging."""
+    """Save the WAV file locally for debugging. Converts WebM to WAV using ffmpeg."""
     if filename is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"recording_{timestamp}.wav"
-    
     # Ensure the recordings directory exists
     os.makedirs(os.getenv('RECORDINGS_DIR'), exist_ok=True)
     filepath = os.path.join(os.getenv('RECORDINGS_DIR'), filename)
-    
     # Create a temporary file for the WebM data
     with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_webm:
         temp_webm.write(audio_data)
         temp_webm_path = temp_webm.name
-    
     try:
         # Convert WebM to WAV using ffmpeg
         stream = ffmpeg.input(temp_webm_path)
         stream = ffmpeg.output(stream, filepath, acodec='pcm_s16le', ac=1, ar=44100)
         ffmpeg.run(stream, overwrite_output=True, quiet=True)
-        
         logger.info(f"Saved WAV file to {filepath}")
-        return filename  # Return only the filename
+        return filename
     finally:
         # Clean up temporary file
         try:
@@ -125,12 +137,11 @@ def generate_video_prompt(transcription, luma_extend=False):
         return None
 
 def process_video(input_path):
-    """Process the video using FFmpeg with specific filters."""
+    """Process the video using FFmpeg with specific filters from environment variables."""
     try:
         # Create a temporary file for the processed video
         with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
             temp_path = temp_file.name
-
         # Apply FFmpeg filters using environment variables
         stream = ffmpeg.input(input_path)
         stream = ffmpeg.filter(stream, 'eq', brightness=float(os.getenv('FFMPEG_BRIGHTNESS')))
@@ -139,13 +150,10 @@ def process_video(input_path):
         stream = ffmpeg.filter(stream, 'bilateral', sigmaS=float(os.getenv('FFMPEG_BILATERAL_SIGMA')))
         stream = ffmpeg.filter(stream, 'noise', all_strength=float(os.getenv('FFMPEG_NOISE_STRENGTH')))
         stream = ffmpeg.output(stream, temp_path)
-        
         # Run FFmpeg
         ffmpeg.run(stream, overwrite_output=True, quiet=True)
-        
         # Replace the original file with the processed one
         os.replace(temp_path, input_path)
-        
         logger.info(f"Processed video saved to {input_path}")
         return input_path
     except Exception as e:
@@ -160,44 +168,35 @@ def process_thumbnail(video_path):
         video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
         width = int(video_info['width'])
         height = int(video_info['height'])
-        
         # Calculate square crop dimensions based on the smaller dimension
         crop_size = min(width, height)
-        
         # Calculate offsets to center the crop
         x_offset = (width - crop_size) // 2
         y_offset = (height - crop_size) // 2
-        
         # Create output directory if it doesn't exist
         thumbs_dir = os.getenv('THUMBS_DIR')
         os.makedirs(thumbs_dir, exist_ok=True)
-        
         # Generate simple timestamp-based filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         thumb_filename = f"thumb_{timestamp}.png"
         thumb_path = os.path.join(thumbs_dir, thumb_filename)
-        
         # Log the FFmpeg command for debugging
         logger.info(f"Generating thumbnail for video: {video_path}")
         logger.info(f"Video dimensions: {width}x{height}")
         logger.info(f"Output path: {thumb_path}")
         logger.info(f"Crop dimensions: {crop_size}x{crop_size} at offset ({x_offset}, {y_offset})")
-        
         # Use FFmpeg to extract frame at 1 second and crop to square
-        stream = ffmpeg.input(video_path, ss=1)  # Seek to 1 second
+        stream = ffmpeg.input(video_path, ss=1)
         stream = ffmpeg.filter(stream, 'crop', crop_size, crop_size, x_offset, y_offset)
-        stream = ffmpeg.output(stream, thumb_path, vframes=1)  # Only extract one frame
-        
+        stream = ffmpeg.output(stream, thumb_path, vframes=1)
         # Run FFmpeg with stderr capture
         try:
             ffmpeg.run(stream, overwrite_output=True, capture_stderr=True)
         except ffmpeg.Error as e:
             logger.error(f"FFmpeg error: {e.stderr.decode()}")
             raise
-        
         logger.info(f"Generated thumbnail saved to {thumb_path}")
         return thumb_filename
-        
     except Exception as e:
         logger.error(f"Error generating thumbnail: {str(e)}")
         raise
@@ -236,6 +235,7 @@ def generate_video(prompt, filename=None, luma_extend=False):
             raise Exception("Failed to get generation ID from response")
         logger.info(f"Started video generation with ID: {generation_id}")
         def poll_for_completion(generation_id):
+            """Poll the Luma API for video generation completion."""
             max_attempts = int(os.getenv('LUMA_MAX_POLL_ATTEMPTS'))
             poll_interval = float(os.getenv('LUMA_POLL_INTERVAL'))
             for attempt in range(max_attempts):
@@ -307,6 +307,7 @@ def generate_video(prompt, filename=None, luma_extend=False):
             video_url = poll_for_completion(extend_id)
         else:
             video_url = poll_for_completion(generation_id)
+        # Download the generated video
         video_response = requests.get(video_url, stream=True)
         video_response.raise_for_status()
         if filename is None:
@@ -318,6 +319,7 @@ def generate_video(prompt, filename=None, luma_extend=False):
             for chunk in video_response.iter_content(chunk_size=8192):
                 f.write(chunk)
         logger.info(f"Saved video to {video_path}")
+        # Post-process the video and generate a thumbnail
         processed_video_path = process_video(video_path)
         logger.info(f"Processed video saved to {processed_video_path}")
         thumb_filename = process_thumbnail(processed_video_path)
@@ -327,7 +329,7 @@ def generate_video(prompt, filename=None, luma_extend=False):
         raise
 
 def process_audio(sid):
-    """Process the recorded audio and generate video."""
+    """Process the recorded audio and generate video, then update state and emit events."""
     try:
         global recording_state, audio_buffer, wav_file, audio_chunks
         # Save the WAV file
@@ -414,7 +416,6 @@ def _initiate_recording():
     recording_state['status'] = 'recording'
     recording_state['transcription'] = '' # Reset transcription
     recording_state['video_prompt'] = ''  # Reset video prompt
-    
     # Reset audio storage
     audio_buffer = io.BytesIO() 
     audio_chunks = []
@@ -430,8 +431,38 @@ def _finalize_and_process_recording(sid=None):
     # Process the audio in a background task
     gevent.spawn(process_audio, sid)
 
+def _cycle_and_play_dream():
+    """Fetches dreams, cycles to the next one, and emits play_video event."""
+    # Get the most recent dreams
+    dreams = dream_db.get_all_dreams()
+    if not dreams:
+        logger.warning("No dreams found to cycle through.")
+        return None
+    # If we're currently playing a video, show the next one in sequence
+    if video_playback_state['is_playing']:
+        video_playback_state['current_index'] += 1
+        if video_playback_state['current_index'] >= len(dreams):
+            video_playback_state['current_index'] = 0  # Wrap around
+    else:
+        # If not playing, start with the most recent dream
+        video_playback_state['current_index'] = 0
+        video_playback_state['is_playing'] = True
+    # Get the dream at the current index
+    dream = dreams[video_playback_state['current_index']]
+    # Emit the video URL to the client
+    socketio.emit('play_video', {
+        'video_url': f"/media/video/{dream['video_filename']}",
+        'loop': True  # Enable looping for the video
+    })
+    logger.info(f"Emitted play_video for dream index {video_playback_state['current_index']}: {dream['video_filename']}")
+    return dream
+
+# =============================
+# SocketIO Event Handlers
+# =============================
 @socketio.on('audio_data')
 def handle_audio_data(data):
+    """Handle incoming audio data chunks from the client during recording."""
     if recording_state['is_recording']:
         try:
             # Convert the received data to bytes
@@ -442,15 +473,77 @@ def handle_audio_data(data):
             logger.error(f"Error handling audio data: {str(e)}")
             emit('error', {'message': f"Error handling audio data: {str(e)}"})
 
+@socketio.on('connect')
+def handle_connect():
+    """Handle new client connection."""
+    logger.info('Client connected')
+    emit('state_update', recording_state)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle client disconnection."""
+    logger.info('Client disconnected')
+
+@socketio.on('start_recording')
+def handle_start_recording():
+    """Socket event to start recording."""
+    if not recording_state['is_recording']:
+        _initiate_recording()
+        emit('state_update', recording_state)
+        logger.info('Started recording via socket event')
+    else:
+        logger.warning('Start recording event received, but already recording.')
+
+@socketio.on('stop_recording')
+def handle_stop_recording():
+    """Socket event to stop recording and trigger processing."""
+    if recording_state['is_recording']:
+        sid = request.sid # Get SID before changing state
+        _finalize_and_process_recording(sid=sid)
+        # Emit the comprehensive state update after finalizing
+        emit('state_update', recording_state)
+        logger.info('Stopped recording via socket event.')
+    else:
+        logger.warning('Stop recording event received, but not currently recording.')
+
+@socketio.on('play_dream')
+def handle_play_dream(data):
+    """Handle when a dream video finishes playing (reset playback state)."""
+    video_playback_state['is_playing'] = False
+    video_playback_state['current_index'] = 0
+
+@socketio.on('show_previous_dream')
+def handle_show_previous_dream():
+    """Socket event handler for showing previous dream."""
+    try:
+        dream = _cycle_and_play_dream()
+        if not dream:
+            socketio.emit('error', {'message': 'No dreams found'})
+    except Exception as e:
+        logger.error(f"Error in socket handle_show_previous_dream: {str(e)}")
+        socketio.emit('error', {'message': str(e)})
+
+# =============================
+# Flask Route Handlers
+# =============================
+# -- Page Routes --
 @app.route('/')
 def index():
+    """Serve the main HTML page."""
     return render_template('index.html', 
                          is_development=app.config['DEBUG'],
                          total_background_images=int(os.getenv('TOTAL_BACKGROUND_IMAGES', 1119)))
 
+@app.route('/dreams')
+def dreams():
+    """Display the dreams library page."""
+    dreams = dream_db.get_all_dreams()
+    return render_template('dreams.html', dreams=dreams)
+
+# -- API Routes --
 @app.route('/api/config')
 def get_config():
-    """Get application configuration"""
+    """Get application configuration for the frontend."""
     return jsonify({
         'is_development': app.config['DEBUG'],
         'playback_duration': int(os.getenv('PLAYBACK_DURATION')),
@@ -461,35 +554,80 @@ def get_config():
         'transition_delay': int(os.getenv('TRANSITION_DELAY'))
     })
 
-@socketio.on('connect')
-def handle_connect():
-    logger.info('Client connected')
-    emit('state_update', recording_state)
+@app.route('/api/trigger_recording', methods=['POST'])
+def trigger_recording():
+    """API endpoint to trigger recording from GPIO controller (double tap)."""
+    try:
+        # Use 'ready' check specifically for the trigger endpoint
+        if recording_state['status'] == 'ready': 
+            _initiate_recording()
+            # Broadcast the recording state change to all clients
+            socketio.emit('recording_state', {'status': 'recording'}) 
+            logger.info("Recording triggered via GPIO double tap")
+            return jsonify({'success': True, 'message': 'Recording started'})
+        else:
+            logger.warning(f'GPIO trigger received, but current state is {recording_state["status"]}')
+            return jsonify({'success': False, 'message': f'Cannot start recording in current state: {recording_state["status"]}'}), 400
+    except Exception as e:
+        logger.error(f"Error triggering recording: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    logger.info('Client disconnected')
+@app.route('/api/show_previous_dream', methods=['POST'])
+def show_previous_dream():
+    """Handle single tap to show previous dream (API endpoint)."""
+    try:
+        dream = _cycle_and_play_dream()
+        if dream:
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error', 'message': 'No dreams found'}), 404
+    except Exception as e:
+        logger.error(f"Error in API show_previous_dream: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
-@socketio.on('start_recording')
-def handle_start_recording():
-    if not recording_state['is_recording']:
-        _initiate_recording()
-        emit('state_update', recording_state)
-        logger.info('Started recording via socket event')
-    else:
-        logger.warning('Start recording event received, but already recording.')
+@app.route('/api/dreams/<int:dream_id>', methods=['DELETE'])
+def delete_dream(dream_id):
+    """Delete a dream and its associated files."""
+    try:
+        # Get the dream details before deletion
+        dream = dream_db.get_dream(dream_id)
+        if not dream:
+            return jsonify({'success': False, 'message': 'Dream not found'}), 404
+        # Delete the dream from the database
+        if dream_db.delete_dream(dream_id):
+            # Delete associated files
+            try:
+                # Delete video file
+                video_path = os.path.join(os.getenv('VIDEOS_DIR'), dream['video_filename'])
+                if os.path.exists(video_path):
+                    os.remove(video_path)
+                # Delete thumbnail file
+                thumb_path = os.path.join(os.getenv('THUMBS_DIR'), dream['thumb_filename'])
+                if os.path.exists(thumb_path):
+                    os.remove(thumb_path)
+                # Delete audio file
+                audio_path = os.path.join(os.getenv('RECORDINGS_DIR'), dream['audio_filename'])
+                if os.path.exists(audio_path):
+                    os.remove(audio_path)
+            except Exception as e:
+                logger.error(f"Error deleting files for dream {dream_id}: {str(e)}")
+                # Continue even if file deletion fails
+            return jsonify({'success': True, 'message': 'Dream deleted successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to delete dream'}), 500
+    except Exception as e:
+        logger.error(f"Error deleting dream {dream_id}: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
-@socketio.on('stop_recording')
-def handle_stop_recording():
-    if recording_state['is_recording']:
-        sid = request.sid # Get SID before changing state
-        _finalize_and_process_recording(sid=sid)
-        # Emit the comprehensive state update after finalizing
-        emit('state_update', recording_state) 
-        logger.info('Stopped recording via socket event.')
-    else:
-        logger.warning('Stop recording event received, but not currently recording.')
+@app.route('/api/clock-config-path')
+def clock_config_path():
+    """Return the clock configuration path from environment."""
+    config_path = os.getenv('CLOCK_CONFIG_PATH')
+    if not config_path:
+        return jsonify({'error': 'CLOCK_CONFIG_PATH not set in environment'}), 500
+    return jsonify({'configPath': config_path})
 
+# -- Media Routes --
 @app.route('/media/<path:filename>')
 def serve_media(filename):
     """Serve media files (audio and video) from the media directory."""
@@ -506,144 +644,15 @@ def serve_thumbnail(filename):
     except FileNotFoundError:
         return "Thumbnail not found", 404
 
-@app.route('/api/trigger_recording', methods=['POST'])
-def trigger_recording():
-    """API endpoint to trigger recording from GPIO controller (double tap)."""
-    try:
-        # Use 'ready' check specifically for the trigger endpoint
-        if recording_state['status'] == 'ready': 
-            _initiate_recording()
-            # Broadcast the simplified recording state change for this specific trigger
-            socketio.emit('recording_state', {'status': 'recording'}) 
-            logger.info("Recording triggered via GPIO double tap")
-            return jsonify({'success': True, 'message': 'Recording started'})
-        else:
-            logger.warning(f'GPIO trigger received, but current state is {recording_state["status"]}')
-            return jsonify({'success': False, 'message': f'Cannot start recording in current state: {recording_state["status"]}'}), 400 # Use 400 Bad Request
-    except Exception as e:
-        logger.error(f"Error triggering recording: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)}), 500
-
-def _cycle_and_play_dream():
-    """Fetches dreams, cycles to the next one, and emits play_video event."""
-    # Get the most recent dreams
-    dreams = dream_db.get_all_dreams()
-    if not dreams:
-        logger.warning("No dreams found to cycle through.")
-        return None  # Indicate no dreams found
-
-    # If we're currently playing a video, show the next one in sequence
-    if video_playback_state['is_playing']:
-        video_playback_state['current_index'] += 1
-        if video_playback_state['current_index'] >= len(dreams):
-            video_playback_state['current_index'] = 0  # Wrap around
-    else:
-        # If not playing, start with the most recent dream
-        video_playback_state['current_index'] = 0
-        video_playback_state['is_playing'] = True
-
-    # Get the dream at the current index
-    dream = dreams[video_playback_state['current_index']]
-
-    # Emit the video URL to the client
-    socketio.emit('play_video', {
-        'video_url': f"/media/video/{dream['video_filename']}",
-        'loop': True  # Enable looping for the video
-    })
-    
-    logger.info(f"Emitted play_video for dream index {video_playback_state['current_index']}: {dream['video_filename']}")
-    return dream  # Return the selected dream object
-
-@app.route('/api/show_previous_dream', methods=['POST'])
-def show_previous_dream():
-    """Handle single tap to show previous dream (API endpoint)."""
-    try:
-        dream = _cycle_and_play_dream()
-        if dream:
-            return jsonify({'status': 'success'})
-        else:
-            return jsonify({'status': 'error', 'message': 'No dreams found'}), 404
-
-    except Exception as e:
-        logger.error(f"Error in API show_previous_dream: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
-
-@app.route('/dreams')
-def dreams():
-    """Display the dreams library page."""
-    dreams = dream_db.get_all_dreams()
-    return render_template('dreams.html', dreams=dreams)
-
-@socketio.on('play_dream')
-def handle_play_dream(data):
-    """Handle when a dream video finishes playing."""
-    # Reset the playback state when a video finishes
-    video_playback_state['is_playing'] = False
-    video_playback_state['current_index'] = 0
-
-@socketio.on('show_previous_dream')
-def handle_show_previous_dream():
-    """Socket event handler for showing previous dream."""
-    try:
-        dream = _cycle_and_play_dream()
-        if not dream:
-            socketio.emit('error', {'message': 'No dreams found'})
-
-    except Exception as e:
-        logger.error(f"Error in socket handle_show_previous_dream: {str(e)}")
-        socketio.emit('error', {'message': str(e)})
-
-@app.route('/api/dreams/<int:dream_id>', methods=['DELETE'])
-def delete_dream(dream_id):
-    """Delete a dream and its associated files."""
-    try:
-        # Get the dream details before deletion
-        dream = dream_db.get_dream(dream_id)
-        if not dream:
-            return jsonify({'success': False, 'message': 'Dream not found'}), 404
-
-        # Delete the dream from the database
-        if dream_db.delete_dream(dream_id):
-            # Delete associated files
-            try:
-                # Delete video file
-                video_path = os.path.join(os.getenv('VIDEOS_DIR'), dream['video_filename'])
-                if os.path.exists(video_path):
-                    os.remove(video_path)
-
-                # Delete thumbnail file
-                thumb_path = os.path.join(os.getenv('THUMBS_DIR'), dream['thumb_filename'])
-                if os.path.exists(thumb_path):
-                    os.remove(thumb_path)
-
-                # Delete audio file
-                audio_path = os.path.join(os.getenv('RECORDINGS_DIR'), dream['audio_filename'])
-                if os.path.exists(audio_path):
-                    os.remove(audio_path)
-            except Exception as e:
-                logger.error(f"Error deleting files for dream {dream_id}: {str(e)}")
-                # Continue even if file deletion fails
-
-            return jsonify({'success': True, 'message': 'Dream deleted successfully'})
-        else:
-            return jsonify({'success': False, 'message': 'Failed to delete dream'}), 500
-    except Exception as e:
-        logger.error(f"Error deleting dream {dream_id}: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)}), 500
-
-@app.route('/api/clock-config-path')
-def clock_config_path():
-    """Return the clock configuration path from environment."""
-    config_path = os.getenv('CLOCK_CONFIG_PATH')
-    if not config_path:
-        return jsonify({'error': 'CLOCK_CONFIG_PATH not set in environment'}), 500
-    return jsonify({'configPath': config_path})
-
+# =============================
+# Main Execution Block
+# =============================
 if __name__ == '__main__':
+    # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--reload', action='store_true', help='Enable auto-reloader')
     args = parser.parse_args()
-    
+    # Start the Flask-SocketIO server
     socketio.run(
         app, 
         host=app.config['HOST'], 
