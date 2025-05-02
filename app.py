@@ -20,7 +20,7 @@ import time
 from dotenv import load_dotenv
 import argparse
 from scripts.env_check import check_required_env_vars
-from dream_db import DreamDB
+from dream_db import DreamDB, DreamData
 from pydub import AudioSegment
 import ffmpeg
 
@@ -337,10 +337,6 @@ def process_audio(sid):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         wav_filename = f"recording_{timestamp}.wav"
         wav_filename = save_wav_file(audio_data, wav_filename)
-        # Get duration of the audio
-        wav_path = os.path.join(os.getenv('RECORDINGS_DIR'), wav_filename)
-        with wave.open(wav_path, 'rb') as wf:
-            duration = wf.getnframes() / wf.getframerate()
         # Create a temporary file for the audio
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
             temp_file.write(audio_data)
@@ -372,20 +368,15 @@ def process_audio(sid):
         # Generate video and get the processed video path and thumbnail filename
         video_filename, thumb_filename = generate_video(video_prompt, luma_extend=luma_extend)
         # Save to database
-        dream_data = {
-            'user_prompt': recording_state['transcription'],
-            'generated_prompt': recording_state['video_prompt'],
-            'audio_filename': wav_filename,
-            'video_filename': video_filename,
-            'thumb_filename': thumb_filename,
-            'duration': int(duration),
-            'status': 'completed',
-            'metadata': {
-                'sid': sid,
-                'timestamp': timestamp
-            }
-        }
-        dream_db.save_dream(dream_data)
+        dream_data = DreamData(
+            user_prompt=recording_state['transcription'],
+            generated_prompt=recording_state['video_prompt'],
+            audio_filename=wav_filename,
+            video_filename=video_filename,
+            thumb_filename=thumb_filename,
+            status='completed',
+        )
+        dream_db.save_dream(dream_data.dict())
         recording_state['status'] = 'complete'
         recording_state['video_url'] = f"/media/video/{video_filename}"
         # Emit the video ready event to trigger playback

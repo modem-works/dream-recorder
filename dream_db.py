@@ -3,8 +3,18 @@ import json
 from datetime import datetime
 from pathlib import Path
 import logging
+from pydantic import BaseModel
+from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+class DreamData(BaseModel):
+    user_prompt: str
+    generated_prompt: str
+    audio_filename: str
+    video_filename: str
+    thumb_filename: Optional[str] = None
+    status: Optional[str] = 'completed'
 
 class DreamDB:
     def __init__(self, db_path='dreams.db'):

@@ -200,7 +200,6 @@ Dream Recorder uses SQLite to store all your dreams and their associated data. T
 - Creation timestamps
 - Duration information
 - Status tracking
-- Additional metadata
 
 The database is automatically created and managed by the application. All dreams are stored locally on your device.
 

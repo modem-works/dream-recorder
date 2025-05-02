@@ -5,7 +5,7 @@ import shutil
 # Ensure parent directory is in sys.path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from dream_db import DreamDB
+from dream_db import DreamDB, DreamData
 
 # Paths
 SAMPLES_DIR = os.path.join(os.path.dirname(__file__), '..', 'dream_samples')
@@ -40,15 +40,15 @@ def main():
 
         # Insert into DB if not present
         if sample['video_dest'] not in existing_videos:
-            dream_data = {
-                'user_prompt': '',
-                'generated_prompt': '',
-                'audio_filename': '',
-                'video_filename': sample['video_dest'],
-                'thumb_filename': sample['thumb_dest'],
-                'status': 'completed',
-            }
-            db.save_dream(dream_data)
+            dream_data = DreamData(
+                user_prompt='',
+                generated_prompt='',
+                audio_filename='',
+                video_filename=sample['video_dest'],
+                thumb_filename=sample['thumb_dest'],
+                status='completed',
+            )
+            db.save_dream(dream_data.dict())
             print(f"Inserted sample dream {i}")
         else:
             print(f"Sample dream {i} already exists in DB")
