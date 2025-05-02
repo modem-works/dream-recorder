@@ -407,6 +407,29 @@ def process_audio(sid):
             except:
                 pass
 
+def _initiate_recording():
+    """Handles the common state changes and buffer resets for starting recording."""
+    global audio_buffer, wav_file, audio_chunks
+    recording_state['is_recording'] = True
+    recording_state['status'] = 'recording'
+    recording_state['transcription'] = '' # Reset transcription
+    recording_state['video_prompt'] = ''  # Reset video prompt
+    
+    # Reset audio storage
+    audio_buffer = io.BytesIO() 
+    audio_chunks = []
+    wav_file = None # Ensure wav_file is reset before creating a new one
+    create_wav_file()
+    logger.debug("Initiated recording: state set, buffers reset, wav file created.")
+
+def _finalize_and_process_recording(sid=None):
+    """Handles the common state changes and triggers audio processing for stopping recording."""
+    recording_state['is_recording'] = False
+    recording_state['status'] = 'processing'
+    logger.info(f"Finalizing recording. Status set to processing. Triggering process_audio for SID: {sid}")
+    # Process the audio in a background task
+    gevent.spawn(process_audio, sid)
+
 @socketio.on('audio_data')
 def handle_audio_data(data):
     if recording_state['is_recording']:
@@ -450,30 +473,22 @@ def handle_disconnect():
 @socketio.on('start_recording')
 def handle_start_recording():
     if not recording_state['is_recording']:
-        recording_state['is_recording'] = True
-        recording_state['status'] = 'recording'
-        recording_state['transcription'] = ''
-        recording_state['video_prompt'] = ''
+        _initiate_recording()
         emit('state_update', recording_state)
-        logger.info('Started recording')
-        # Initialize WAV file
-        create_wav_file()
-        # Clear any previous audio chunks
-        audio_chunks.clear()
+        logger.info('Started recording via socket event')
+    else:
+        logger.warning('Start recording event received, but already recording.')
 
 @socketio.on('stop_recording')
 def handle_stop_recording():
     if recording_state['is_recording']:
-        recording_state['is_recording'] = False
-        recording_state['status'] = 'processing'
-        emit('state_update', recording_state)
-        logger.info('Stopped recording')
-        
-        # Get the current session ID
-        sid = request.sid
-        
-        # Process the audio in a background task
-        gevent.spawn(process_audio, sid)
+        sid = request.sid # Get SID before changing state
+        _finalize_and_process_recording(sid=sid)
+        # Emit the comprehensive state update after finalizing
+        emit('state_update', recording_state) 
+        logger.info('Stopped recording via socket event.')
+    else:
+        logger.warning('Stop recording event received, but not currently recording.')
 
 @app.route('/media/<path:filename>')
 def serve_media(filename):
@@ -495,23 +510,16 @@ def serve_thumbnail(filename):
 def trigger_recording():
     """API endpoint to trigger recording from GPIO controller (double tap)."""
     try:
-        if recording_state['status'] == 'ready':
-            # Start recording
-            recording_state['is_recording'] = True
-            recording_state['status'] = 'recording'
-            
-            # Reset the audio buffer
-            global audio_buffer, wav_file, audio_chunks
-            audio_buffer = io.BytesIO()
-            audio_chunks = []
-            create_wav_file()
-            
-            # Broadcast the recording state change to all clients
-            socketio.emit('recording_state', {'status': 'recording'})
+        # Use 'ready' check specifically for the trigger endpoint
+        if recording_state['status'] == 'ready': 
+            _initiate_recording()
+            # Broadcast the simplified recording state change for this specific trigger
+            socketio.emit('recording_state', {'status': 'recording'}) 
             logger.info("Recording triggered via GPIO double tap")
             return jsonify({'success': True, 'message': 'Recording started'})
         else:
-            return jsonify({'success': False, 'message': f'Cannot start recording in current state: {recording_state["status"]}'})
+            logger.warning(f'GPIO trigger received, but current state is {recording_state["status"]}')
+            return jsonify({'success': False, 'message': f'Cannot start recording in current state: {recording_state["status"]}'}), 400 # Use 400 Bad Request
     except Exception as e:
         logger.error(f"Error triggering recording: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
