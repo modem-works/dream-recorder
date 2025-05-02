@@ -600,8 +600,8 @@ def handle_show_previous_dream():
             # Move to the next video in the sequence
             video_playback_state['current_index'] += 1
             
-            # If we've reached the limit, wrap around to the most recent
-            if video_playback_state['current_index'] >= int(os.getenv('VIDEO_HISTORY_LIMIT')):
+            # If we've reached the end, wrap around to the most recent
+            if video_playback_state['current_index'] >= len(dreams):
                 video_playback_state['current_index'] = 0
         
         # Get the video at the current index
