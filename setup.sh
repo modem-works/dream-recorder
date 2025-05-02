@@ -59,10 +59,28 @@ fi
 
 # Check for .env file
 if [ ! -f ".env" ]; then
-    log "Creating .env file from .env.example..."
+    log "No .env file found."
     if [ -f ".env.example" ]; then
-        cp .env.example .env
-        log "Created .env file. Please update it with your API keys"
+        # Prompt for API keys
+        echo -n "Enter your OPENAI_API_KEY: "
+        read -r OPENAI_API_KEY
+        if [ -z "$OPENAI_API_KEY" ]; then
+            log "ERROR: OPENAI_API_KEY cannot be empty. Exiting."
+            exit 1
+        fi
+        echo -n "Enter your LUMALABS_API_KEY: "
+        read -r LUMALABS_API_KEY
+        if [ -z "$LUMALABS_API_KEY" ]; then
+            log "ERROR: LUMALABS_API_KEY cannot be empty. Exiting."
+            exit 1
+        fi
+        # Create .env by copying .env.example, but replace the API keys
+        awk -v openai="$OPENAI_API_KEY" -v luma="$LUMALABS_API_KEY" '
+            /^OPENAI_API_KEY=/ { print "OPENAI_API_KEY=\"" openai "\""; next }
+            /^LUMALABS_API_KEY=/ { print "LUMALABS_API_KEY=\"" luma "\""; next }
+            { print }
+        ' .env.example > .env
+        log "Created .env file with your API keys."
     else
         log "ERROR: .env.example file not found!"
         exit 1
