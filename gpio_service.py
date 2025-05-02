@@ -15,7 +15,7 @@ import os
 import sys
 from enum import Enum
 from dotenv import load_dotenv
-from env_check import check_required_env_vars
+from scripts.env_check import check_required_env_vars
 
 # Load environment variables and check they're all set
 load_dotenv()
