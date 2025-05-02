@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="/static/css/dreams.css">
 </head>
 <body>
+    <div class="logo-container">
+        <img src="/static/images/Logo.png" alt="Dream Recorder Logo" class="logo-img">
+    </div>
+
     <div class="dreams-grid">
         {% for dream in dreams %}
         <div class="dream-card" data-id="{{ dream.id }}"
@@ -31,16 +35,25 @@
     <div class="modal" id="dreamModal">
         <div class="modal-content">
             <button class="modal-close">&times;</button>
+            <div class="modal-section" id="modalVideoSection" style="display: none;">
+                <video id="modalVideoPlayer" width="100%" controls>
+                    <source id="modalVideoSource" src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="modal-section" id="modalAudioSection" style="display: none;">
+                <audio id="modalAudioPlayer" controls style="width: 100%;">
+                    <source id="modalAudioSource" src="" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
             <div class="modal-section">
-                <h3>Your dream</h3>
                 <p id="modalUserPrompt"></p>
             </div>
             <div class="modal-section">
-                <h3>The prompt</h3>
                 <p id="modalGeneratedPrompt"></p>
             </div>
             <div class="modal-section">
-                <h3>Created at</h3>
                 <p id="modalCreatedAt"></p>
             </div>
             <div class="modal-actions">
@@ -78,7 +91,32 @@
                     } else {
                         audioLink.style.display = 'none';
                     }
+                    // Audio player logic
+                    const audioSection = document.getElementById('modalAudioSection');
+                    const audioPlayer = document.getElementById('modalAudioPlayer');
+                    const audioSource = document.getElementById('modalAudioSource');
+                    if (data.audioUrl && data.audioUrl !== '/media/audio/') {
+                        audioSource.src = data.audioUrl;
+                        audioPlayer.load();
+                        audioSection.style.display = '';
+                    } else {
+                        audioSource.src = '';
+                        audioSection.style.display = 'none';
+                    }
                     document.getElementById('modalVideoLink').href = data.videoUrl;
+                    
+                    // Video player logic
+                    const videoSection = document.getElementById('modalVideoSection');
+                    const videoPlayer = document.getElementById('modalVideoPlayer');
+                    const videoSource = document.getElementById('modalVideoSource');
+                    if (data.videoUrl && data.videoUrl !== '/media/video/') {
+                        videoSource.src = data.videoUrl;
+                        videoPlayer.load();
+                        videoSection.style.display = '';
+                    } else {
+                        videoSource.src = '';
+                        videoSection.style.display = 'none';
+                    }
                     
                     // Store the dream ID for deletion
                     document.getElementById('modalDeleteButton').dataset.dreamId = data.id;
@@ -89,11 +127,33 @@
 
             modalClose.addEventListener('click', function() {
                 modal.classList.remove('show');
+                // Stop audio and video playback when closing modal
+                const audioPlayer = document.getElementById('modalAudioPlayer');
+                if (audioPlayer) {
+                    audioPlayer.pause();
+                    audioPlayer.currentTime = 0;
+                }
+                const videoPlayer = document.getElementById('modalVideoPlayer');
+                if (videoPlayer) {
+                    videoPlayer.pause();
+                    videoPlayer.currentTime = 0;
+                }
             });
 
             modal.addEventListener('click', function(e) {
                 if (e.target === modal) {
                     modal.classList.remove('show');
+                    // Stop audio and video playback when closing modal
+                    const audioPlayer = document.getElementById('modalAudioPlayer');
+                    if (audioPlayer) {
+                        audioPlayer.pause();
+                        audioPlayer.currentTime = 0;
+                    }
+                    const videoPlayer = document.getElementById('modalVideoPlayer');
+                    if (videoPlayer) {
+                        videoPlayer.pause();
+                        videoPlayer.currentTime = 0;
+                    }
                 }
             });
 
