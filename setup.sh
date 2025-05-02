@@ -50,6 +50,9 @@ if [ ! -f "dreams.db" ]; then
     log "Initializing database..."
     python3 -c "from dream_db import DreamDB; DreamDB()._init_db()"
     log "Database initialized successfully"
+    log "Populating sample dreams..."
+    python3 scripts/init_sample_dreams.py
+    log "Sample dreams populated"
 else
     log "Database already exists"
 fi

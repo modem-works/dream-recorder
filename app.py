@@ -16,7 +16,7 @@ import requests
 import time
 from dotenv import load_dotenv
 import argparse
-from env_check import check_required_env_vars
+from scripts.env_check import check_required_env_vars
 from dream_db import DreamDB
 from pydub import AudioSegment
 import ffmpeg

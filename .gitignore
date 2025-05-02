@@ -3,11 +3,7 @@
 dreams.db
 media/
 logs/
-*.wav
-*.mp4
-*.webm
-*.opus
-scripts/
+temp_scripts/
 
 # Node.js
 node_modules/

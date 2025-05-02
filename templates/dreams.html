@@ -71,7 +71,13 @@
                     document.getElementById('modalGeneratedPrompt').textContent = data.generatedPrompt;
                     document.getElementById('modalCreatedAt').textContent = data.createdAt;
                     
-                    document.getElementById('modalAudioLink').href = data.audioUrl;
+                    const audioLink = document.getElementById('modalAudioLink');
+                    if (data.audioUrl && data.audioUrl !== '/media/audio/') {
+                        audioLink.href = data.audioUrl;
+                        audioLink.style.display = '';
+                    } else {
+                        audioLink.style.display = 'none';
+                    }
                     document.getElementById('modalVideoLink').href = data.videoUrl;
                     
                     // Store the dream ID for deletion
