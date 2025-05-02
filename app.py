@@ -106,14 +106,15 @@ def save_wav_file(audio_data, filename=None):
         except:
             pass
 
-def generate_video_prompt(transcription):
+def generate_video_prompt(transcription, luma_extend=False):
     """Generate an enhanced video prompt from the transcription using GPT."""
     try:
+        system_prompt = os.getenv('GPT_SYSTEM_PROMPT_EXTEND') if luma_extend else os.getenv('GPT_SYSTEM_PROMPT')
         response = client.chat.completions.create(
             model=os.getenv('GPT_MODEL'),
             messages=[
-                {"role": "system", "content": os.getenv('GPT_SYSTEM_PROMPT')},
-                {"role": "user", "content": f"Transform this dream description into a detailed video prompt: {transcription}"}
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"{transcription}"}
             ],
             temperature=float(os.getenv('GPT_TEMPERATURE')),
             max_tokens=int(os.getenv('GPT_MAX_TOKENS'))
@@ -201,10 +202,16 @@ def process_thumbnail(video_path):
         logger.error(f"Error generating thumbnail: {str(e)}")
         raise
 
-def generate_video(prompt, filename=None):
-    """Generate a video using Luma Labs API."""
+def generate_video(prompt, filename=None, luma_extend=False):
+    """Generate a video using Luma Labs API, with optional extension if LUMA_EXTEND is set."""
     try:
-        # Create the generation request
+        # If luma_extend, split the prompt into two parts
+        if luma_extend and '*****' in prompt:
+            initial_prompt, extension_prompt = [p.strip() for p in prompt.split('*****', 1)]
+        else:
+            initial_prompt = prompt
+            extension_prompt = 'Continue on with this video'  # fallback
+        # Step 1: Create the initial generation request
         response = requests.post(
             os.getenv('LUMA_GENERATIONS_ENDPOINT'),
             headers={
@@ -213,111 +220,108 @@ def generate_video(prompt, filename=None):
                 'content-type': 'application/json'
             },
             json={
-                'prompt': prompt,
+                'prompt': initial_prompt,
                 'model': os.getenv('LUMA_MODEL'),
                 'resolution': os.getenv('LUMA_RESOLUTION'),
                 'duration': os.getenv('LUMA_DURATION'),
                 "aspect_ratio": os.getenv('LUMA_ASPECT_RATIO'),
             }
         )
-        
-        # Accept both 200 and 201 status codes
         if response.status_code not in [200, 201]:
             raise Exception(f"Luma API error: {response.text}")
-        
         response_data = response.json()
         logger.info(f"API response: {response_data}")
-        
         generation_id = response_data.get('id')
         if not generation_id:
             raise Exception("Failed to get generation ID from response")
-        
         logger.info(f"Started video generation with ID: {generation_id}")
-        
-        # Poll for completion with more detailed status checking
-        max_attempts = int(os.getenv('LUMA_MAX_POLL_ATTEMPTS'))
-        poll_interval = float(os.getenv('LUMA_POLL_INTERVAL'))
-        
-        for attempt in range(max_attempts):
-            status_response = requests.get(
-                f'{os.getenv("LUMA_API_URL")}/generations/{generation_id}',
+        def poll_for_completion(generation_id):
+            max_attempts = int(os.getenv('LUMA_MAX_POLL_ATTEMPTS'))
+            poll_interval = float(os.getenv('LUMA_POLL_INTERVAL'))
+            for attempt in range(max_attempts):
+                status_response = requests.get(
+                    f'{os.getenv("LUMA_API_URL")}/generations/{generation_id}',
+                    headers={
+                        'accept': 'application/json',
+                        'authorization': f'Bearer {os.getenv("LUMALABS_API_KEY")}'
+                    }
+                )
+                if status_response.status_code not in [200, 201]:
+                    logger.error(f"Status check failed with code {status_response.status_code}: {status_response.text}")
+                    time.sleep(poll_interval)
+                    continue
+                status_data = status_response.json()
+                if attempt == 0 or attempt % 10 == 0:
+                    logger.info(f"Full status response: {status_data}")
+                state = status_data.get('state')
+                logger.info(f"Generation state: {state} (attempt {attempt+1}/{max_attempts})")
+                if state in ['completed', 'succeeded']:
+                    assets = status_data.get('assets') or {}
+                    video_url = None
+                    if isinstance(assets, dict):
+                        video_url = (assets.get('video') or 
+                                   assets.get('url') or 
+                                   (assets.get('videos', {}) or {}).get('url'))
+                    if not video_url and 'result' in status_data:
+                        result = status_data.get('result', {})
+                        if isinstance(result, dict):
+                            video_url = result.get('url')
+                    if not video_url:
+                        raise Exception("Video URL not found in completed response")
+                    logger.info(f"Video generation completed: {video_url}")
+                    return video_url
+                elif state in ['failed', 'error']:
+                    error_msg = status_data.get('failure_reason') or status_data.get('error') or "Unknown error"
+                    raise Exception(f"Video generation failed: {error_msg}")
+                time.sleep(poll_interval)
+            raise Exception(f"Timed out waiting for video generation after {max_attempts} attempts")
+        # Step 2: If luma_extend is set, extend the video
+        if luma_extend:
+            logger.info("LUMA_EXTEND is set. Requesting video extension.")
+            _ = poll_for_completion(generation_id)  # Wait for completion
+            extend_response = requests.post(
+                os.getenv('LUMA_GENERATIONS_ENDPOINT'),
                 headers={
                     'accept': 'application/json',
-                    'authorization': f'Bearer {os.getenv("LUMALABS_API_KEY")}'
+                    'authorization': f'Bearer {os.getenv("LUMALABS_API_KEY")}',
+                    'content-type': 'application/json'
+                },
+                json={
+                    'prompt': extension_prompt,
+                    'keyframes': {
+                        'frame0': {
+                            'type': 'generation',
+                            'id': generation_id
+                        }
+                    }
                 }
             )
-            
-            if status_response.status_code not in [200, 201]:
-                logger.error(f"Status check failed with code {status_response.status_code}: {status_response.text}")
-                time.sleep(poll_interval)
-                continue
-            
-            status_data = status_response.json()
-            
-            # Log the full response periodically for debugging
-            if attempt == 0 or attempt % 10 == 0:
-                logger.info(f"Full status response: {status_data}")
-            
-            # Check for different possible state values
-            state = status_data.get('state')
-            logger.info(f"Generation state: {state} (attempt {attempt+1}/{max_attempts})")
-            
-            if state in ['completed', 'succeeded']:
-                # Try to extract the video URL from different possible locations
-                assets = status_data.get('assets') or {}
-                video_url = None
-                
-                if isinstance(assets, dict):
-                    video_url = (assets.get('video') or 
-                               assets.get('url') or 
-                               (assets.get('videos', {}) or {}).get('url'))
-                
-                # Also check the result field for backward compatibility
-                if not video_url and 'result' in status_data:
-                    result = status_data.get('result', {})
-                    if isinstance(result, dict):
-                        video_url = result.get('url')
-                
-                if not video_url:
-                    raise Exception("Video URL not found in completed response")
-                
-                logger.info(f"Video generation completed: {video_url}")
-                
-                # Download the video
-                video_response = requests.get(video_url, stream=True)
-                video_response.raise_for_status()
-                
-                # Save the video locally
-                if filename is None:
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"generated_{timestamp}.mp4"
-                
-                os.makedirs(os.getenv('VIDEOS_DIR'), exist_ok=True)
-                video_path = os.path.join(os.getenv('VIDEOS_DIR'), filename)
-                
-                with open(video_path, 'wb') as f:
-                    for chunk in video_response.iter_content(chunk_size=8192):
-                        f.write(chunk)
-                
-                logger.info(f"Saved video to {video_path}")
-                
-                # Process the video with FFmpeg
-                processed_video_path = process_video(video_path)
-                logger.info(f"Processed video saved to {processed_video_path}")
-                
-                # Generate thumbnail for the processed video
-                thumb_filename = process_thumbnail(processed_video_path)
-                
-                return filename, thumb_filename
-                
-            elif state in ['failed', 'error']:
-                error_msg = status_data.get('failure_reason') or status_data.get('error') or "Unknown error"
-                raise Exception(f"Video generation failed: {error_msg}")
-            
-            time.sleep(poll_interval)
-        
-        raise Exception(f"Timed out waiting for video generation after {max_attempts} attempts")
-            
+            if extend_response.status_code not in [200, 201]:
+                raise Exception(f"Luma API error (extend): {extend_response.text}")
+            extend_data = extend_response.json()
+            logger.info(f"Extend API response: {extend_data}")
+            extend_id = extend_data.get('id')
+            if not extend_id:
+                raise Exception("Failed to get extend generation ID from response")
+            logger.info(f"Started video extension with ID: {extend_id}")
+            video_url = poll_for_completion(extend_id)
+        else:
+            video_url = poll_for_completion(generation_id)
+        video_response = requests.get(video_url, stream=True)
+        video_response.raise_for_status()
+        if filename is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"generated_{timestamp}.mp4"
+        os.makedirs(os.getenv('VIDEOS_DIR'), exist_ok=True)
+        video_path = os.path.join(os.getenv('VIDEOS_DIR'), filename)
+        with open(video_path, 'wb') as f:
+            for chunk in video_response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        logger.info(f"Saved video to {video_path}")
+        processed_video_path = process_video(video_path)
+        logger.info(f"Processed video saved to {processed_video_path}")
+        thumb_filename = process_thumbnail(processed_video_path)
+        return filename, thumb_filename
     except Exception as e:
         logger.error(f"Error generating video: {str(e)}")
         raise
@@ -326,53 +330,45 @@ def process_audio(sid):
     """Process the recorded audio and generate video."""
     try:
         global recording_state, audio_buffer, wav_file, audio_chunks
-        
         # Save the WAV file
         audio_data = b''.join(audio_chunks)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         wav_filename = f"recording_{timestamp}.wav"
         wav_filename = save_wav_file(audio_data, wav_filename)
-        
         # Get duration of the audio
         wav_path = os.path.join(os.getenv('RECORDINGS_DIR'), wav_filename)
         with wave.open(wav_path, 'rb') as wf:
             duration = wf.getnframes() / wf.getframerate()
-        
         # Create a temporary file for the audio
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
             temp_file.write(audio_data)
             temp_file_path = temp_file.name
-
         # Transcribe the audio using OpenAI's Whisper API
         with open(temp_file_path, 'rb') as audio_file:
             transcription = client.audio.transcriptions.create(
                 model=os.getenv('WHISPER_MODEL'),
                 file=audio_file
             )
-
         # Update the transcription in the global state
         recording_state['transcription'] = transcription.text
-
         # Emit the transcription
         if sid:
             socketio.emit('transcription_update', {'text': transcription.text}, room=sid)
         else:
             socketio.emit('transcription_update', {'text': transcription.text})
-
+        # Check if LUMA_EXTEND is set
+        luma_extend = os.getenv('LUMA_EXTEND', 'False').lower() in ('1', 'true', 'yes')
         # Generate video prompt
-        video_prompt = generate_video_prompt(transcription.text)
+        video_prompt = generate_video_prompt(transcription.text, luma_extend=luma_extend)
         if not video_prompt:
             raise Exception("Failed to generate video prompt")
-        
         recording_state['video_prompt'] = video_prompt
         if sid:
             socketio.emit('video_prompt_update', {'text': video_prompt}, room=sid)
         else:
             socketio.emit('video_prompt_update', {'text': video_prompt})
-        
         # Generate video and get the processed video path and thumbnail filename
-        video_filename, thumb_filename = generate_video(video_prompt)
-        
+        video_filename, thumb_filename = generate_video(video_prompt, luma_extend=luma_extend)
         # Save to database
         dream_data = {
             'user_prompt': recording_state['transcription'],
@@ -388,16 +384,13 @@ def process_audio(sid):
             }
         }
         dream_db.save_dream(dream_data)
-        
         recording_state['status'] = 'complete'
         recording_state['video_url'] = f"/media/video/{video_filename}"
-        
         # Emit the video ready event to trigger playback
         if sid:
             socketio.emit('video_ready', {'url': recording_state['video_url']}, room=sid)
         else:
             socketio.emit('video_ready', {'url': recording_state['video_url']})
-        
     except Exception as e:
         logger.error(f"Error processing audio: {str(e)}")
         recording_state['status'] = 'error'
