@@ -28,3 +28,11 @@
 .colon.hidden {
     opacity: 0;
 }
+
+.digit, .colon {
+    text-shadow:
+        0 0 8px var(--clock-color),
+        0 0 16px var(--clock-color),
+        0 0 32px var(--clock-color),
+        0 0 64px var(--clock-color);
+}
