@@ -314,6 +314,12 @@ const StateManager = {
                 } else if (this.currentState === this.STATES.PLAYBACK) {
                     // Double tap during playback returns to clock
                     this.updateState(this.STATES.CLOCK);
+                } else if (this.currentState === this.STATES.RECORDING) {
+                    // Double tap during recording cancels and returns to clock
+                    if (window.stopRecording) {
+                        window.stopRecording();
+                    }
+                    this.updateState(this.STATES.CLOCK);
                 }
                 break;
                 

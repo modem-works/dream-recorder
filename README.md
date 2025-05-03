@@ -4,6 +4,49 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
 
 ## Setup
 
+### Script Roles: `setup.sh` vs `startup.sh`
+
+Dream Recorder uses two main scripts for setup and running:
+
+| Task                        | `setup.sh` | `startup.sh` |
+|-----------------------------|:----------:|:------------:|
+| Install dependencies        |     ✔      |      ✗       |
+| Initialize database         |     ✔      |      ✗       |
+| Prompt for API keys         |     ✔      |      ✗       |
+| Start app services          |     ✗      |      ✔       |
+| Kill old processes          |     ✔      |      ✔       |
+| Check GPIO permissions      |     ✔      |      ✔       |
+
+- **`setup.sh`**: Use this script for the **first-time setup** or when resetting your environment. It installs dependencies, sets up the database, prompts for API keys, and prepares your system. It also kills any running Dream Recorder processes and checks GPIO permissions.
+- **`startup.sh`**: Use this script **every time you want to start the application**. It kills any running Dream Recorder processes, checks GPIO permissions, and starts the Flask and GPIO services. It does not reinstall dependencies or reinitialize the database.
+- **Overlap**: Both scripts stop any running Dream Recorder processes and check GPIO permissions. Normally, you only need to run `setup.sh` once, and then use `startup.sh` for daily use.
+
+### First-Time Setup
+
+1. Run the setup script to prepare your environment:
+   ```bash
+   ./setup.sh
+   ```
+   This will install dependencies, set up the database, and prompt you for API keys.
+
+### Starting the Application
+
+- To start the Dream Recorder, run:
+  ```bash
+  ./startup.sh
+  ```
+  This will launch the web server and GPIO service.
+
+- For development mode (auto-reload Flask):
+  ```bash
+  ./startup.sh --dev
+  ```
+
+- If you want to ensure setup is always run before starting (not usually necessary after first setup):
+  ```bash
+  ./startup.sh --setup
+  ```
+
 ### Hardware Setup
 
 1. Install Raspberry Pi Imager
@@ -57,8 +100,9 @@ The Dream Recorder uses a simple touch interface with two interaction patterns:
    - During clock view: Shows the most recent dream
    - During recording: Stops the recording
 
-2. **Double Tap**: Starts a new recording when in clock view, or returns to clock view during playback
+2. **Double Tap**: Starts a new recording when in clock view, cancels a recording and returns to clock view if recording, or returns to clock view during playback
    - During clock view: Starts recording
+   - During recording: Cancels the recording and returns to clock view
    - During playback: Returns to clock view
 
 ## Directory Structure
