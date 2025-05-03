@@ -95,28 +95,33 @@ chmod +x startup.sh run_gpio.sh
 if [ "$INSTALL_SERVICE" = true ]; then
     log "Installing systemd service..."
     if [ -f "dream-recorder.service" ]; then
-        # Update paths in service file to match current directory
+        # Create a temporary copy of the service file
+        TMP_SERVICE=$(mktemp)
+        cp dream-recorder.service "$TMP_SERVICE"
         CURRENT_DIR=$(pwd)
-        sed -i "s|WorkingDirectory=.*|WorkingDirectory=$CURRENT_DIR|g" dream-recorder.service
-        sed -i "s|ExecStart=.*|ExecStart=$CURRENT_DIR/startup.sh|g" dream-recorder.service
-        sed -i "s|User=pi|User=$(whoami)|g" dream-recorder.service
-        
+        sed -i "s|WorkingDirectory=.*|WorkingDirectory=$CURRENT_DIR|g" "$TMP_SERVICE"
+        sed -i "s|ExecStart=.*|ExecStart=$CURRENT_DIR/startup.sh|g" "$TMP_SERVICE"
+        sed -i "s|User=pi|User=$(whoami)|g" "$TMP_SERVICE"
+
         # Install service
-        sudo cp dream-recorder.service /etc/systemd/system/
+        sudo cp "$TMP_SERVICE" /etc/systemd/system/dream-recorder.service
+        rm "$TMP_SERVICE"
         sudo systemctl daemon-reload
         sudo systemctl enable dream-recorder.service
         log "Service installed and enabled. To start it now, run: sudo systemctl start dream-recorder.service"
-        
+
         # Install kiosk service if both flags are provided
         if [ "$SETUP_KIOSK" = true ] && [ -f "dream-recorder-kiosk.service" ]; then
             log "Installing kiosk mode service..."
-            
-            # Update user in kiosk service file
-            sed -i "s|User=%USER%|User=$(whoami)|g" dream-recorder-kiosk.service
-            sed -i "s|XAUTHORITY=/home/%USER%/.Xauthority|XAUTHORITY=/home/$(whoami)/.Xauthority|g" dream-recorder-kiosk.service
-            
+            # Create a temporary copy of the kiosk service file
+            TMP_KIOSK_SERVICE=$(mktemp)
+            cp dream-recorder-kiosk.service "$TMP_KIOSK_SERVICE"
+            sed -i "s|User=%USER%|User=$(whoami)|g" "$TMP_KIOSK_SERVICE"
+            sed -i "s|XAUTHORITY=/home/%USER%/.Xauthority|XAUTHORITY=/home/$(whoami)/.Xauthority|g" "$TMP_KIOSK_SERVICE"
+
             # Install and enable kiosk service
-            sudo cp dream-recorder-kiosk.service /etc/systemd/system/
+            sudo cp "$TMP_KIOSK_SERVICE" /etc/systemd/system/dream-recorder-kiosk.service
+            rm "$TMP_KIOSK_SERVICE"
             sudo systemctl daemon-reload
             sudo systemctl enable dream-recorder-kiosk.service
             log "Kiosk service installed and enabled. It will start automatically after the Dream Recorder service."
