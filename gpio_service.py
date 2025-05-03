@@ -167,8 +167,38 @@ def main():
                         help=f'Sampling rate in seconds (default: {os.getenv("GPIO_SAMPLING_RATE")})')
     parser.add_argument('--startup-delay', type=int, default=int(os.getenv('GPIO_STARTUP_DELAY')),
                         help=f'Delay in seconds before starting (default: {os.getenv("GPIO_STARTUP_DELAY")})')
+    parser.add_argument('--test', action='store_true', help='Run in test mode (simulate taps from CLI)')
     args = parser.parse_args()
-    
+
+    # If test mode, run CLI loop for simulating taps
+    if args.test:
+        single_tap_url = f"{args.flask_url}{args.single_tap_endpoint}"
+        double_tap_url = f"{args.flask_url}{args.double_tap_endpoint}"
+        print("GPIO Service Test Mode: Simulate taps from CLI")
+        print("Type 's' for single tap, 'd' for double tap, 'q' to quit.")
+        while True:
+            user_input = input('> ').strip().lower()
+            if user_input == 's':
+                print(f"Simulating single tap... (POST {single_tap_url})")
+                try:
+                    response = requests.post(single_tap_url)
+                    print(f"Single tap response: {response.status_code} {response.text}")
+                except Exception as e:
+                    print(f"Error sending single tap: {e}")
+            elif user_input == 'd':
+                print(f"Simulating double tap... (POST {double_tap_url})")
+                try:
+                    response = requests.post(double_tap_url)
+                    print(f"Double tap response: {response.status_code} {response.text}")
+                except Exception as e:
+                    print(f"Error sending double tap: {e}")
+            elif user_input == 'q':
+                print("Exiting test mode.")
+                break
+            else:
+                print("Unknown command. Type 's' for single tap, 'd' for double tap, 'q' to quit.")
+        return
+
     # Add a small delay at startup to let system initialize
     logger.info(f"Starting up, waiting {args.startup_delay} seconds for system initialization...")
     time.sleep(args.startup_delay)

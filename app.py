@@ -235,11 +235,9 @@ def get_config():
 def gpio_single_tap():
     """API endpoint for single tap from GPIO controller."""
     try:
-        # DO A SINGLE TAP
-        if True:
-            return jsonify({'status': 'success'})
-        else:
-            return jsonify({'status': 'error', 'message': 'An error occurred'}), 404
+        # Notify all clients of a single tap event
+        socketio.emit('device_event', {'eventType': 'single_tap'})
+        return jsonify({'status': 'success'})
     except Exception as e:
         if logger:
             logger.error(f"Error in API gpio_single_tap: {str(e)}")
@@ -249,11 +247,9 @@ def gpio_single_tap():
 def gpio_double_tap():
     """API endpoint for double tap from GPIO controller."""
     try:
-        # DO A DOUBLE TAP
-        if True:
-            return jsonify({'status': 'success'})
-        else:
-            return jsonify({'status': 'error', 'message': 'An error occurred'}), 404
+        # Notify all clients of a double tap event
+        socketio.emit('device_event', {'eventType': 'double_tap'})
+        return jsonify({'status': 'success'})
     except Exception as e:
         if logger:
             logger.error(f"Error in API gpio_double_tap: {str(e)}")
