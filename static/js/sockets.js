@@ -141,7 +141,7 @@ window.socket.on('device_event', (data) => {
     console.log('Received device_event:', data);
     if (window.StateManager) {
         // Prefer camelCase, fallback to snake_case for compatibility
-        const eventType = data.eventType || data.event_type || 'single_tap';
+        const eventType = data.eventType;
         window.StateManager.handleDeviceEvent(eventType);
     } else if (window.stopRecording) {
         window.stopRecording();

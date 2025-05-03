@@ -11,17 +11,16 @@ import logging
 import gevent
 import io
 from openai import OpenAI
-from datetime import datetime
 from dotenv import load_dotenv
 import argparse
 from scripts.env_check import check_required_env_vars
 from dream_db import DreamDB
-import ffmpeg
 from functions.audio import create_wav_file, process_audio
 
 # =============================
 # Environment & Logging
 # =============================
+
 # Load environment variables and check they're all set
 load_dotenv()
 check_required_env_vars()
@@ -33,6 +32,7 @@ logger = logging.getLogger(__name__)
 # =============================
 # Global Variables & Constants
 # =============================
+
 # Global state for recording
 recording_state = {
     'is_recording': False,
@@ -58,6 +58,7 @@ audio_chunks = []
 # =============================
 # Flask App & Extensions Initialization
 # =============================
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config.update(
@@ -81,6 +82,7 @@ dream_db = DreamDB()
 # =============================
 # Core Logic / Helper Functions
 # =============================
+
 def initiate_recording():
     """Handles the common state changes and buffer resets for starting recording."""
     global audio_buffer, wav_file, audio_chunks
@@ -99,6 +101,7 @@ def initiate_recording():
 # =============================
 # SocketIO Event Handlers
 # =============================
+
 @socketio.on('connect')
 def handle_connect():
     """Handle new client connection."""
@@ -319,6 +322,7 @@ def serve_thumbnail(filename):
 # =============================
 # Main Execution Block
 # =============================
+
 if __name__ == '__main__':
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
