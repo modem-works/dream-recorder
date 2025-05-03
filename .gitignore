@@ -1,8 +1,10 @@
 # Project specific
 *.db
 dreams.db
-media/
-logs/
+media/*
+!media/.gitkeep
+logs/*
+!logs/.gitkeep
 temp_scripts/
 
 # Node.js
@@ -245,3 +247,13 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+media/audio/*
+!media/audio/.gitkeep
+media/video/*
+!media/video/.gitkeep
+media/thumbs/*
+!media/thumbs/.gitkeep
+
+db/*
+!db/.gitkeep

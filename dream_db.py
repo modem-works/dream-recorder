@@ -5,6 +5,7 @@ from pathlib import Path
 import logging
 from pydantic import BaseModel
 from typing import Optional
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,9 @@ class DreamData(BaseModel):
     status: Optional[str] = 'completed'
 
 class DreamDB:
-    def __init__(self, db_path='dreams.db'):
+    def __init__(self, db_path=None):
+        if db_path is None:
+            db_path = os.getenv('DREAMS_DB_PATH', '/app/db/dreams.db')
         self.db_path = db_path
         self._init_db()
     

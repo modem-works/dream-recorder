@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  dream-recorder:
+    build: .
+    ports:
+      - "${PORT}:${PORT}"
+    volumes:
+      - db-data:/app/db
+      - media-data:/app/media
+      - logs-data:/app/logs
+    env_file:
+      - .env
+    environment:
+      - HOST=0.0.0.0
+    command: python app.py
+
+  # For development mode, use:
+  #   docker-compose run --service-ports dev
+  dev:
+    build: .
+    ports:
+      - "${PORT}:${PORT}"
+    volumes:
+      - .:/app
+      - db-data:/app/db
+      - media-data:/app/media
+      - logs-data:/app/logs
+    env_file:
+      - .env
+    environment:
+      - HOST=0.0.0.0
+    command: python app.py --reload
+
+volumes:
+  db-data:
+  media-data:
+  logs-data: 

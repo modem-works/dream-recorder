@@ -3,6 +3,7 @@ import requests
 import time
 import os
 import ffmpeg
+import shutil
 from datetime import datetime
 
 def process_video(input_path, logger=None):
@@ -22,7 +23,7 @@ def process_video(input_path, logger=None):
         # Run FFmpeg
         ffmpeg.run(stream, overwrite_output=True, quiet=True)
         # Replace the original file with the processed one
-        os.replace(temp_path, input_path)
+        shutil.move(temp_path, input_path)
         if logger:
             logger.info(f"Processed video saved to {input_path}")
         return input_path
