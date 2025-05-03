@@ -31,6 +31,7 @@ services:
       - HOST=0.0.0.0
       - FLASK_ENV=development
     command: python app.py --reload
+    profiles: ["dev"]
 
 volumes:
   db-data:

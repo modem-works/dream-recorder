@@ -26,9 +26,10 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
 
 4. **Start in development mode (with live reload):**
    ```bash
-   docker compose run --service-ports dev
+   docker compose --profile dev run --service-ports dev
    ```
    - The app will be available at [http://localhost:5000](http://localhost:5000) (or the port in your config).
+   - The `dev` service is now only started when the `dev` profile is specified.
 
 5. **Stop the app:**
    ```bash
@@ -58,7 +59,11 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
    ```bash
    ./start_dream_recorder_pi.sh
    ```
-   - This will start the Docker app, the GPIO service, and launch Chromium in kiosk mode.
+   - This will start the Docker app (production mode by default), the GPIO service, and launch Chromium in kiosk mode.
+   - To start the app in development mode, use:
+     ```bash
+     docker compose --profile dev run --service-ports dev
+     ```
 
 5. **(Optional) Enable auto-start on boot:**
    ```bash
