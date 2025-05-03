@@ -6,8 +6,11 @@ import logging
 from pydantic import BaseModel
 from typing import Optional
 import os
+from config_loader import load_config
 
 logger = logging.getLogger(__name__)
+
+config = load_config()
 
 class DreamData(BaseModel):
     user_prompt: str
@@ -20,7 +23,7 @@ class DreamData(BaseModel):
 class DreamDB:
     def __init__(self, db_path=None):
         if db_path is None:
-            db_path = os.getenv('DREAMS_DB_PATH', '/app/db/dreams.db')
+            db_path = config.get('DREAMS_DB_PATH', '/app/db/dreams.db')
         self.db_path = db_path
         self._init_db()
     

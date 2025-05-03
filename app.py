@@ -11,22 +11,18 @@ import logging
 import gevent
 import io
 from openai import OpenAI
-from dotenv import load_dotenv
 import argparse
-from scripts.env_check import check_required_env_vars
 from dream_db import DreamDB
 from functions.audio import create_wav_file, process_audio
+from config_loader import load_config
 
 # =============================
-# Environment & Logging
+# Load Configuration
 # =============================
-
-# Load environment variables and check they're all set
-load_dotenv()
-check_required_env_vars()
+config = load_config()
 
 # Configure logging
-logging.basicConfig(level=getattr(logging, os.getenv('LOG_LEVEL')))
+logging.basicConfig(level=getattr(logging, config["LOG_LEVEL"]))
 logger = logging.getLogger(__name__)
 
 # =============================
@@ -62,14 +58,14 @@ audio_chunks = []
 # Initialize Flask app
 app = Flask(__name__)
 app.config.update(
-    DEBUG=os.getenv('FLASK_ENV') == 'development',
-    HOST=os.getenv('HOST'),
-    PORT=int(os.getenv('PORT').split('#')[0].strip())
+    DEBUG=config["FLASK_ENV"] == "development",
+    HOST=config["HOST"],
+    PORT=int(config["PORT"])
 )
 
 # Initialize OpenAI client
 client = OpenAI(
-    api_key=os.getenv('OPENAI_API_KEY'),
+    api_key=config["OPENAI_API_KEY"],
     http_client=None
 )
 
@@ -212,7 +208,7 @@ def index():
     """Serve the main HTML page."""
     return render_template('index.html', 
                          is_development=app.config['DEBUG'],
-                         total_background_images=int(os.getenv('TOTAL_BACKGROUND_IMAGES', 1119)))
+                         total_background_images=int(config["TOTAL_BACKGROUND_IMAGES"]))
 
 @app.route('/dreams')
 def dreams():
@@ -226,12 +222,12 @@ def get_config():
     """Get application configuration for the frontend."""
     return jsonify({
         'is_development': app.config['DEBUG'],
-        'playback_duration': int(os.getenv('PLAYBACK_DURATION')),
-        'logo_fade_in_duration': int(os.getenv('LOGO_FADE_IN_DURATION')),
-        'logo_fade_out_duration': int(os.getenv('LOGO_FADE_OUT_DURATION')),
-        'clock_fade_in_duration': int(os.getenv('CLOCK_FADE_IN_DURATION')),
-        'clock_fade_out_duration': int(os.getenv('CLOCK_FADE_OUT_DURATION')),
-        'transition_delay': int(os.getenv('TRANSITION_DELAY'))
+        'playback_duration': int(config['PLAYBACK_DURATION']),
+        'logo_fade_in_duration': int(config['LOGO_FADE_IN_DURATION']),
+        'logo_fade_out_duration': int(config['LOGO_FADE_OUT_DURATION']),
+        'clock_fade_in_duration': int(config['CLOCK_FADE_IN_DURATION']),
+        'clock_fade_out_duration': int(config['CLOCK_FADE_OUT_DURATION']),
+        'transition_delay': int(config['TRANSITION_DELAY'])
     })
 
 @app.route('/api/gpio_single_tap', methods=['POST'])
@@ -271,15 +267,15 @@ def delete_dream(dream_id):
             # Delete associated files
             try:
                 # Delete video file
-                video_path = os.path.join(os.getenv('VIDEOS_DIR'), dream['video_filename'])
+                video_path = os.path.join(config['VIDEOS_DIR'], dream['video_filename'])
                 if os.path.exists(video_path):
                     os.remove(video_path)
                 # Delete thumbnail file
-                thumb_path = os.path.join(os.getenv('THUMBS_DIR'), dream['thumb_filename'])
+                thumb_path = os.path.join(config['THUMBS_DIR'], dream['thumb_filename'])
                 if os.path.exists(thumb_path):
                     os.remove(thumb_path)
                 # Delete audio file
-                audio_path = os.path.join(os.getenv('RECORDINGS_DIR'), dream['audio_filename'])
+                audio_path = os.path.join(config['RECORDINGS_DIR'], dream['audio_filename'])
                 if os.path.exists(audio_path):
                     os.remove(audio_path)
             except Exception as e:
@@ -296,10 +292,10 @@ def delete_dream(dream_id):
 
 @app.route('/api/clock-config-path')
 def clock_config_path():
-    """Return the clock configuration path from environment."""
-    config_path = os.getenv('CLOCK_CONFIG_PATH')
+    """Return the clock configuration path from config."""
+    config_path = config['CLOCK_CONFIG_PATH']
     if not config_path:
-        return jsonify({'error': 'CLOCK_CONFIG_PATH not set in environment'}), 500
+        return jsonify({'error': 'CLOCK_CONFIG_PATH not set in config'}), 500
     return jsonify({'configPath': config_path})
 
 # -- Media Routes --
@@ -315,7 +311,7 @@ def serve_media(filename):
 def serve_thumbnail(filename):
     """Serve thumbnail files from the thumbs directory."""
     try:
-        return send_file(os.path.join(os.getenv('THUMBS_DIR'), filename))
+        return send_file(os.path.join(config['THUMBS_DIR'], filename))
     except FileNotFoundError:
         return "Thumbnail not found", 404
 
