@@ -80,12 +80,11 @@ def generate_video_prompt(transcription, luma_extend=False, client=None, logger=
     """Generate an enhanced video prompt from the transcription using GPT."""
     try:
         system_prompt = os.getenv('GPT_SYSTEM_PROMPT_EXTEND') if luma_extend else os.getenv('GPT_SYSTEM_PROMPT')
-        pre_prompt = os.getenv('GPT_PRE_PROMPT')
         response = client.chat.completions.create(
             model=os.getenv('GPT_MODEL'),
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"{pre_prompt}: {transcription}"}
+                {"role": "user", "content": f"{transcription}"}
             ],
             temperature=float(os.getenv('GPT_TEMPERATURE')),
             max_tokens=int(os.getenv('GPT_MAX_TOKENS'))
