@@ -9,20 +9,15 @@ from flask_socketio import SocketIO, emit
 import os
 import logging
 import gevent
-import tempfile
-import wave
 import io
 from openai import OpenAI
-import numpy as np
 from datetime import datetime
-import requests
-import time
 from dotenv import load_dotenv
 import argparse
 from scripts.env_check import check_required_env_vars
-from dream_db import DreamDB, DreamData
-from pydub import AudioSegment
+from dream_db import DreamDB
 import ffmpeg
+from functions.audio import create_wav_file, process_audio
 
 # =============================
 # Environment & Logging
@@ -56,6 +51,7 @@ video_playback_state = {
 # Audio buffer for storing chunks
 audio_buffer = io.BytesIO()
 wav_file = None
+
 # List to store incoming audio chunks
 audio_chunks = []
 
@@ -78,330 +74,14 @@ client = OpenAI(
 
 # Initialize SocketIO
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent')
+
 # Initialize DreamDB
 dream_db = DreamDB()
 
 # =============================
 # Core Logic / Helper Functions
 # =============================
-def create_wav_file():
-    """Create a new WAV file in the audio buffer with the correct format."""
-    global wav_file
-    wav_file = wave.open(audio_buffer, 'wb')
-    wav_file.setnchannels(int(os.getenv('AUDIO_CHANNELS')))
-    wav_file.setsampwidth(int(os.getenv('AUDIO_SAMPLE_WIDTH')))
-    wav_file.setframerate(int(os.getenv('AUDIO_FRAME_RATE')))
-
-def save_wav_file(audio_data, filename=None):
-    """Save the WAV file locally for debugging. Converts WebM to WAV using ffmpeg."""
-    if filename is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"recording_{timestamp}.wav"
-    # Ensure the recordings directory exists
-    os.makedirs(os.getenv('RECORDINGS_DIR'), exist_ok=True)
-    filepath = os.path.join(os.getenv('RECORDINGS_DIR'), filename)
-    # Create a temporary file for the WebM data
-    with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_webm:
-        temp_webm.write(audio_data)
-        temp_webm_path = temp_webm.name
-    try:
-        # Convert WebM to WAV using ffmpeg
-        stream = ffmpeg.input(temp_webm_path)
-        stream = ffmpeg.output(stream, filepath, acodec='pcm_s16le', ac=1, ar=44100)
-        ffmpeg.run(stream, overwrite_output=True, quiet=True)
-        logger.info(f"Saved WAV file to {filepath}")
-        return filename
-    finally:
-        # Clean up temporary file
-        try:
-            os.unlink(temp_webm_path)
-        except:
-            pass
-
-def generate_video_prompt(transcription, luma_extend=False):
-    """Generate an enhanced video prompt from the transcription using GPT."""
-    try:
-        system_prompt = os.getenv('GPT_SYSTEM_PROMPT_EXTEND') if luma_extend else os.getenv('GPT_SYSTEM_PROMPT')
-        pre_prompt = os.getenv('GPT_PRE_PROMPT')
-        response = client.chat.completions.create(
-            model=os.getenv('GPT_MODEL'),
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"{pre_prompt}: {transcription}"}
-            ],
-            temperature=float(os.getenv('GPT_TEMPERATURE')),
-            max_tokens=int(os.getenv('GPT_MAX_TOKENS'))
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        logger.error(f"Error generating video prompt: {str(e)}")
-        return None
-
-def process_video(input_path):
-    """Process the video using FFmpeg with specific filters from environment variables."""
-    try:
-        # Create a temporary file for the processed video
-        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
-            temp_path = temp_file.name
-        # Apply FFmpeg filters using environment variables
-        stream = ffmpeg.input(input_path)
-        stream = ffmpeg.filter(stream, 'eq', brightness=float(os.getenv('FFMPEG_BRIGHTNESS')))
-        stream = ffmpeg.filter(stream, 'vibrance', intensity=float(os.getenv('FFMPEG_VIBRANCE')))
-        stream = ffmpeg.filter(stream, 'vaguedenoiser', threshold=float(os.getenv('FFMPEG_DENOISE_THRESHOLD')))
-        stream = ffmpeg.filter(stream, 'bilateral', sigmaS=float(os.getenv('FFMPEG_BILATERAL_SIGMA')))
-        stream = ffmpeg.filter(stream, 'noise', all_strength=float(os.getenv('FFMPEG_NOISE_STRENGTH')))
-        stream = ffmpeg.output(stream, temp_path)
-        # Run FFmpeg
-        ffmpeg.run(stream, overwrite_output=True, quiet=True)
-        # Replace the original file with the processed one
-        os.replace(temp_path, input_path)
-        logger.info(f"Processed video saved to {input_path}")
-        return input_path
-    except Exception as e:
-        logger.error(f"Error processing video: {str(e)}")
-        raise
-
-def process_thumbnail(video_path):
-    """Create a square thumbnail from the video at 1 second in."""
-    try:
-        # Get video dimensions using ffprobe
-        probe = ffmpeg.probe(video_path)
-        video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
-        width = int(video_info['width'])
-        height = int(video_info['height'])
-        # Calculate square crop dimensions based on the smaller dimension
-        crop_size = min(width, height)
-        # Calculate offsets to center the crop
-        x_offset = (width - crop_size) // 2
-        y_offset = (height - crop_size) // 2
-        # Create output directory if it doesn't exist
-        thumbs_dir = os.getenv('THUMBS_DIR')
-        os.makedirs(thumbs_dir, exist_ok=True)
-        # Generate simple timestamp-based filename
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        thumb_filename = f"thumb_{timestamp}.png"
-        thumb_path = os.path.join(thumbs_dir, thumb_filename)
-        # Log the FFmpeg command for debugging
-        logger.info(f"Generating thumbnail for video: {video_path}")
-        logger.info(f"Video dimensions: {width}x{height}")
-        logger.info(f"Output path: {thumb_path}")
-        logger.info(f"Crop dimensions: {crop_size}x{crop_size} at offset ({x_offset}, {y_offset})")
-        # Use FFmpeg to extract frame at 1 second and crop to square
-        stream = ffmpeg.input(video_path, ss=1)
-        stream = ffmpeg.filter(stream, 'crop', crop_size, crop_size, x_offset, y_offset)
-        stream = ffmpeg.output(stream, thumb_path, vframes=1)
-        # Run FFmpeg with stderr capture
-        try:
-            ffmpeg.run(stream, overwrite_output=True, capture_stderr=True)
-        except ffmpeg.Error as e:
-            logger.error(f"FFmpeg error: {e.stderr.decode()}")
-            raise
-        logger.info(f"Generated thumbnail saved to {thumb_path}")
-        return thumb_filename
-    except Exception as e:
-        logger.error(f"Error generating thumbnail: {str(e)}")
-        raise
-
-def generate_video(prompt, filename=None, luma_extend=False):
-    """Generate a video using Luma Labs API, with optional extension if LUMA_EXTEND is set."""
-    try:
-        # If luma_extend, split the prompt into two parts
-        if luma_extend and '*****' in prompt:
-            initial_prompt, extension_prompt = [p.strip() for p in prompt.split('*****', 1)]
-        else:
-            initial_prompt = prompt
-            extension_prompt = 'Continue on with this video'  # fallback
-        # Step 1: Create the initial generation request
-        response = requests.post(
-            os.getenv('LUMA_GENERATIONS_ENDPOINT'),
-            headers={
-                'accept': 'application/json',
-                'authorization': f'Bearer {os.getenv("LUMALABS_API_KEY")}',
-                'content-type': 'application/json'
-            },
-            json={
-                'prompt': initial_prompt,
-                'model': os.getenv('LUMA_MODEL'),
-                'resolution': os.getenv('LUMA_RESOLUTION'),
-                'duration': os.getenv('LUMA_DURATION'),
-                "aspect_ratio": os.getenv('LUMA_ASPECT_RATIO'),
-            }
-        )
-        if response.status_code not in [200, 201]:
-            raise Exception(f"Luma API error: {response.text}")
-        response_data = response.json()
-        logger.info(f"API response: {response_data}")
-        generation_id = response_data.get('id')
-        if not generation_id:
-            raise Exception("Failed to get generation ID from response")
-        logger.info(f"Started video generation with ID: {generation_id}")
-        def poll_for_completion(generation_id):
-            """Poll the Luma API for video generation completion."""
-            max_attempts = int(os.getenv('LUMA_MAX_POLL_ATTEMPTS'))
-            poll_interval = float(os.getenv('LUMA_POLL_INTERVAL'))
-            for attempt in range(max_attempts):
-                status_response = requests.get(
-                    f'{os.getenv("LUMA_API_URL")}/generations/{generation_id}',
-                    headers={
-                        'accept': 'application/json',
-                        'authorization': f'Bearer {os.getenv("LUMALABS_API_KEY")}'
-                    }
-                )
-                if status_response.status_code not in [200, 201]:
-                    logger.error(f"Status check failed with code {status_response.status_code}: {status_response.text}")
-                    time.sleep(poll_interval)
-                    continue
-                status_data = status_response.json()
-                if attempt == 0 or attempt % 10 == 0:
-                    logger.info(f"Full status response: {status_data}")
-                state = status_data.get('state')
-                logger.info(f"Generation state: {state} (attempt {attempt+1}/{max_attempts})")
-                if state in ['completed', 'succeeded']:
-                    assets = status_data.get('assets') or {}
-                    video_url = None
-                    if isinstance(assets, dict):
-                        video_url = (assets.get('video') or 
-                                   assets.get('url') or 
-                                   (assets.get('videos', {}) or {}).get('url'))
-                    if not video_url and 'result' in status_data:
-                        result = status_data.get('result', {})
-                        if isinstance(result, dict):
-                            video_url = result.get('url')
-                    if not video_url:
-                        raise Exception("Video URL not found in completed response")
-                    logger.info(f"Video generation completed: {video_url}")
-                    return video_url
-                elif state in ['failed', 'error']:
-                    error_msg = status_data.get('failure_reason') or status_data.get('error') or "Unknown error"
-                    raise Exception(f"Video generation failed: {error_msg}")
-                time.sleep(poll_interval)
-            raise Exception(f"Timed out waiting for video generation after {max_attempts} attempts")
-        # Step 2: If luma_extend is set, extend the video
-        if luma_extend:
-            logger.info("LUMA_EXTEND is set. Requesting video extension.")
-            _ = poll_for_completion(generation_id)  # Wait for completion
-            extend_response = requests.post(
-                os.getenv('LUMA_GENERATIONS_ENDPOINT'),
-                headers={
-                    'accept': 'application/json',
-                    'authorization': f'Bearer {os.getenv("LUMALABS_API_KEY")}',
-                    'content-type': 'application/json'
-                },
-                json={
-                    'prompt': extension_prompt,
-                    'keyframes': {
-                        'frame0': {
-                            'type': 'generation',
-                            'id': generation_id
-                        }
-                    }
-                }
-            )
-            if extend_response.status_code not in [200, 201]:
-                raise Exception(f"Luma API error (extend): {extend_response.text}")
-            extend_data = extend_response.json()
-            logger.info(f"Extend API response: {extend_data}")
-            extend_id = extend_data.get('id')
-            if not extend_id:
-                raise Exception("Failed to get extend generation ID from response")
-            logger.info(f"Started video extension with ID: {extend_id}")
-            video_url = poll_for_completion(extend_id)
-        else:
-            video_url = poll_for_completion(generation_id)
-        # Download the generated video
-        video_response = requests.get(video_url, stream=True)
-        video_response.raise_for_status()
-        if filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"generated_{timestamp}.mp4"
-        os.makedirs(os.getenv('VIDEOS_DIR'), exist_ok=True)
-        video_path = os.path.join(os.getenv('VIDEOS_DIR'), filename)
-        with open(video_path, 'wb') as f:
-            for chunk in video_response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        logger.info(f"Saved video to {video_path}")
-        # Post-process the video and generate a thumbnail
-        processed_video_path = process_video(video_path)
-        logger.info(f"Processed video saved to {processed_video_path}")
-        thumb_filename = process_thumbnail(processed_video_path)
-        return filename, thumb_filename
-    except Exception as e:
-        logger.error(f"Error generating video: {str(e)}")
-        raise
-
-def process_audio(sid):
-    """Process the recorded audio and generate video, then update state and emit events."""
-    try:
-        global recording_state, audio_buffer, wav_file, audio_chunks
-        # Save the WAV file
-        audio_data = b''.join(audio_chunks)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        wav_filename = f"recording_{timestamp}.wav"
-        wav_filename = save_wav_file(audio_data, wav_filename)
-        # Create a temporary file for the audio
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-            temp_file.write(audio_data)
-            temp_file_path = temp_file.name
-        # Transcribe the audio using OpenAI's Whisper API
-        with open(temp_file_path, 'rb') as audio_file:
-            transcription = client.audio.transcriptions.create(
-                model=os.getenv('WHISPER_MODEL'),
-                file=audio_file
-            )
-        # Update the transcription in the global state
-        recording_state['transcription'] = transcription.text
-        # Emit the transcription
-        if sid:
-            socketio.emit('transcription_update', {'text': transcription.text}, room=sid)
-        else:
-            socketio.emit('transcription_update', {'text': transcription.text})
-        # Check if LUMA_EXTEND is set
-        luma_extend = os.getenv('LUMA_EXTEND', 'False').lower() in ('1', 'true', 'yes')
-        # Generate video prompt
-        video_prompt = generate_video_prompt(transcription.text, luma_extend=luma_extend)
-        if not video_prompt:
-            raise Exception("Failed to generate video prompt")
-        recording_state['video_prompt'] = video_prompt
-        if sid:
-            socketio.emit('video_prompt_update', {'text': video_prompt}, room=sid)
-        else:
-            socketio.emit('video_prompt_update', {'text': video_prompt})
-        # Generate video and get the processed video path and thumbnail filename
-        video_filename, thumb_filename = generate_video(video_prompt, luma_extend=luma_extend)
-        # Save to database
-        dream_data = DreamData(
-            user_prompt=recording_state['transcription'],
-            generated_prompt=recording_state['video_prompt'],
-            audio_filename=wav_filename,
-            video_filename=video_filename,
-            thumb_filename=thumb_filename,
-            status='completed',
-        )
-        dream_db.save_dream(dream_data.dict())
-        recording_state['status'] = 'complete'
-        recording_state['video_url'] = f"/media/video/{video_filename}"
-        # Emit the video ready event to trigger playback
-        if sid:
-            socketio.emit('video_ready', {'url': recording_state['video_url']}, room=sid)
-        else:
-            socketio.emit('video_ready', {'url': recording_state['video_url']})
-    except Exception as e:
-        logger.error(f"Error processing audio: {str(e)}")
-        recording_state['status'] = 'error'
-        socketio.emit('error', {'message': str(e)})
-    finally:
-        # Clean up
-        audio_buffer = io.BytesIO()
-        audio_chunks = []
-        wav_file = None
-        # Remove temporary file if it exists
-        if 'temp_file_path' in locals():
-            try:
-                os.unlink(temp_file_path)
-            except:
-                pass
-
-def _initiate_recording():
+def initiate_recording():
     """Handles the common state changes and buffer resets for starting recording."""
     global audio_buffer, wav_file, audio_chunks
     recording_state['is_recording'] = True
@@ -412,47 +92,39 @@ def _initiate_recording():
     audio_buffer = io.BytesIO() 
     audio_chunks = []
     wav_file = None # Ensure wav_file is reset before creating a new one
-    create_wav_file()
-    logger.debug("Initiated recording: state set, buffers reset, wav file created.")
-
-def _finalize_and_process_recording(sid=None):
-    """Handles the common state changes and triggers audio processing for stopping recording."""
-    recording_state['is_recording'] = False
-    recording_state['status'] = 'processing'
-    logger.info(f"Finalizing recording. Status set to processing. Triggering process_audio for SID: {sid}")
-    # Process the audio in a background task
-    gevent.spawn(process_audio, sid)
-
-def _cycle_and_play_dream():
-    """Fetches dreams, cycles to the next one, and emits play_video event."""
-    # Get the most recent dreams
-    dreams = dream_db.get_all_dreams()
-    if not dreams:
-        logger.warning("No dreams found to cycle through.")
-        return None
-    # If we're currently playing a video, show the next one in sequence
-    if video_playback_state['is_playing']:
-        video_playback_state['current_index'] += 1
-        if video_playback_state['current_index'] >= len(dreams):
-            video_playback_state['current_index'] = 0  # Wrap around
-    else:
-        # If not playing, start with the most recent dream
-        video_playback_state['current_index'] = 0
-        video_playback_state['is_playing'] = True
-    # Get the dream at the current index
-    dream = dreams[video_playback_state['current_index']]
-    # Emit the video URL to the client
-    socketio.emit('play_video', {
-        'video_url': f"/media/video/{dream['video_filename']}",
-        'loop': True  # Enable looping for the video
-    })
-    logger.info(f"Emitted play_video for dream index {video_playback_state['current_index']}: {dream['video_filename']}")
-    return dream
+    wav_file = create_wav_file(audio_buffer)
+    if logger:
+        logger.debug("Initiated recording: state set, buffers reset, wav file created.")
 
 # =============================
 # SocketIO Event Handlers
 # =============================
-@socketio.on('audio_data')
+@socketio.on('connect')
+def handle_connect():
+    """Handle new client connection."""
+    if logger:
+        logger.info('Client connected')
+    emit('state_update', recording_state)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle client disconnection."""
+    if logger:
+        logger.info('Client disconnected')
+
+@socketio.on('start_recording')
+def handle_start_recording():
+    """Socket event to start recording."""
+    if not recording_state['is_recording']:
+        initiate_recording()
+        emit('state_update', recording_state)
+        if logger:
+            logger.info('Started recording via socket event')
+    else:
+        if logger:
+            logger.warning('Start recording event received, but already recording.')
+
+@socketio.on('stream_recording')
 def handle_audio_data(data):
     """Handle incoming audio data chunks from the client during recording."""
     if recording_state['is_recording']:
@@ -462,62 +134,75 @@ def handle_audio_data(data):
             # Store the chunk
             audio_chunks.append(audio_bytes)
         except Exception as e:
-            logger.error(f"Error handling audio data: {str(e)}")
+            if logger:
+                logger.error(f"Error handling audio data: {str(e)}")
             emit('error', {'message': f"Error handling audio data: {str(e)}"})
-
-@socketio.on('connect')
-def handle_connect():
-    """Handle new client connection."""
-    logger.info('Client connected')
-    emit('state_update', recording_state)
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    """Handle client disconnection."""
-    logger.info('Client disconnected')
-
-@socketio.on('start_recording')
-def handle_start_recording():
-    """Socket event to start recording."""
-    if not recording_state['is_recording']:
-        _initiate_recording()
-        emit('state_update', recording_state)
-        logger.info('Started recording via socket event')
-    else:
-        logger.warning('Start recording event received, but already recording.')
 
 @socketio.on('stop_recording')
 def handle_stop_recording():
     """Socket event to stop recording and trigger processing."""
     if recording_state['is_recording']:
         sid = request.sid # Get SID before changing state
-        _finalize_and_process_recording(sid=sid)
+
+        # Finalize the recording
+        recording_state['is_recording'] = False
+        recording_state['status'] = 'processing'
+        if logger:
+            logger.info(f"Finalizing recording. Status set to processing. Triggering process_audio for SID: {sid}")
+
+        # Process the audio in a background task, passing all required arguments
+        gevent.spawn(
+            process_audio, sid, client, socketio, dream_db, recording_state, audio_chunks, logger
+        )
+
         # Emit the comprehensive state update after finalizing
         emit('state_update', recording_state)
-        logger.info('Stopped recording via socket event.')
+        if logger:
+            logger.info('Stopped recording via socket event.')
     else:
-        logger.warning('Stop recording event received, but not currently recording.')
-
-@socketio.on('play_dream')
-def handle_play_dream(data):
-    """Handle when a dream video finishes playing (reset playback state)."""
-    video_playback_state['is_playing'] = False
-    video_playback_state['current_index'] = 0
+        if logger:
+            logger.warning('Stop recording event received, but not currently recording.')
 
 @socketio.on('show_previous_dream')
 def handle_show_previous_dream():
     """Socket event handler for showing previous dream."""
     try:
-        dream = _cycle_and_play_dream()
+        # Get the most recent dreams
+        dreams = dream_db.get_all_dreams()
+        if not dreams:
+            if logger:
+                logger.warning("No dreams found to cycle through.")
+            return None
+        # If we're currently playing a video, show the next one in sequence
+        if video_playback_state['is_playing']:
+            video_playback_state['current_index'] += 1
+            if video_playback_state['current_index'] >= len(dreams):
+                video_playback_state['current_index'] = 0  # Wrap around
+        else:
+            # If not playing, start with the most recent dream
+            video_playback_state['current_index'] = 0
+            video_playback_state['is_playing'] = True
+        # Get the dream at the current index
+        dream = dreams[video_playback_state['current_index']]
+        # Emit the video URL to the client
+        socketio.emit('play_video', {
+            'video_url': f"/media/video/{dream['video_filename']}",
+            'loop': True  # Enable looping for the video
+        })
+        if logger:
+            logger.info(f"Emitted play_video for dream index {video_playback_state['current_index']}: {dream['video_filename']}")
+
         if not dream:
             socketio.emit('error', {'message': 'No dreams found'})
     except Exception as e:
-        logger.error(f"Error in socket handle_show_previous_dream: {str(e)}")
+        if logger:
+            logger.error(f"Error in socket handle_show_previous_dream: {str(e)}")
         socketio.emit('error', {'message': str(e)})
 
 # =============================
 # Flask Route Handlers
 # =============================
+
 # -- Page Routes --
 @app.route('/')
 def index():
@@ -546,35 +231,32 @@ def get_config():
         'transition_delay': int(os.getenv('TRANSITION_DELAY'))
     })
 
-@app.route('/api/trigger_recording', methods=['POST'])
-def trigger_recording():
-    """API endpoint to trigger recording from GPIO controller (double tap)."""
+@app.route('/api/gpio_single_tap', methods=['POST'])
+def gpio_single_tap():
+    """API endpoint for single tap from GPIO controller."""
     try:
-        # Use 'ready' check specifically for the trigger endpoint
-        if recording_state['status'] == 'ready': 
-            _initiate_recording()
-            # Broadcast the recording state change to all clients
-            socketio.emit('recording_state', {'status': 'recording'}) 
-            logger.info("Recording triggered via GPIO double tap")
-            return jsonify({'success': True, 'message': 'Recording started'})
-        else:
-            logger.warning(f'GPIO trigger received, but current state is {recording_state["status"]}')
-            return jsonify({'success': False, 'message': f'Cannot start recording in current state: {recording_state["status"]}'}), 400
-    except Exception as e:
-        logger.error(f"Error triggering recording: {str(e)}")
-        return jsonify({'success': False, 'message': str(e)}), 500
-
-@app.route('/api/show_previous_dream', methods=['POST'])
-def show_previous_dream():
-    """Handle single tap to show previous dream (API endpoint)."""
-    try:
-        dream = _cycle_and_play_dream()
-        if dream:
+        # DO A SINGLE TAP
+        if True:
             return jsonify({'status': 'success'})
         else:
-            return jsonify({'status': 'error', 'message': 'No dreams found'}), 404
+            return jsonify({'status': 'error', 'message': 'An error occurred'}), 404
     except Exception as e:
-        logger.error(f"Error in API show_previous_dream: {str(e)}")
+        if logger:
+            logger.error(f"Error in API gpio_single_tap: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/gpio_double_tap', methods=['POST'])
+def gpio_double_tap():
+    """API endpoint for double tap from GPIO controller."""
+    try:
+        # DO A DOUBLE TAP
+        if True:
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error', 'message': 'An error occurred'}), 404
+    except Exception as e:
+        if logger:
+            logger.error(f"Error in API gpio_double_tap: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/dreams/<int:dream_id>', methods=['DELETE'])
@@ -602,13 +284,15 @@ def delete_dream(dream_id):
                 if os.path.exists(audio_path):
                     os.remove(audio_path)
             except Exception as e:
-                logger.error(f"Error deleting files for dream {dream_id}: {str(e)}")
+                if logger:
+                    logger.error(f"Error deleting files for dream {dream_id}: {str(e)}")
                 # Continue even if file deletion fails
             return jsonify({'success': True, 'message': 'Dream deleted successfully'})
         else:
             return jsonify({'success': False, 'message': 'Failed to delete dream'}), 500
     except Exception as e:
-        logger.error(f"Error deleting dream {dream_id}: {str(e)}")
+        if logger:
+            logger.error(f"Error deleting dream {dream_id}: {str(e)}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/clock-config-path')

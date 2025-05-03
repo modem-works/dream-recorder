@@ -1,11 +1,11 @@
 // UI Controller for Dream Recorder
 document.addEventListener('DOMContentLoaded', () => {
     // Input simulator buttons
-    const tapBtn = document.getElementById('tapBtn');
+    const singleTapBtn = document.getElementById('singleTapBtn');
     const doubleTapBtn = document.getElementById('doubleTapBtn');
     
     // Input simulator handlers
-    tapBtn.addEventListener('click', () => simulateInput('tap'));
+    singleTapBtn.addEventListener('click', () => simulateInput('single_tap'));
     doubleTapBtn.addEventListener('click', () => simulateInput('double_tap'));
     
     // Listen for state changes

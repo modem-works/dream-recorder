@@ -92,7 +92,7 @@ window.startRecording = async function() {
                     };
                     // Emit through the global socket object
                     if (window.socket) {
-                        window.socket.emit('audio_data', audioData);
+                        window.socket.emit('stream_recording', audioData);
                         console.log('Sent audio_data chunk, size:', audioData.data.length);
                     }
                 });

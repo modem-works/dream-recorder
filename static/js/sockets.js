@@ -128,7 +128,7 @@ window.socket.on('recording_state', (data) => {
         if (data.status === 'recording') {
             window.StateManager.handleDeviceEvent('double_tap');
         } else if (data.status === 'processing') {
-            window.StateManager.handleDeviceEvent('tap');
+            window.StateManager.handleDeviceEvent('single_tap');
         }
     } else if (window.startRecording && data.status === 'recording') {
         window.startRecording();
@@ -140,7 +140,7 @@ window.socket.on('recording_state', (data) => {
 window.socket.on('device_event', (data) => {
     console.log('Received device_event:', data);
     if (window.StateManager) {
-        window.StateManager.handleDeviceEvent(data.event_type || 'tap');
+        window.StateManager.handleDeviceEvent(data.event_type || 'single_tap');
     } else if (window.stopRecording) {
         window.stopRecording();
     }

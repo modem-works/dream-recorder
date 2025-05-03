@@ -128,7 +128,8 @@ class GPIOController:
         except KeyboardInterrupt:
             logger.info("Keyboard interrupt received, stopping")
         except Exception as e:
-            logger.error(f"Error in GPIO monitoring: {str(e)}")
+            if logger:
+                logger.error(f"Error in GPIO monitoring: {str(e)}")
         finally:
             self.cleanup()
     
@@ -188,9 +189,11 @@ def main():
             if response.status_code == 200:
                 logger.info("Single tap processed successfully")
             else:
-                logger.error(f"Failed to process single tap: {response.status_code} - {single_tap_url}")
+                if logger:
+                    logger.error(f"Failed to process single tap: {response.status_code} - {single_tap_url}")
         except Exception as e:
-            logger.error(f"Error sending single tap: {str(e)}")
+            if logger:
+                logger.error(f"Error sending single tap: {str(e)}")
     
     def double_tap_callback():
         logger.info("Double tap detected, sending to server...")
@@ -199,9 +202,11 @@ def main():
             if response.status_code == 200:
                 logger.info("Double tap processed successfully")
             else:
-                logger.error(f"Failed to process double tap: {response.status_code} - {double_tap_url}")
+                if logger:
+                    logger.error(f"Failed to process double tap: {response.status_code} - {double_tap_url}")
         except Exception as e:
-            logger.error(f"Error sending double tap: {str(e)}")
+            if logger:
+                logger.error(f"Error sending double tap: {str(e)}")
     
     # Initialize GPIO with retry logic
     max_retries = 3
@@ -224,12 +229,14 @@ def main():
             logger.info(f"GPIO Service started successfully. Touch sensor on pin {args.pin}")
             break
         except Exception as e:
-            logger.error(f"Error initializing GPIO (attempt {attempt + 1}/{max_retries}): {str(e)}")
+            if logger:
+                logger.error(f"Error initializing GPIO (attempt {attempt + 1}/{max_retries}): {str(e)}")
             if attempt < max_retries - 1:
                 logger.info(f"Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
             else:
-                logger.error("Failed to initialize GPIO after multiple attempts. Exiting.")
+                if logger:
+                    logger.error("Failed to initialize GPIO after multiple attempts. Exiting.")
                 sys.exit(1)
     
     logger.info("Press Ctrl+C to exit")
@@ -242,7 +249,8 @@ def main():
     except KeyboardInterrupt:
         logger.info("GPIO Service shutting down...")
     except Exception as e:
-        logger.error(f"Error during GPIO monitoring: {str(e)}")
+        if logger:
+            logger.error(f"Error during GPIO monitoring: {str(e)}")
     finally:
         if controller:
             controller.cleanup()

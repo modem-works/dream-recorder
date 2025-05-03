@@ -16,13 +16,13 @@ const StateManager = {
 
     // Input modes (kept for input simulator compatibility)
     MODES: {
-        TAP: 'tap',
+        SINGLE_TAP: 'single_tap',
         DOUBLE_TAP: 'double_tap'
     },
 
     // Current state and mode
     currentState: 'startup',
-    currentMode: 'tap', // Default to TAP
+    currentMode: 'single_tap',
     error: null,
     previousState: null,
     stateChangeCallbacks: [],
@@ -292,7 +292,7 @@ const StateManager = {
         console.log(`Handling device event: ${eventType}`);
         
         switch (eventType) {
-            case 'tap':
+            case 'single_tap':
                 if (this.currentState === this.STATES.RECORDING) {
                     // Any tap during recording stops it
                     this.stopRecording();

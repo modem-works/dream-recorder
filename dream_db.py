@@ -105,12 +105,16 @@ class DreamDB:
                     conn.commit()
                     return cursor.rowcount > 0
                 except sqlite3.Error as e:
-                    logger.error(f"Database error: {str(e)}")
-                    logger.error(f"Query: {query}")
-                    logger.error(f"Values: {values}")
+                    if logger:
+                        logger.error(f"Database error: {str(e)}")
+                    if logger:
+                        logger.error(f"Query: {query}")
+                    if logger:
+                        logger.error(f"Values: {values}")
                     raise
         except Exception as e:
-            logger.error(f"Error updating dream {dream_id}: {str(e)}")
+            if logger:
+                logger.error(f"Error updating dream {dream_id}: {str(e)}")
             raise
     
     def delete_dream(self, dream_id):
