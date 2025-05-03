@@ -14,6 +14,25 @@ SERVICE_NAME="dream-recorder-launcher"
 SCRIPT_PATH="$(realpath "$0")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 
+# Ensure Docker is installed
+if ! command -v docker &> /dev/null; then
+    echo "Docker not found. Installing Docker for Raspberry Pi..."
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+    sudo usermod -aG docker $USER
+    rm get-docker.sh
+    echo "Docker installed. You may need to log out and back in for group changes to take effect."
+fi
+
+# Ensure Docker Compose is installed
+if ! command -v docker-compose &> /dev/null; then
+    echo "Docker Compose not found. Installing Docker Compose..."
+    sudo apt-get update
+    sudo apt-get install -y python3-pip
+    sudo pip3 install docker-compose
+    echo "Docker Compose installed."
+fi
+
 # 1. Start Docker Compose (in detached mode)
 echo "Starting Dream Recorder Docker container..."
 docker-compose up -d
