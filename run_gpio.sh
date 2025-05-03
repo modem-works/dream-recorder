@@ -20,7 +20,7 @@ sleep 1
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running GPIO service..."
 
 # Ensure log directory exists
-mkdir -p "$SCRIPT_DIR/log"
+mkdir -p "$SCRIPT_DIR/logs"
 
 # Run with system Python to ensure GPIO access works correctly
 PATH=/usr/local/bin:/usr/bin:/bin
