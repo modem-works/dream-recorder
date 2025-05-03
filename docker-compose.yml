@@ -29,6 +29,7 @@ services:
       - .env
     environment:
       - HOST=0.0.0.0
+      - FLASK_ENV=development
     command: python app.py --reload
 
 volumes:
