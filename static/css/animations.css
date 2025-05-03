@@ -36,15 +36,33 @@
 
 /* Animation timing */
 .rec-animation {
-    animation: playRec 2.5s steps(151) infinite;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .gen-animation {
-    animation: playGen 2.5s steps(151) infinite;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .error-animation {
-    animation: playError 1.2s steps(72) infinite;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rec-animation img,
+.gen-animation img,
+.error-animation img {
+    width: 1280px;
+    height: 400px;
+    object-fit: contain;
+    display: block;
 }
 
 @keyframes playRec {
