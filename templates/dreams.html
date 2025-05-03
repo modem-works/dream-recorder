@@ -57,12 +57,6 @@
                 <p id="modalCreatedAt"></p>
             </div>
             <div class="modal-actions">
-                <a href="#" id="modalAudioLink" target="_blank">
-                    <i class="bi bi-music-note"></i> Listen to Audio
-                </a>
-                <a href="#" id="modalVideoLink" target="_blank">
-                    <i class="bi bi-play-circle"></i> Watch Video
-                </a>
                 <button id="modalDeleteButton" class="delete-button">
                     <i class="bi bi-trash"></i> Delete
                 </button>
@@ -84,13 +78,6 @@
                     document.getElementById('modalGeneratedPrompt').textContent = data.generatedPrompt;
                     document.getElementById('modalCreatedAt').textContent = data.createdAt;
                     
-                    const audioLink = document.getElementById('modalAudioLink');
-                    if (data.audioUrl && data.audioUrl !== '/media/audio/') {
-                        audioLink.href = data.audioUrl;
-                        audioLink.style.display = '';
-                    } else {
-                        audioLink.style.display = 'none';
-                    }
                     // Audio player logic
                     const audioSection = document.getElementById('modalAudioSection');
                     const audioPlayer = document.getElementById('modalAudioPlayer');
@@ -103,7 +90,6 @@
                         audioSource.src = '';
                         audioSection.style.display = 'none';
                     }
-                    document.getElementById('modalVideoLink').href = data.videoUrl;
                     
                     // Video player logic
                     const videoSection = document.getElementById('modalVideoSection');
