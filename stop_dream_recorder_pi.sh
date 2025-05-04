@@ -10,7 +10,7 @@ fi
 
 # Stop Docker Compose app
 echo "Stopping Dream Recorder Docker container..."
-docker-compose down
+docker compose down
 
 # Kill GPIO service
 echo "Stopping GPIO service..."

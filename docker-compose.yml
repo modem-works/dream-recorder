@@ -15,7 +15,7 @@ services:
     command: python app.py
 
   # For development mode, use:
-  #   docker-compose run --service-ports dev
+  #   docker compose run --service-ports dev
   dev:
     build: .
     ports:
