@@ -166,6 +166,21 @@ systemctl --user start dream-recorder-docker.service && \
     log_info "Docker Compose service started." || \
     log_warn "Could not start Docker Compose service. You may need to log in with a desktop session first."
 
+# =============================
+# API Key Validation (inside container)
+# =============================
+log_step "Testing API keys inside the container"
+if docker compose exec dream-recorder python scripts/test_openai_key.py; then
+    log_info "OpenAI API key is valid."
+else
+    log_warn "OpenAI API key is invalid. Please check your .env file."
+fi
+if docker compose exec dream-recorder python scripts/test_luma_key.py; then
+    log_info "Luma Labs API key is valid."
+else
+    log_warn "Luma Labs API key is invalid. Please check your .env file."
+fi
+
 log_step "Enabling lingering for user services to start at boot"
 if sudo loginctl enable-linger $USER; then
     log_info "Lingering enabled for $USER. User services will start at boot."
