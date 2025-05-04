@@ -169,13 +169,66 @@ def main():
 
     # If test mode, run CLI loop for simulating taps
     if args.test:
+        import sys
+        import time
+        import threading
+        
         single_tap_url = f"{args.flask_url}{args.single_tap_endpoint}"
         double_tap_url = f"{args.flask_url}{args.double_tap_endpoint}"
-        print("GPIO Service Test Mode: Simulate taps from CLI")
-        print("Type 's' for single tap, 'd' for double tap, 'q' to quit.")
+
+        BUTTONS = [
+            {"label": "Single", "key": "s"},
+            {"label": "Double", "key": "d"}
+        ]
+
+        def clear_screen():
+            print("\033[2J\033[H", end="")
+
+        def draw_buttons(pressed=None):
+            clear_screen()
+            print("Retro GPIO Button Presser!\n")
+            # Draw both buttons on the same line
+            if pressed == 's':
+                single = [
+                    " __________  ",
+                    "|##########| ",
+                    "| PRESSED  | ",
+                    "|##########| "
+                ]
+            else:
+                single = [
+                    " __________  ",
+                    "|          | ",
+                    "|  Single  | ",
+                    "|__________| "
+                ]
+            if pressed == 'd':
+                double = [
+                    " __________  ",
+                    "|##########| ",
+                    "| PRESSED  | ",
+                    "|##########| "
+                ]
+            else:
+                double = [
+                    " __________  ",
+                    "|          | ",
+                    "|  Double  | ",
+                    "|__________| "
+                ]
+            # Print lines side by side
+            for s, d in zip(single, double):
+                print(f"{s} {d}")
+            print("\nType 's' for single tap, 'd' for double tap, 'q' to quit.")
+
+        draw_buttons()
         while True:
             user_input = input('> ').strip().lower()
             if user_input == 's':
+                draw_buttons(pressed='s')
+                sys.stdout.flush()
+                time.sleep(0.25)
+                draw_buttons()
                 print(f"Simulating single tap... (POST {single_tap_url})")
                 try:
                     response = requests.post(single_tap_url)
@@ -183,6 +236,10 @@ def main():
                 except Exception as e:
                     print(f"Error sending single tap: {e}")
             elif user_input == 'd':
+                draw_buttons(pressed='d')
+                sys.stdout.flush()
+                time.sleep(0.25)
+                draw_buttons()
                 print(f"Simulating double tap... (POST {double_tap_url})")
                 try:
                     response = requests.post(double_tap_url)
@@ -193,6 +250,7 @@ def main():
                 print("Exiting test mode.")
                 break
             else:
+                draw_buttons()
                 print("Unknown command. Type 's' for single tap, 'd' for double tap, 'q' to quit.")
         return
 

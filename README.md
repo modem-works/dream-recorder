@@ -4,30 +4,33 @@
 
 ### For Developers (Local/Development)
 
-1. **Clone the repository:**
+1. **Clone the repository on your computer:**
    ```bash
    git clone <repo_url>
    cd dream-recorder
    ```
-
 2. **Set up your API keys:**
-   - Copy `.env.example` to `.env` and add your `OPENAI_API_KEY` and `LUMALABS_API_KEY` (no quotes):
+   - Copy `.env.example` to `.env` and add your `OPENAI_API_KEY` and `LUMALABS_API_KEY`:
      ```bash
      cp .env.example .env
      # Edit .env and add your keys
      ```
 
-3. **Edit configuration as needed:**
-   - All non-secret config can be tweaked in `config.json` (for dev) and `config.production.json` (for prod).
+3. **Edit `config.production.json` as needed** for development.
 
 4. **Start in development mode (with live reload):**
    ```bash
    docker compose --profile dev run --service-ports dev
    ```
    - The app will be available at [http://localhost:5000](http://localhost:5000) (or the port in your config).
-   - The `dev` service is now only started when the `dev` profile is specified.
 
-5. **Stop the app:**
+5. **Simulate sensor button presses:**
+   ```bash
+   ./python gpio_service.py --test
+   ```
+   - The app will be available at [http://localhost:5000](http://localhost:5000) (or the port in your config).
+
+6. **Stop the app:**
    ```bash
    docker compose down
    ```
@@ -42,47 +45,24 @@
    cd dream-recorder
    ```
 
-2. **Set up your API keys:**
-   - Copy `.env.example` to `.env` and add your `OPENAI_API_KEY` and `LUMALABS_API_KEY` (no quotes):
-     ```bash
-     cp .env.example .env
-     # Edit .env and add your keys
-     ```
+2. **Edit `config.production.json` as needed** for your deployment.
 
-3. **Edit `config.production.json` as needed** for your deployment.
-
-4. **Run the setup and enable kiosk mode:**
+3. **Run the setup and enable kiosk mode:**
    ```bash
    ./pi_installer.sh
    ```
-   - This will copy all necessary files, set permissions, and enable the user-level systemd service for kiosk mode.
 
-5. **Log out and log back in (or reboot) to start kiosk mode.**
-   - Chromium will launch in kiosk mode after you log in to the graphical desktop.
-
-6. **If you ever need to start the app and GPIO service manually:**
+4. **Reboot the Raspberry Pi:**
    ```bash
-   ./start_dream_recorder_pi.sh
+   sudo reboot
    ```
-
-7. **...or to stop them:**
-   ```bash
-   ./stop_dream_recorder_pi.sh
-   ```
----
-
-## Configuration
-
-- **API keys:** Only `OPENAI_API_KEY` and `LUMALABS_API_KEY` go in `.env`.
-- **All other config:** Use `config.development.json` (for dev) and `config.production.json` (for prod).
-- **Switching environments:** The app automatically loads the correct config based on the `FLASK_ENV` environment variable (set in Docker Compose or by the start script).
 
 ---
 
 ## Troubleshooting
 
 - **Logs:**
-  - App logs: `logs/flask_app.log`
+  - App logs: `docker logs -f dream-recorder`
   - GPIO logs: `logs/gpio_service.log`
 - **Check running services:**
   ```bash

@@ -1,5 +1,6 @@
 services:
   dream-recorder:
+    container_name: dream-recorder
     build: .
     ports:
       - "${PORT}:${PORT}"
@@ -17,6 +18,7 @@ services:
   # For development mode, use:
   #   docker compose run --service-ports dev
   dev:
+    container_name: dream-recorder
     build: .
     ports:
       - "${PORT}:${PORT}"
