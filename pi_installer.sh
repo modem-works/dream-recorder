@@ -301,6 +301,9 @@ fi
 # =============================
 # 9. Final Summary
 # =============================
+log_step "Setting desktop wallpaper to @0.jpg"
+python3 "$SCRIPT_DIR/scripts/set_pi_background.py"
+
 log_step "Setup Complete!"
 echo -e "${GREEN}Docker Compose and Chromium kiosk mode will auto-start on boot.${NC}"
 echo -e "${YELLOW}You may need to reboot for all changes to take effect.${NC}"
