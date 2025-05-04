@@ -66,21 +66,6 @@ else
 fi
 
 # =============================
-# 2b. Initialize sample dreams if DB does not exist
-# =============================
-DB_PATH="$SCRIPT_DIR/db/dreams.db"
-if [ ! -f "$DB_PATH" ]; then
-    log_step "Initializing sample dreams (no database found)"
-    if python3 "$SCRIPT_DIR/scripts/init_sample_dreams.py"; then
-        log_info "Sample dreams initialized."
-    else
-        log_warn "Failed to initialize sample dreams."
-    fi
-else
-    log_info "Dreams database already exists. Skipping sample dream initialization."
-fi
-
-# =============================
 # 3. Docker Installation
 # =============================
 log_step "Checking for Docker"

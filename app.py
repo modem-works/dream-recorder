@@ -15,11 +15,29 @@ import argparse
 from dream_db import DreamDB
 from functions.audio import create_wav_file, process_audio
 from config_loader import load_config
+import subprocess
 
 # =============================
 # Load Configuration
 # =============================
 config = load_config()
+
+# =============================
+# Initialize sample dreams if DB does not exist
+# =============================
+DB_PATH = os.path.join(os.path.dirname(__file__), 'db', 'dreams.db')
+if not os.path.isfile(DB_PATH):
+    try:
+        print("[INFO] No dreams database found. Initializing sample dreams...")
+        result = subprocess.run([
+            'python3', os.path.join(os.path.dirname(__file__), 'scripts', 'init_sample_dreams.py')
+        ], capture_output=True, text=True)
+        if result.returncode == 0:
+            print("[INFO] Sample dreams initialized.")
+        else:
+            print(f"[WARN] Failed to initialize sample dreams.\n{result.stderr}")
+    except Exception as e:
+        print(f"[ERROR] Exception while initializing sample dreams: {e}")
 
 # Configure logging
 logging.basicConfig(level=getattr(logging, config["LOG_LEVEL"]))
