@@ -55,23 +55,22 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
 
 3. **Edit `config.production.json` as needed** for your deployment.
 
-4. **Start the app, GPIO service, and Chromium in kiosk mode:**
+4. **Run the setup and enable kiosk mode:**
+   ```bash
+   ./start_dream_recorder_pi.sh --setup
+   ```
+   - This will copy all necessary files, set permissions, and enable the user-level systemd service for kiosk mode.
+   - Add `--install-systemd` if you want the app and GPIO service to auto-start on boot.
+
+5. **Log out and log back in (or reboot) to start kiosk mode.**
+   - Chromium will launch in kiosk mode after you log in to the graphical desktop.
+
+6. **To start the app and GPIO service manually:**
    ```bash
    ./start_dream_recorder_pi.sh
    ```
-   - This will start the Docker app (production mode by default), the GPIO service, and launch Chromium in kiosk mode.
-   - To start the app in development mode, use:
-     ```bash
-     docker compose --profile dev run --service-ports dev
-     ```
 
-5. **(Optional) Enable auto-start on boot:**
-   ```bash
-   sudo ./start_dream_recorder_pi.sh --install-systemd
-   ```
-   - This will install a systemd service so the app starts automatically on boot.
-
-6. **Stop all services:**
+7. **To stop all services:**
    ```bash
    ./stop_dream_recorder_pi.sh
    ```

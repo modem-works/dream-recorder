@@ -34,6 +34,71 @@ if ! command -v docker &> /dev/null; then
     echo "Docker installed. You may need to log out and back in for group changes to take effect."
 fi
 
+# --- SETUP LOGIC ---
+if [[ "$1" == "--setup" || "$1" == "--install" ]]; then
+  # Detect user and home
+  if [ "$SUDO_USER" ]; then
+    USERNAME="$SUDO_USER"
+    USERHOME="$(eval echo ~$SUDO_USER)"
+  else
+    USERNAME="$USER"
+    USERHOME="$HOME"
+  fi
+
+  PROJECT_DIR="$(pwd)"
+
+  # Check for required files
+  if [ ! -f "$PROJECT_DIR/kiosk.sh" ] || [ ! -f "$PROJECT_DIR/.config/systemd/user/kiosk.service" ] || [ ! -f "$PROJECT_DIR/.config/systemd/user/xsession.target" ] || [ ! -f "$PROJECT_DIR/.xsessionrc" ]; then
+    echo "Error: Please run this script from the project root and ensure kiosk.sh, .config/systemd/user/kiosk.service, .config/systemd/user/xsession.target, and .xsessionrc exist."
+    exit 1
+  fi
+
+  # Copy kiosk.sh
+  cp "$PROJECT_DIR/kiosk.sh" "$USERHOME/kiosk.sh"
+  chmod +x "$USERHOME/kiosk.sh"
+
+  # Copy systemd user service files
+  mkdir -p "$USERHOME/.config/systemd/user/"
+  cp "$PROJECT_DIR/.config/systemd/user/kiosk.service" "$USERHOME/.config/systemd/user/kiosk.service"
+  cp "$PROJECT_DIR/.config/systemd/user/xsession.target" "$USERHOME/.config/systemd/user/xsession.target"
+
+  # Copy .xsessionrc
+  cp "$PROJECT_DIR/.xsessionrc" "$USERHOME/.xsessionrc"
+
+  # Set ownership if run as sudo
+  if [ "$SUDO_USER" ]; then
+    chown "$USERNAME:$USERNAME" "$USERHOME/kiosk.sh" "$USERHOME/.xsessionrc"
+    chown -R "$USERNAME:$USERNAME" "$USERHOME/.config/systemd/user/"
+  fi
+
+  # Enable user-level systemd service
+  su - "$USERNAME" -c 'systemctl --user daemon-reload && systemctl --user enable kiosk && systemctl --user start kiosk'
+
+  # Optionally install system-level service for app/GPIO
+  if [[ "$2" == "--install-systemd" ]] || [ "$EUID" -eq 0 ]; then
+    "$PROJECT_DIR/start_dream_recorder_pi.sh" --install-systemd
+  fi
+
+  cat <<EOF
+
+Setup complete!
+
+- Chromium will launch in kiosk mode after you log in to the graphical desktop.
+- The Dream Recorder app and GPIO service are set up.
+- To start the app and GPIO service now, run:
+    $PROJECT_DIR/start_dream_recorder_pi.sh
+- To stop all services:
+    $PROJECT_DIR/stop_dream_recorder_pi.sh
+- For full auto-start on boot, reboot your Pi.
+
+If you encounter issues, check logs with:
+    journalctl --user -u kiosk -f
+    tail -f ~/chromium-kiosk.log (if you add logging to kiosk.sh)
+
+EOF
+  exit 0
+fi
+
 # 1. Start Docker Compose (in detached mode)
 echo "Starting Dream Recorder Docker container..."
 docker compose up -d
