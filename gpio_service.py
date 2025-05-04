@@ -11,8 +11,6 @@ import time
 import logging
 import requests
 import argparse
-import os
-import sys
 from enum import Enum
 from config_loader import load_config
 
@@ -170,8 +168,6 @@ def main():
     # If test mode, run CLI loop for simulating taps
     if args.test:
         import sys
-        import time
-        import threading
         
         single_tap_url = f"{args.flask_url}{args.single_tap_endpoint}"
         double_tap_url = f"{args.flask_url}{args.double_tap_endpoint}"
