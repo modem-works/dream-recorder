@@ -1,3 +1,0 @@
-[Unit]
-Description=Xsession running
-BindsTo=graphical-session.target 

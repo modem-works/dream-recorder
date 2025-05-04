@@ -1,6 +1,4 @@
 #!/bin/bash
-# stop_dream_recorder_pi.sh
-# Stops the Dream Recorder Docker app, GPIO service, and Chromium on Raspberry Pi.
 
 # Check if running on a Raspberry Pi
 if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
@@ -20,15 +18,6 @@ if [ -n "$GPIO_PID" ]; then
     echo "GPIO service (PID $GPIO_PID) stopped."
 else
     echo "GPIO service not running."
-fi
-
-# Optionally, stop Chromium
-CHROME_PID=$(ps aux | grep '[c]hromium-browser' | awk '{print $2}')
-if [ -n "$CHROME_PID" ]; then
-    kill $CHROME_PID
-    echo "Chromium browser (PID $CHROME_PID) stopped."
-else
-    echo "Chromium browser not running."
 fi
 
 echo "All Dream Recorder services stopped." 
