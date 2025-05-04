@@ -145,6 +145,11 @@ systemctl --user enable dream-recorder-docker.service && \
     log_info "Enabled dream-recorder-docker.service for user $USER." || \
     log_warn "Could not enable dream-recorder-docker.service. You may need to log in with a desktop session first."
 
+log_step "Starting Docker Compose service now"
+systemctl --user start dream-recorder-docker.service && \
+    log_info "Docker Compose service started." || \
+    log_warn "Could not start Docker Compose service. You may need to log in with a desktop session first."
+
 log_step "Enabling lingering for user services to start at boot"
 if sudo loginctl enable-linger $USER; then
     log_info "Lingering enabled for $USER. User services will start at boot."
