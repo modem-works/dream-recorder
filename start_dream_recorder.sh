@@ -6,6 +6,9 @@ if ! grep -q "Raspberry Pi" /proc/device-tree/model 2>/dev/null; then
     exit 1
 fi
 
+SCRIPT_PATH="$(realpath "$0")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+
 # 1. Start Docker Compose (in detached mode)
 echo "Starting Dream Recorder Docker container..."
 docker compose up -d
