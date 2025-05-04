@@ -52,10 +52,10 @@ for SERVICE in "${SERVICES[@]}"; do
     else
         log_info "$SERVICE_PATH not found. Skipping."
     fi
-    # Remove logs if present
+    # Remove log files if present
     if [ -d "$LOGS_DIR" ]; then
-        rm -rf "$LOGS_DIR"
-        log_info "Removed logs directory at $LOGS_DIR."
+        find "$LOGS_DIR" -type f -name '*.log' -exec rm -f {} +
+        log_info "Removed all .log files in $LOGS_DIR."
     fi
     done
 
