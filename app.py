@@ -58,7 +58,7 @@ audio_chunks = []
 # Initialize Flask app
 app = Flask(__name__)
 app.config.update(
-    DEBUG=config["FLASK_ENV"] == "development",
+    DEBUG=os.environ.get("FLASK_ENV", "production") == "development",
     HOST=config["HOST"],
     PORT=int(config["PORT"])
 )

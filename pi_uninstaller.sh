@@ -37,6 +37,13 @@ echo -e "${YELLOW}========================================="
 echo -e " Dream Recorder Pi Uninstaller "
 echo -e "=========================================${NC}"
 
+echo -ne "${RED}Are you sure you want to uninstall Dream Recorder and remove all related services and data? (type 'yes' to continue): ${NC}"
+read REALLY_SURE
+if [ "$REALLY_SURE" != "yes" ]; then
+    log_warn "Uninstall cancelled. No changes made."
+    exit 0
+fi
+
 # =============================
 # 2. Remove systemd user services
 # =============================
