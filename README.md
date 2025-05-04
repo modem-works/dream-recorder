@@ -57,45 +57,22 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
 
 4. **Run the setup and enable kiosk mode:**
    ```bash
-   ./start_dream_recorder_pi.sh --setup
+   ./install_dream_recorder.sh
    ```
    - This will copy all necessary files, set permissions, and enable the user-level systemd service for kiosk mode.
-   - Add `--install-systemd` if you want the app and GPIO service to auto-start on boot.
 
 5. **Log out and log back in (or reboot) to start kiosk mode.**
    - Chromium will launch in kiosk mode after you log in to the graphical desktop.
 
-6. **To start the app and GPIO service manually:**
+6. **If you ever need to start the app and GPIO service manually:**
    ```bash
    ./start_dream_recorder_pi.sh
    ```
 
-7. **To stop all services:**
+7. **...or to stop them:**
    ```bash
    ./stop_dream_recorder_pi.sh
    ```
-
----
-
-## Directory Structure
-
-```
-dream-recorder/
-├── app.py              # Main Flask application
-├── gpio_service.py     # GPIO interaction service
-├── start_dream_recorder_pi.sh   # Start everything on Raspberry Pi
-├── stop_dream_recorder_pi.sh    # Stop everything on Raspberry Pi
-├── config.development.json      # Dev config
-├── config.production.json       # Production config
-├── .env.example        # Example for API keys
-├── media/              # Stored media files (audio, video, thumbs)
-├── logs/               # Application logs
-├── static/             # Static assets (JS, CSS, etc.)
-├── templates/          # HTML templates
-├── scripts/            # Utility scripts
-└── ...
-```
-
 ---
 
 ## Configuration
