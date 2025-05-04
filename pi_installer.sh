@@ -6,6 +6,7 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[1;34m'
 NC='\033[0m' # No Color
 
 log_info() {
@@ -18,14 +19,56 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 log_step() {
-    echo -e "${YELLOW}==> $1${NC}"
+    echo -e "\n${BLUE}==============================="
+    echo -e ">>> $1"
+    echo -e "===============================${NC}\n"
 }
 
 SCRIPT_PATH="$(realpath "$0")"
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
-CONFIG_PATH="$SCRIPT_DIR/config.production.json"
+CONFIG_PATH="$SCRIPT_DIR/config.json"
 
-log_step "Checking for Docker..."
+# =============================
+# 1. Welcome
+# =============================
+echo -e "${YELLOW}========================================="
+echo -e " Dream Recorder Pi Installer "
+echo -e "=========================================${NC}"
+
+# =============================
+# 2. Pre-checks & Initialization
+# =============================
+log_step "Pre-checks and Initialization"
+
+# .env.example check
+if [ ! -f "$SCRIPT_DIR/.env.example" ]; then
+    log_error ".env.example not found! Please add it to the project root."
+    exit 1
+fi
+# config.example.json check
+if [ ! -f "$SCRIPT_DIR/config.example.json" ]; then
+    log_error "config.example.json not found! Please add it to the project root."
+    exit 1
+fi
+# Copy .env if missing
+if [ ! -f "$SCRIPT_DIR/.env" ]; then
+    cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
+    log_info "Copied .env.example to .env."
+else
+    log_info ".env already exists. Skipping."
+fi
+# Copy config.json if missing
+if [ ! -f "$CONFIG_PATH" ]; then
+    cp "$SCRIPT_DIR/config.example.json" "$CONFIG_PATH"
+    log_info "Copied config.example.json to config.json."
+else
+    log_info "config.json already exists. Skipping."
+fi
+
+# =============================
+# 3. Docker Installation
+# =============================
+log_step "Checking for Docker"
 if command -v docker &> /dev/null; then
     log_info "Docker is already installed."
 else
@@ -45,7 +88,10 @@ else
     log_info "Docker installed. You may need to log out and back in for group changes to take effect."
 fi
 
-log_step "Checking for jq (JSON parser)..."
+# =============================
+# 4. jq Installation
+# =============================
+log_step "Checking for jq (JSON parser)"
 if command -v jq &> /dev/null; then
     log_info "jq is already installed."
 else
@@ -55,37 +101,10 @@ else
     log_info "jq installed."
 fi
 
-log_step "Checking for Chromium browser..."
-if command -v chromium-browser &> /dev/null; then
-    BROWSER_CMD="chromium-browser"
-    log_info "chromium-browser is already installed."
-elif command -v chromium &> /dev/null; then
-    BROWSER_CMD="chromium"
-    log_info "chromium is already installed."
-else
-    log_warn "Chromium browser not found. Installing chromium-browser..."
-    sudo apt-get update
-    if sudo apt-get install -y chromium-browser; then
-        BROWSER_CMD="chromium-browser"
-        log_info "chromium-browser installed."
-    elif sudo apt-get install -y chromium; then
-        BROWSER_CMD="chromium"
-        log_info "chromium installed."
-    else
-        log_error "Failed to install Chromium browser. Exiting."
-        exit 1
-    fi
-fi
-
-log_step "Checking for config.production.json..."
-if [ ! -f "$CONFIG_PATH" ]; then
-    log_error "$CONFIG_PATH not found! Please ensure you are running this script from the project directory."
-    exit 1
-else
-    log_info "Found $CONFIG_PATH."
-fi
-
-log_step "Parsing GPIO_FLASK_URL from config.production.json..."
+# =============================
+# 5. Parse config.json for URLs
+# =============================
+log_step "Parsing GPIO_FLASK_URL from config.json"
 KIOSK_URL=$(jq -r '.GPIO_FLASK_URL' "$CONFIG_PATH")
 if [ -z "$KIOSK_URL" ] || [ "$KIOSK_URL" == "null" ]; then
     log_error "Could not parse GPIO_FLASK_URL from $CONFIG_PATH. Exiting."
@@ -94,7 +113,10 @@ else
     log_info "Parsed KIOSK URL: $KIOSK_URL"
 fi
 
-log_step "Setting up Docker Compose auto-start as a user systemd service..."
+# =============================
+# 6. Systemd Service Setup
+# =============================
+log_step "Setting up Docker Compose auto-start as a user systemd service"
 SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SYSTEMD_USER_DIR"
 SERVICE_FILE="$SYSTEMD_USER_DIR/dream-recorder-docker.service"
@@ -117,20 +139,20 @@ EOL
 
 log_info "Created user systemd service at $SERVICE_FILE."
 
-log_step "Reloading user systemd daemon and enabling service..."
+log_step "Reloading user systemd daemon and enabling Docker Compose service"
 systemctl --user daemon-reload
 systemctl --user enable dream-recorder-docker.service && \
     log_info "Enabled dream-recorder-docker.service for user $USER." || \
     log_warn "Could not enable dream-recorder-docker.service. You may need to log in with a desktop session first."
 
-log_step "Enabling lingering for user services to start at boot..."
+log_step "Enabling lingering for user services to start at boot"
 if sudo loginctl enable-linger $USER; then
     log_info "Lingering enabled for $USER. User services will start at boot."
 else
     log_warn "Could not enable lingering. You may need to run: sudo loginctl enable-linger $USER"
 fi
 
-log_step "Setting up GPIO service as a user systemd service..."
+log_step "Setting up GPIO service as a user systemd service"
 GPIO_SERVICE_FILE="$SYSTEMD_USER_DIR/dream-recorder-gpio.service"
 LOGS_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOGS_DIR"
@@ -154,18 +176,21 @@ EOL
 
 log_info "Created user systemd service at $GPIO_SERVICE_FILE."
 
-log_step "Reloading user systemd daemon and enabling GPIO service..."
+log_step "Reloading user systemd daemon and enabling GPIO service"
 systemctl --user daemon-reload
 systemctl --user enable dream-recorder-gpio.service && \
     log_info "Enabled dream-recorder-gpio.service for user $USER." || \
     log_warn "Could not enable dream-recorder-gpio.service. You may need to log in with a desktop session first."
 
-log_step "Starting GPIO service now..."
+log_step "Starting GPIO service now"
 systemctl --user start dream-recorder-gpio.service && \
     log_info "GPIO service started." || \
     log_warn "Could not start GPIO service. You may need to log in with a desktop session first."
 
-log_step "Setting up Chromium kiosk mode autostart..."
+# =============================
+# 7. Chromium Kiosk Autostart Setup
+# =============================
+log_step "Setting up Chromium kiosk mode autostart"
 AUTOSTART_DIR="$HOME/.config/autostart"
 mkdir -p "$AUTOSTART_DIR"
 KIOSK_DESKTOP_FILE="$AUTOSTART_DIR/dream-recorder-kiosk.desktop"
@@ -173,6 +198,18 @@ KIOSK_DESKTOP_FILE="$AUTOSTART_DIR/dream-recorder-kiosk.desktop"
 # Path to the loading screen HTML (absolute path)
 LOADING_SCREEN_SRC="$SCRIPT_DIR/templates/loading.html"
 LOADING_SCREEN_DST="$SCRIPT_DIR/templates/loading.kiosk.html"
+
+# Detect Chromium or Chrome
+if command -v chromium-browser &> /dev/null; then
+    BROWSER_CMD="chromium-browser"
+elif command -v chromium &> /dev/null; then
+    BROWSER_CMD="chromium"
+elif command -v google-chrome &> /dev/null; then
+    BROWSER_CMD="google-chrome"
+else
+    log_warn "Chromium or Chrome not found. Please install Chromium for kiosk mode."
+    BROWSER_CMD="chromium-browser"
+fi
 
 # Inject the real app URL into the loading screen HTML
 if [ -f "$LOADING_SCREEN_SRC" ]; then
@@ -197,7 +234,10 @@ else
     log_error "Failed to create autostart desktop entry at $KIOSK_DESKTOP_FILE."
 fi
 
-log_step "Creating script to disable screen blanking..."
+# =============================
+# 8. Screen Blanking Disable Script
+# =============================
+log_step "Creating script to disable screen blanking"
 SCREEN_SCRIPT="$HOME/disable-screen-blanking.sh"
 cat > "$SCREEN_SCRIPT" <<EOL
 #!/bin/bash
@@ -222,6 +262,10 @@ else
     log_error "Failed to create autostart entry for screen blanking."
 fi
 
-log_info "Setup complete!"
+# =============================
+# 9. Final Summary
+# =============================
+log_step "Setup Complete!"
 echo -e "${GREEN}Docker Compose and Chromium kiosk mode will auto-start on boot.${NC}"
-echo -e "${YELLOW}You may need to reboot for all changes to take effect.${NC}" 
+echo -e "${YELLOW}You may need to reboot for all changes to take effect.${NC}"
+echo -e "${BLUE}If you see any warnings about systemd user services, log in with a desktop session and re-run this script or run the suggested commands.${NC}" 

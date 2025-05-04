@@ -11,8 +11,7 @@ def load_config():
     }
 
     # Determine which config to load
-    config_env = os.getenv("FLASK_ENV", "production").lower()
-    config_file = "config.development.json" if config_env == "development" else "config.production.json"
+    config_file = "config.json"
 
     with open(config_file, "r") as f:
         config = json.load(f)

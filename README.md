@@ -57,7 +57,7 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
 
 4. **Run the setup and enable kiosk mode:**
    ```bash
-   ./install_dream_recorder.sh
+   ./pi_installer.sh
    ```
    - This will copy all necessary files, set permissions, and enable the user-level systemd service for kiosk mode.
 
