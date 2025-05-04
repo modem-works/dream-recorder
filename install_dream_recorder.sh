@@ -171,8 +171,8 @@ mkdir -p "$AUTOSTART_DIR"
 KIOSK_DESKTOP_FILE="$AUTOSTART_DIR/dream-recorder-kiosk.desktop"
 
 # Path to the loading screen HTML (absolute path)
-LOADING_SCREEN_SRC="$SCRIPT_DIR/loading_screen/index.html"
-LOADING_SCREEN_DST="$SCRIPT_DIR/loading_screen/index.kiosk.html"
+LOADING_SCREEN_SRC="$SCRIPT_DIR/templates/loading.html"
+LOADING_SCREEN_DST="$SCRIPT_DIR/templates/loading.kiosk.html"
 
 # Inject the real app URL into the loading screen HTML
 if [ -f "$LOADING_SCREEN_SRC" ]; then

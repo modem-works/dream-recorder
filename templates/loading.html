@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream Recorder Loading...</title>
+    <link rel="stylesheet" href="../static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div id="icon-animations">
+            <div class="icon-animation generating-animation">
+                <img src="../static/images/icons/generating.webp" />
+            </div>
+        </div>
+    </div>
+    <script>
+        // The real app URL will be injected by the install script
+        const target = window.KIOSK_APP_URL || "http://localhost:5000";
+        const interval = 2000;
+        function check() {
+            fetch(target, {mode: 'no-cors'}).then(() => {
+                window.location.href = target;
+            }).catch(() => {
+                setTimeout(check, interval);
+            });
+        }
+        check();
+    </script>
+</body>
+</html> 
