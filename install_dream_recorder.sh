@@ -170,11 +170,24 @@ AUTOSTART_DIR="$HOME/.config/autostart"
 mkdir -p "$AUTOSTART_DIR"
 KIOSK_DESKTOP_FILE="$AUTOSTART_DIR/dream-recorder-kiosk.desktop"
 
+# Path to the loading screen HTML (absolute path)
+LOADING_SCREEN_SRC="$SCRIPT_DIR/loading_screen/index.html"
+LOADING_SCREEN_DST="$SCRIPT_DIR/loading_screen/index.kiosk.html"
+
+# Inject the real app URL into the loading screen HTML
+if [ -f "$LOADING_SCREEN_SRC" ]; then
+    sed "s|window.KIOSK_APP_URL || window.KIOSK_APP_URL = '"$KIOSK_URL"';|" "$LOADING_SCREEN_SRC" > "$LOADING_SCREEN_DST"
+    log_info "Injected KIOSK_URL into loading screen HTML."
+else
+    log_error "Loading screen HTML not found at $LOADING_SCREEN_SRC."
+    exit 1
+fi
+
 cat > "$KIOSK_DESKTOP_FILE" <<EOL
 [Desktop Entry]
 Type=Application
 Name=Dream Recorder Kiosk
-Exec=$BROWSER_CMD --kiosk --no-first-run --disable-session-crashed-bubble --disable-infobars --app=$KIOSK_URL
+Exec=$BROWSER_CMD --kiosk --no-first-run --disable-session-crashed-bubble --disable-infobars --app=file://$LOADING_SCREEN_DST
 X-GNOME-Autostart-enabled=true
 EOL
 
