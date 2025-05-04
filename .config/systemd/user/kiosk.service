@@ -1,0 +1,12 @@
+[Unit]
+Description=Chromium kiosk
+PartOf=graphical-session.target
+
+[Service]
+# The following path will be updated by the install script to match the current user
+ExecStart=%h/kiosk.sh
+Restart=on-abort
+Type=forking
+
+[Install]
+WantedBy=xsession.target 

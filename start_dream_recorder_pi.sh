@@ -38,6 +38,9 @@ fi
 echo "Starting Dream Recorder Docker container..."
 docker compose up -d
 
+# Ensure logs directory exists before starting GPIO service
+mkdir -p "$SCRIPT_DIR/logs"
+
 # 2. Start GPIO service (native, in background)
 echo "Starting GPIO service..."
 nohup python3 "$SCRIPT_DIR/gpio_service.py" > "$SCRIPT_DIR/logs/gpio_service.log" 2>&1 &
@@ -50,9 +53,7 @@ until curl -s $APP_URL > /dev/null; do
 done
 echo "Dream Recorder web app is up!"
 
-# 4. Launch Chromium in kiosk mode
-echo "Launching Chromium in kiosk mode..."
-chromium-browser --kiosk --no-first-run --disable-session-crashed-bubble --disable-infobars --app=$APP_URL &
+# 4. Chromium is now started by a user-level systemd service (see kiosk.sh and kiosk.service)
 
 # 5. Optionally, set up systemd service for auto-start on boot
 if [ "$1" == "--install-systemd" ]; then
@@ -80,4 +81,8 @@ EOL
     echo "Systemd service installed. It will start on boot. To start now: sudo systemctl start $SERVICE_NAME"
 fi
 
-echo "All services started. To stop, run ./stop_dream_recorder_pi.sh" 
+echo "All services started. To stop, run ./stop_dream_recorder_pi.sh"
+
+# Instructions for user to add Chromium to autostart
+# To launch Chromium automatically on boot, add the following line to ~/.config/lxsession/LXDE-pi/autostart:
+# @chromium-browser --kiosk --no-first-run --disable-session-crashed-bubble --disable-infobars --app=http://localhost:5000 
