@@ -176,7 +176,7 @@ LOADING_SCREEN_DST="$SCRIPT_DIR/templates/loading.kiosk.html"
 
 # Inject the real app URL into the loading screen HTML
 if [ -f "$LOADING_SCREEN_SRC" ]; then
-    sed "s|window.KIOSK_APP_URL || window.KIOSK_APP_URL = '"$KIOSK_URL"';|" "$LOADING_SCREEN_SRC" > "$LOADING_SCREEN_DST"
+    sed "s#const target = window.KIOSK_APP_URL || \"http://localhost:5000\";#const target = '$KIOSK_URL';#" "$LOADING_SCREEN_SRC" > "$LOADING_SCREEN_DST"
     log_info "Injected KIOSK_URL into loading screen HTML."
 else
     log_error "Loading screen HTML not found at $LOADING_SCREEN_SRC."
