@@ -6,6 +6,7 @@ media/*
 logs/*
 !logs/.gitkeep
 temp_scripts/
+templates/loading.kiosk.html
 
 # Node.js
 node_modules/
