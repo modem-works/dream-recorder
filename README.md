@@ -1,9 +1,5 @@
 ## Dream Recorder
 
-Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing you to record and review your dreams with simple touch interactions.
-
----
-
 ## Quick Start
 
 ### For Developers (Local/Development)
@@ -22,7 +18,7 @@ Dream Recorder is an application designed to run on a Raspberry Pi 5, allowing y
      ```
 
 3. **Edit configuration as needed:**
-   - All non-secret config is in `config.development.json` (for dev) and `config.production.json` (for prod).
+   - All non-secret config can be tweaked in `config.json` (for dev) and `config.production.json` (for prod).
 
 4. **Start in development mode (with live reload):**
    ```bash

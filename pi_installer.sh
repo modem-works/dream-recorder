@@ -52,8 +52,24 @@ if [ ! -f "$SCRIPT_DIR/config.example.json" ]; then
 fi
 # Copy .env if missing
 if [ ! -f "$SCRIPT_DIR/.env" ]; then
-    cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
-    log_info "Copied .env.example to .env."
+    # Prompt for API keys
+    echo -ne "Enter your OPENAI_API_KEY (from OpenAI dashboard): "
+    read -r OPENAI_API_KEY
+    if [[ ! "$OPENAI_API_KEY" =~ ^[A-Za-z0-9_-]{20,}$ ]]; then
+        log_error "OPENAI_API_KEY must be at least 20 alphanumeric characters. Exiting."
+        exit 1
+    fi
+    echo -ne "Enter your LUMALABS_API_KEY (from Luma Labs dashboard): "
+    read -r LUMALABS_API_KEY
+    if [[ ! "$LUMALABS_API_KEY" =~ ^[A-Za-z0-9_-]{20,}$ ]]; then
+        log_error "LUMALABS_API_KEY must be at least 20 alphanumeric characters. Exiting."
+        exit 1
+    fi
+    # Create .env from template, replacing placeholders
+    sed -e "s|OPENAI_API_KEY=your-openai-api-key-here|OPENAI_API_KEY=$OPENAI_API_KEY|" \
+        -e "s|LUMALABS_API_KEY=your-luma-labs-api-key-here|LUMALABS_API_KEY=$LUMALABS_API_KEY|" \
+        "$SCRIPT_DIR/.env.example" > "$SCRIPT_DIR/.env"
+    log_info "Created .env with provided API keys."
 else
     log_info ".env already exists. Skipping."
 fi
