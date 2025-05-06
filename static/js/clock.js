@@ -77,15 +77,27 @@ const Clock = {
         const hours = now.getHours().toString().padStart(2, '0');
         const minutes = now.getMinutes().toString().padStart(2, '0');
         
-        // Update digits
-        this.elements.hourTens.textContent = hours[0];
-        this.elements.hourOnes.textContent = hours[1];
-        this.elements.minuteTens.textContent = minutes[0];
-        this.elements.minuteOnes.textContent = minutes[1];
+        // Helper to update digit only if changed
+        function updateDigit(element, newValue) {
+            if (!element) return;
+            const lastValue = element.getAttribute('data-value');
+            if (lastValue !== newValue) {
+                element.textContent = newValue;
+                element.setAttribute('data-value', newValue);
+            }
+        }
+
+        // Update digits only if changed
+        updateDigit(this.elements.hourTens, hours[0]);
+        updateDigit(this.elements.hourOnes, hours[1]);
+        updateDigit(this.elements.minuteTens, minutes[0]);
+        updateDigit(this.elements.minuteOnes, minutes[1]);
         
         // Toggle colon visibility
         this.colonVisible = !this.colonVisible;
-        this.elements.colon.classList.toggle('hidden', !this.colonVisible);
+        if (this.elements.colon) {
+            this.elements.colon.classList.toggle('hidden', !this.colonVisible);
+        }
     },
 
     // Update configuration at runtime
