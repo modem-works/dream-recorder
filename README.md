@@ -68,6 +68,10 @@
 - Run the installer: `./pi_installer.sh`
    - When prompted, paste in the two API keys generated above
 - Reboot the Raspberry Pi: `sudo reboot`
+- To change config variables:
+   - Run: `docker compose exec prod python3 scripts/config_editor.py`
+   - After saving (s) and quitting (q), reload the application by running: `docker compose restart prod`
+
 
 ### For Developers (Local/Development)
 
@@ -79,7 +83,9 @@ To get the app running on your local machine:
    cp config.example.json config.json
    vim .env
    # Add your API keys
-   docker compose --profile dev run --service-ports dev
+   docker compose up dev
+   # Edit the default config options (optional)
+   docker compose exec dev python3 scripts/config_editor.py
    ```
 The app will be available at [http://localhost:5000](http://localhost:5000)
 

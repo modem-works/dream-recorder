@@ -1,6 +1,7 @@
 services:
-  dream-recorder:
-    container_name: dream-recorder
+  # For production mode, use:
+  #   docker compose up
+  prod:
     build: .
     ports:
       - "${PORT}:${PORT}"
@@ -16,9 +17,8 @@ services:
     command: python app.py
 
   # For development mode, use:
-  #   docker compose run --service-ports dev
+  #   docker compose up dev
   dev:
-    container_name: dream-recorder
     build: .
     ports:
       - "${PORT}:${PORT}"
@@ -33,7 +33,6 @@ services:
       - HOST=0.0.0.0
       - FLASK_ENV=development
     command: python app.py --reload
-    profiles: ["dev"]
 
 volumes:
   db-data:

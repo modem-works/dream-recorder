@@ -1,0 +1,367 @@
+[
+    {
+        "name": "LUMA_EXTEND",
+        "category": "Luma",
+        "description": "Whether to use the Luma 'extend' feature - which will first generate a video and then send it back to Luma to create a longer, extended version of the video.",
+        "default": false,
+        "type": "boolean"
+    },
+    {
+        "name": "LUMA_MODEL",
+        "category": "Luma",
+        "description": "Luma model to use for video generation.",
+        "default": "ray-flash-2",
+        "type": "string",
+        "options": [
+            "ray-flash-2",
+            "ray-2",
+            "ray-1-6"
+        ]
+    },
+    {
+        "name": "LUMA_DURATION",
+        "category": "Luma",
+        "description": "Duration of generated videos.",
+        "default": "5s",
+        "type": "string",
+        "options": [
+            "5s",
+            "9s"
+        ]
+    },
+    {
+        "name": "LUMA_RESOLUTION",
+        "category": "Luma",
+        "description": "Output video resolution.",
+        "default": "540p",
+        "type": "string",
+        "options": [
+            "540p",
+            "720p",
+            "1080",
+            "4k"
+        ]
+    },
+    {
+        "name": "LUMA_POLL_INTERVAL",
+        "category": "Luma",
+        "description": "Seconds between polling Luma for video generation status.",
+        "default": 5,
+        "type": "integer"
+    },
+    {
+        "name": "LUMA_MAX_POLL_ATTEMPTS",
+        "category": "Luma",
+        "description": "Maximum number of polling attempts for Luma video generation before giving up.",
+        "default": 100,
+        "type": "integer"
+    },
+    {
+        "name": "WHISPER_MODEL",
+        "category": "OpenAI",
+        "description": "Name of the OpenAI Whisper model to use for transcription.",
+        "default": "whisper-1",
+        "type": "string",
+        "options": [
+            "whisper-1",
+            "gpt-4o-transcribe",
+            "gpt-4o-mini-transcribe"
+        ]
+    },
+    {
+        "name": "GPT_MODEL",
+        "category": "OpenAI",
+        "description": "Name of the OpenAI GPT model to use for prompt generation.",
+        "default": "gpt-4o-mini",
+        "type": "string",
+        "options": [
+            "gpt-4o-mini",
+            "gpt-4o",
+            "o1-mini"
+        ]
+    },
+    {
+        "name": "GPT_SYSTEM_PROMPT",
+        "category": "OpenAI",
+        "description": "System prompt for the GPT model (single-sentence version).",
+        "default": "You are a creative video prompt engineer specializing in Luma Dream Machine. Your task is to transform dream descriptions into cinematic video prompts using clear, simple language. Be specific about useful visual elements and emotional tone. Keep the prompt concise but rich in visual detail, formatted as a single, succinct sentence.",
+        "type": "string"
+    },
+    {
+        "name": "GPT_SYSTEM_PROMPT_EXTEND",
+        "category": "OpenAI",
+        "description": "System prompt for the GPT model (two-sentence/extended version).",
+        "default": "You are a creative video prompt engineer specializing in Luma Dream Machine. Your task is to transform dream descriptions into  cinematic video prompts using clear, simple language. Be specific about useful visual elements and emotional tone. Keep the prompt concise but rich in visual detail, formatted as two succinct sentences. Break down the prompt into exactly two clear separate parts, using '*****' as a separator between part one and part two.",
+        "type": "string"
+    },
+    {
+        "name": "GPT_TEMPERATURE",
+        "category": "OpenAI",
+        "description": "Sampling temperature for GPT.",
+        "default": 0.7,
+        "type": "float"
+    },
+    {
+        "name": "GPT_MAX_TOKENS",
+        "category": "OpenAI",
+        "description": "Maximum number of tokens for GPT responses.",
+        "default": 400,
+        "type": "integer"
+    },
+    {
+        "name": "CLOCK_FADE_IN_DURATION",
+        "category": "General",
+        "description": "Milliseconds taken for the clock to fade in.",
+        "default": 500,
+        "type": "integer"
+    },
+    {
+        "name": "CLOCK_FADE_OUT_DURATION",
+        "category": "General",
+        "description": "Milliseconds taken for the clock to fade out.",
+        "default": 500,
+        "type": "integer"
+    },
+    {
+        "name": "CLOCK_CONFIG_PATH",
+        "category": "Directories & Paths",
+        "description": "Path to the JSON file defining the clock's appearance and behavior.",
+        "default": "/static/config/clock-default.json",
+        "type": "string"
+    },
+    {
+        "name": "PLAYBACK_DURATION",
+        "category": "Video",
+        "description": "Duration (in seconds) for audio/video playback.",
+        "default": 120,
+        "type": "integer"
+    },
+    {
+        "name": "VIDEO_HISTORY_LIMIT",
+        "category": "Video",
+        "description": "Number of videos to loop through in the device's history.",
+        "default": 7,
+        "type": "integer"
+    },
+    {
+        "name": "LOGO_FADE_IN_DURATION",
+        "category": "General",
+        "description": "Milliseconds taken for the logo to fade in.",
+        "default": 2000,
+        "type": "integer"
+    },
+    {
+        "name": "LOGO_FADE_OUT_DURATION",
+        "category": "General",
+        "description": "Milliseconds taken for the logo to fade out.",
+        "default": 1000,
+        "type": "integer"
+    },
+    {
+        "name": "TRANSITION_DELAY",
+        "category": "General",
+        "description": "Delay (in milliseconds) between UI transitions.",
+        "default": 100,
+        "type": "integer"
+    },
+    {
+        "name": "LOG_LEVEL",
+        "category": "General",
+        "description": "Sets the logging verbosity.",
+        "default": "INFO",
+        "type": "string",
+        "options": [
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR"
+        ]
+    },
+    {
+        "name": "HOST",
+        "category": "General",
+        "description": "The internal network interface the server binds to.",
+        "default": "0.0.0.0",
+        "type": "string"
+    },
+    {
+        "name": "PORT",
+        "category": "General",
+        "description": "The port the server listens on.",
+        "default": 5000,
+        "type": "integer"
+    },
+    {
+        "name": "TOTAL_BACKGROUND_IMAGES",
+        "category": "General",
+        "description": "Number of available background images for the UI (in static/images/background).",
+        "default": 1119,
+        "type": "integer"
+    },
+    {
+        "name": "AUDIO_CHANNELS",
+        "category": "Audio",
+        "description": "Number of audio channels to record.",
+        "default": 1,
+        "type": "integer",
+        "options": [
+            1,
+            2
+        ]
+    },
+    {
+        "name": "AUDIO_SAMPLE_WIDTH",
+        "category": "Audio",
+        "description": "Audio sample width in bytes.",
+        "default": 2,
+        "type": "integer"
+    },
+    {
+        "name": "AUDIO_FRAME_RATE",
+        "category": "Audio",
+        "description": "Audio sample rate in Hz.",
+        "default": 44100,
+        "type": "integer"
+    },
+    {
+        "name": "RECORDINGS_DIR",
+        "category": "Directories & Paths",
+        "description": "Directory where audio recordings are stored.",
+        "default": "media/audio",
+        "type": "string"
+    },
+    {
+        "name": "LUMA_API_URL",
+        "category": "Luma",
+        "description": "Base URL for the Luma Labs API.",
+        "default": "https://api.lumalabs.ai/dream-machine/v1",
+        "type": "url"
+    },
+    {
+        "name": "LUMA_GENERATIONS_ENDPOINT",
+        "category": "Luma",
+        "description": "Endpoint for generating videos with Luma Labs.",
+        "default": "https://api.lumalabs.ai/dream-machine/v1/generations",
+        "type": "url"
+    },
+    {
+        "name": "LUMA_ASPECT_RATIO",
+        "category": "Luma",
+        "description": "Aspect ratio for generated videos.",
+        "default": "21:9",
+        "type": "string",
+        "options": ["9:16", "3:4", "1:1", "4:3", "16:9", "21:9"]
+    },
+    {
+        "name": "VIDEOS_DIR",
+        "category": "Directories & Paths",
+        "description": "Directory where generated videos are stored.",
+        "default": "media/video",
+        "type": "string"
+    },
+    {
+        "name": "THUMBS_DIR",
+        "category": "Directories & Paths",
+        "description": "Directory where video thumbnails are stored.",
+        "default": "media/thumbs",
+        "type": "string"
+    },
+    {
+        "name": "FFMPEG_BRIGHTNESS",
+        "category": "Video",
+        "description": "Brightness adjustment for video processing.",
+        "default": 0.2,
+        "type": "float"
+    },
+    {
+        "name": "FFMPEG_VIBRANCE",
+        "category": "Video",
+        "description": "Vibrance adjustment for video processing.",
+        "default": 2,
+        "type": "float"
+    },
+    {
+        "name": "FFMPEG_DENOISE_THRESHOLD",
+        "category": "Video",
+        "description": "Denoise threshold for video processing.",
+        "default": 300,
+        "type": "integer"
+    },
+    {
+        "name": "FFMPEG_BILATERAL_SIGMA",
+        "category": "Video",
+        "description": "Bilateral filter sigma value for video processing.",
+        "default": 100,
+        "type": "integer"
+    },
+    {
+        "name": "FFMPEG_NOISE_STRENGTH",
+        "category": "Video",
+        "description": "Noise strength for video processing.",
+        "default": 40,
+        "type": "integer"
+    },
+    {
+        "name": "GPIO_PIN",
+        "category": "GPIO",
+        "description": "GPIO pin number used for the physical button.",
+        "default": 4,
+        "type": "integer"
+    },
+    {
+        "name": "GPIO_FLASK_URL",
+        "category": "GPIO",
+        "description": "URL of the Flask server for GPIO events.",
+        "default": "http://localhost:5000",
+        "type": "url"
+    },
+    {
+        "name": "GPIO_SINGLE_TAP_ENDPOINT",
+        "category": "GPIO",
+        "description": "API endpoint for single-tap button events.",
+        "default": "/api/gpio_single_tap",
+        "type": "string"
+    },
+    {
+        "name": "GPIO_DOUBLE_TAP_ENDPOINT",
+        "category": "GPIO",
+        "description": "API endpoint for double-tap button events.",
+        "default": "/api/gpio_double_tap",
+        "type": "string"
+    },
+    {
+        "name": "GPIO_SINGLE_TAP_MAX_DURATION",
+        "category": "GPIO",
+        "description": "Max duration (seconds) for a single tap to be recognized.",
+        "default": 0.5,
+        "type": "float"
+    },
+    {
+        "name": "GPIO_DOUBLE_TAP_MAX_INTERVAL",
+        "category": "GPIO",
+        "description": "Max interval (seconds) between taps for a double tap.",
+        "default": 0.7,
+        "type": "float"
+    },
+    {
+        "name": "GPIO_DEBOUNCE_TIME",
+        "category": "GPIO",
+        "description": "Debounce time (seconds) for button presses.",
+        "default": 0.05,
+        "type": "float"
+    },
+    {
+        "name": "GPIO_STARTUP_DELAY",
+        "category": "GPIO",
+        "description": "Delay (seconds) before GPIO service starts after boot.",
+        "default": 2,
+        "type": "integer"
+    },
+    {
+        "name": "GPIO_SAMPLING_RATE",
+        "category": "GPIO",
+        "description": "Sampling rate (seconds) for reading GPIO pin state.",
+        "default": 0.01,
+        "type": "float"
+    }
+]
