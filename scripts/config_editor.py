@@ -1,7 +1,6 @@
 import curses
 import json
 import os
-import argparse
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), '..', 'config.template.json')
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), '..', 'config.json')
@@ -36,8 +35,21 @@ def save_config(config):
     with open(OUTPUT_PATH, 'w') as f:
         json.dump(config, f, indent=2)
 
-def get_default_config(template):
-    return {item['name']: item['default'] for item in template}
+def load_current_config():
+    if os.path.exists(OUTPUT_PATH):
+        with open(OUTPUT_PATH, 'r') as f:
+            return json.load(f)
+    return {}
+
+def get_merged_config(template, loaded_config):
+    config = {}
+    for item in template:
+        name = item['name']
+        if name in loaded_config:
+            config[name] = loaded_config[name]
+        else:
+            config[name] = item['default']
+    return config
 
 def init_colors():
     curses.start_color()
@@ -59,7 +71,8 @@ def main(stdscr):
     template = load_template()
     # Sort template by category, then by name for consistent grouping
     template = sorted(template, key=lambda x: (x.get('category', ''), x['name']))
-    config = get_default_config(template)
+    loaded_config = load_current_config()
+    config = get_merged_config(template, loaded_config)
     current = 0
     editing = False
     edit_value = ''
@@ -190,16 +203,5 @@ def main(stdscr):
                 editing = True
                 edit_value = str(config[item['name']])
 
-def generate_and_save_default_config():
-    template = load_template()
-    config = get_default_config(template)
-    save_config(config)
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Dream Recorder Config Editor')
-    parser.add_argument('--generate-defaults', action='store_true', help='Generate config.json from template defaults and exit')
-    args = parser.parse_args()
-    if args.generate_defaults:
-        generate_and_save_default_config()
-    else:
-        curses.wrapper(main) 
+    curses.wrapper(main) 

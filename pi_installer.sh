@@ -75,8 +75,8 @@ else
 fi
 # Copy config.json if missing
 if [ ! -f "$CONFIG_PATH" ]; then
-    log_info "Generating config.json from template using config_editor.py..."
-    docker compose run --rm app python3 scripts/config_editor.py --generate-defaults
+    cp "$SCRIPT_DIR/config.example.json" "$CONFIG_PATH"
+    log_info "Copied config.example.json to config.json."
 else
     log_info "config.json already exists. Skipping."
 fi
