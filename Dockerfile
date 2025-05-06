@@ -14,7 +14,6 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy the rest of the code
 COPY . .
-RUN python3 scripts/config_editor.py --generate-defaults
 
 # Expose Flask port
 EXPOSE 5000
