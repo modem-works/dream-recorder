@@ -1,17 +1,10 @@
-```
-   .-.                                         .-.                                                 
-  (_) )-.                                     (_) )-.                               .'             
-    .:   \    .;.::..-.  .-.    . ,';.,';.      .:   \   .-.  .-.   .-.  .;.::..-..'  .-.   .;.::. 
-   .:'    \   .;  .;.-' ;   :   ;;  ;;  ;;     .::.   ).;.-' ;     ;   ;'.;   :   ; .;.-'   .;     
- .-:.      ).;'    `:::'`:::'-'';  ;;  ';    .-:. `:-'  `:::'`;;;;'`;;'.;'    `:::'`.`:::'.;'      
-(_/  `----'                   _;        `-' (_/     `:._.                                          
-```
+# Dream Recorder
 
-# Getting started
+## Getting started
 
-## To get the Dream Recorder up and running on your Raspberry Pi
+### To get the Dream Recorder up and running on your Raspberry Pi
 
-### On your computer
+#### On your computer
 - Download and install the Raspberry Pi imager software - https://www.raspberrypi.com/software/
 - Plug the micro SD card into your computer using an SD card reader
 - Open the Raspberry Pi imager software and install it using the following details:
@@ -26,11 +19,11 @@
          Enable SSH using password authentication
 - Once the installation has finished, safely eject and remove the microSD card
 
-### On the Raspberry Pi
+#### On the Raspberry Pi
 - Insert the microSD card into the Raspberry Pi
 - Plug the Raspberry Pi in using the power supply and wait for it to boot up
 
-### On your computer
+#### On your computer
 - Find the IP address of the Raspberry Pi in one of the following ways:
    1. On the device:
       - Plug in a USB mouse to the Raspberry Pi
@@ -44,7 +37,7 @@
       - Make a note of your computer's IP address (e.g. 192.168.1.100)
       - Run this command: `nmap -sn 192.168.1.0/24 | grep dreamer` - keeping the first three numbers sets the same as your computer's IP (eg. 192.168.1.) and leaving the 0/24 at the end
 
-### In a Terminal on your computer
+#### In a Terminal on your computer
 - SSH into the Dream Recorder with this command: `ssh dreamer@X.X.X.X` (using the simple password you created in the Raspberry Pi imager)
 - Run the Raspberry Pi config tool by running this command: `sudo raspi-config`
    - Interface Options -> VNC -> Yes -> OK
@@ -52,7 +45,7 @@
    - Select \<Finish\>
 - Keep this terminal window open for later   
 
-### On your computer
+#### On your computer
 - [Download RealVNC](https://www.realvnc.com/en/connect/download), install and run it
    - Connect to the Dream Recorder's IP address using the username (dreamer) and your simple password
    - You should now have remote desktop access to the Raspberry Pi
@@ -69,7 +62,7 @@
    - Copy the value and paste it to a text file temporarily as you will need it shortly
    - Add a few dollars of credits to your account ($20 suggested)
 
-### In the Terminal on your computer (which should still be connected to the Raspberry Pi via SSH)
+#### In the Terminal on your computer (which should still be connected to the Raspberry Pi via SSH)
 - Clone the Dream Recorder from Github: git clone <repo_ssh_url>
 - Once completed, navigate into the repo folder: `cd dream-recorder`
 - Run the installer: `./pi_installer.sh`
@@ -80,7 +73,7 @@
    - After saving (s) and quitting (q), reload the application by running: `docker compose restart app`
 
 
-## For Developers (Local/Development)
+### For Developers (Local/Development)
 
 To get the app running on your local machine:
    ```bash
@@ -105,7 +98,7 @@ To stop the app:
 docker compose down
 ```
 
-# Troubleshooting
+## Troubleshooting
 
 - **Logs:**
   - App logs: `docker compose logs -f`
@@ -129,4 +122,6 @@ docker compose down
 
 ## Questions?
 
-Open an issue or contact the maintainer for help!
+Open an issue or contact the lead maintainer for help:
+
+<img src="https://github.com/markhinch.png" width="80px;"/><br /><a href="https://github.com/markhinch">@markhinch</a>
