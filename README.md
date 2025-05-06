@@ -69,8 +69,8 @@
    - When prompted, paste in the two API keys generated above
 - Reboot the Raspberry Pi: `sudo reboot`
 - To change config variables:
-   - Run: `docker compose exec prod python3 scripts/config_editor.py`
-   - After saving (s) and quitting (q), reload the application by running: `docker compose restart prod`
+   - Run: `docker compose exec app python3 scripts/config_editor.py`
+   - After saving (s) and quitting (q), reload the application by running: `docker compose restart app`
 
 
 ### For Developers (Local/Development)
@@ -80,12 +80,11 @@ To get the app running on your local machine:
    git clone <repo_url>
    cd dream-recorder
    cp .env.example .env
-   cp config.example.json config.json
    vim .env
    # Add your API keys
-   docker compose up dev
+   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
    # Edit the default config options (optional)
-   docker compose exec dev python3 scripts/config_editor.py
+   docker compose exec app python3 scripts/config_editor.py
    ```
 The app will be available at [http://localhost:5000](http://localhost:5000)
 
@@ -101,8 +100,8 @@ docker compose down
 ## Troubleshooting on the Raspberry Pi
 
 - **Logs:**
-  - App logs: `docker logs -f dream-recorder`
-  - GPIO logs: `logs/gpio_service.log`
+  - App logs: `docker compose logs -f`
+  - GPIO logs: `tail -f logs/gpio_service.log`
 - **Check running services:**
   ```bash
   docker ps

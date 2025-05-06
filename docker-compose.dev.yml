@@ -1,0 +1,7 @@
+services:
+  app:
+    volumes:
+      - .:/app
+    environment:
+      - FLASK_ENV=development
+    command: python app.py --reload 

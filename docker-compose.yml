@@ -1,25 +1,5 @@
 services:
-  # For production mode, use:
-  #   docker compose --profile prod up
-  prod:
-    build: .
-    ports:
-      - "${PORT}:${PORT}"
-    volumes:
-      - db-data:/app/db
-      - media-data:/app/media
-      - logs-data:/app/logs
-    env_file:
-      - .env
-    environment:
-      - HOST=0.0.0.0
-      - FLASK_ENV=production
-    command: python app.py
-    profiles: ["prod"]
-
-  # For development mode, use:
-  #   docker compose --profile dev up
-  dev:
+  app:
     build: .
     ports:
       - "${PORT}:${PORT}"
@@ -32,11 +12,9 @@ services:
       - .env
     environment:
       - HOST=0.0.0.0
-      - FLASK_ENV=development
-    command: python app.py --reload
-    profiles: ["dev"]
+    command: python app.py
 
 volumes:
   db-data:
   media-data:
-  logs-data: 
+  logs-data:
