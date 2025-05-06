@@ -80,8 +80,8 @@ To get the app running on your local machine:
    git clone <repo_url>
    cd dream-recorder
    cp .env.example .env
-   vim .env
    # Add your API keys
+   vim .env
    docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
    # Edit the default config options (optional)
    docker compose exec app python3 scripts/config_editor.py

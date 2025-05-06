@@ -1,6 +1,7 @@
 import curses
 import json
 import os
+import argparse
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), '..', 'config.template.json')
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), '..', 'config.json')
@@ -189,5 +190,16 @@ def main(stdscr):
                 editing = True
                 edit_value = str(config[item['name']])
 
+def generate_and_save_default_config():
+    template = load_template()
+    config = get_default_config(template)
+    save_config(config)
+
 if __name__ == '__main__':
-    curses.wrapper(main) 
+    parser = argparse.ArgumentParser(description='Dream Recorder Config Editor')
+    parser.add_argument('--generate-defaults', action='store_true', help='Generate config.json from template defaults and exit')
+    args = parser.parse_args()
+    if args.generate_defaults:
+        generate_and_save_default_config()
+    else:
+        curses.wrapper(main) 
