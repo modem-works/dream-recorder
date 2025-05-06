@@ -42,7 +42,7 @@
 - Run the Raspberry Pi config tool by running this command: `sudo raspi-config`
    - Interface Options -> VNC -> Yes -> OK
    - Localisation Options -> Configure time zone -> Choose your country & city
-   - <Finish>
+   - Select \<Finish\>
 - Keep this terminal window open for later   
 
 #### On your computer
