@@ -18,6 +18,7 @@
     font-family: var(--clock-font-family);
     font-size: var(--clock-font-size);
     color: var(--clock-color);
+    font-weight: var(--clock-font-weight);
 }
 
 .digit, .colon {

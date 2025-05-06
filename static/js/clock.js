@@ -66,6 +66,7 @@ const Clock = {
         const root = document.documentElement;
         root.style.setProperty('--clock-font-family', this.config.fontFamily);
         root.style.setProperty('--clock-font-size', this.config.fontSize);
+        root.style.setProperty('--clock-font-weight', this.config.fontWeight);
         root.style.setProperty('--clock-color', this.config.color);
         root.style.setProperty('--clock-glow-color', this.config.glowColor);
         root.style.setProperty('--clock-spacing', this.config.spacing);

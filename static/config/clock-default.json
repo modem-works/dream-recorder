@@ -2,7 +2,7 @@
     "fontFamily": "Ballet, cursive",
     "fontSize": "12rem",
     "color": "#ffffff",
-    "fontWeight": "400",
+    "fontWeight": "normal",
     "fontStyle": "normal",
     "fontUrl": "https://fonts.googleapis.com/css2?family=Ballet&display=swap"
 }

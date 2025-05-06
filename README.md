@@ -76,6 +76,7 @@ To get the app running on your local machine:
    git clone <repo_url>
    cd dream-recorder
    cp .env.example .env
+   cp config.example.json config.json
    vim .env
    # Add your API keys
    docker compose --profile dev run --service-ports dev
