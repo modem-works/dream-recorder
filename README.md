@@ -81,7 +81,7 @@ To get the app running on your local machine:
    cd dream-recorder
    cp .env.example .env
    cp config.example.json config.json
-   # Add your API keys
+   # Add your API keys using vim, nano or any text editor you're compfortable with
    vim .env
    docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
    # Edit the default config options (optional)
