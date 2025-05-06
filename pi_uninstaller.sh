@@ -96,18 +96,27 @@ else
 fi
 
 # =============================
-# 5. Remove Docker containers, images, and volumes
+# 5. Remove Docker containers, images, and volumes (project only)
 # =============================
-log_step "Docker cleanup (containers, images, volumes)"
-log_warn "This will remove ALL Docker containers, images, and volumes on this system!"
+log_step "Docker cleanup (project containers, images, volumes only)"
+log_warn "This will remove ONLY Docker containers, images, and volumes related to this project!"
+
 echo -ne "${RED}Are you sure you want to proceed? (type 'yes' to continue): ${NC}"
 read CONFIRM
 if [ "$CONFIRM" == "yes" ]; then
+    # Stop and remove containers, networks, and volumes defined in this compose file
     docker compose down --volumes || true
-    docker rm -f $(docker ps -aq) 2>/dev/null || true
-    docker rmi -f $(docker images -aq) 2>/dev/null || true
-    docker volume rm $(docker volume ls -q) 2>/dev/null || true
-    log_info "All Docker containers, images, and volumes removed."
+
+    # Remove images built by this compose file
+    IMAGE_IDS=$(docker compose images -q | grep -v "<none>" | sort | uniq)
+    if [ -n "$IMAGE_IDS" ]; then
+        docker rmi -f $IMAGE_IDS || true
+        log_info "Removed Docker images built by this project."
+    else
+        log_info "No project images to remove."
+    fi
+
+    log_info "All Docker containers, images, and volumes for this project removed."
 else
     log_warn "Docker cleanup skipped."
 fi
