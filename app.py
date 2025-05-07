@@ -25,7 +25,7 @@ config = load_config()
 # =============================
 # Initialize sample dreams if DB does not exist
 # =============================
-DB_PATH = os.path.join(os.path.dirname(__file__), 'db', 'dreams.db')
+DB_PATH = config['DB_PATH']
 if not os.path.isfile(DB_PATH):
     try:
         print("[INFO] No dreams database found. Initializing sample dreams...")

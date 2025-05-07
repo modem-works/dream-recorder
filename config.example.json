@@ -1,5 +1,6 @@
 {
   "LOG_LEVEL": "INFO",
+  "DB_PATH": "db/dreams.db",
   "HOST": "0.0.0.0",
   "PORT": 5000,
   "TOTAL_BACKGROUND_IMAGES": 1119,

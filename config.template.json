@@ -178,6 +178,13 @@
         ]
     },
     {
+        "name": "DB_PATH",
+        "category": "Directories & Paths",
+        "description": "Path to the database file.",
+        "default": "db/dreams.db",
+        "type": "string"
+    },
+    {
         "name": "HOST",
         "category": "General",
         "description": "The internal network interface the server binds to.",

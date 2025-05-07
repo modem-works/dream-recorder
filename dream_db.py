@@ -23,7 +23,7 @@ class DreamData(BaseModel):
 class DreamDB:
     def __init__(self, db_path=None):
         if db_path is None:
-            db_path = config.get('DREAMS_DB_PATH', '/app/db/dreams.db')
+            db_path = config['DB_PATH']
         self.db_path = db_path
         self._init_db()
     
