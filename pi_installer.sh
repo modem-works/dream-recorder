@@ -167,13 +167,10 @@ systemctl --user start dream-recorder-docker.service && \
     log_warn "Could not start Docker Compose service. You may need to log in with a desktop session first."
 
 # =============================
-# Ensure Docker containers are built and running
+# Build Docker container
 # =============================
 log_step "Building Docker images (docker compose build)"
 docker compose build
-
-log_step "Bringing up Docker containers (docker compose up -d)"
-docker compose up -d
 
 # =============================
 # API Key Validation (inside container)
