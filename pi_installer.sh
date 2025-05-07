@@ -260,7 +260,7 @@ cat > "$KIOSK_DESKTOP_FILE" <<EOL
 [Desktop Entry]
 Type=Application
 Name=Dream Recorder Kiosk
-Exec=$BROWSER_CMD --kiosk --no-first-run --disable-session-crashed-bubble --disable-infobars --app=file://$LOADING_SCREEN_DST
+Exec=$BROWSER_CMD --kiosk --no-first-run --disable-session-crashed-bubble --disable-infobars --use-fake-ui-for-media-stream --app=file://$LOADING_SCREEN_DST
 X-GNOME-Autostart-enabled=true
 EOL
 
