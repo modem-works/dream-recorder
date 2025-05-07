@@ -122,6 +122,40 @@ else
 fi
 
 # =============================
+# 5b. Force remove any remaining containers and named volumes
+# =============================
+log_step "Force removing any remaining project containers and named volumes"
+# Remove any remaining containers related to the project
+PROJECT_CONTAINERS=$(docker ps -a --filter "name=dream-recorder" -q)
+if [ -n "$PROJECT_CONTAINERS" ]; then
+    docker rm -f $PROJECT_CONTAINERS || true
+    log_info "Force removed remaining project containers."
+else
+    log_info "No remaining project containers to remove."
+fi
+
+# Remove named volumes if they still exist
+VOLUMES=("dream-recorder_logs-data" "dream-recorder_db-data" "dream-recorder_media-data")
+for VOLUME in "${VOLUMES[@]}"; do
+    if docker volume inspect "$VOLUME" >/dev/null 2>&1; then
+        docker volume rm -f "$VOLUME" || true
+        log_info "Force removed volume $VOLUME."
+    else
+        log_info "Volume $VOLUME not found or already removed."
+    fi
+done
+
+# Optionally prune all unused Docker resources
+echo -ne "${RED}Do you want to prune all unused Docker resources? (type 'yes' to continue): ${NC}"
+read PRUNE_CONFIRM
+if [ "$PRUNE_CONFIRM" == "yes" ]; then
+    docker system prune -a --volumes -f
+    log_info "Pruned all unused Docker resources."
+else
+    log_info "Docker system prune skipped."
+fi
+
+# =============================
 # 6. Final message
 # =============================
 log_step "Uninstallation Complete!"
