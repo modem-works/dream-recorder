@@ -149,6 +149,11 @@ const StateManager = {
             } 
         });
         document.dispatchEvent(event);
+
+        // Hide errorDiv if leaving ERROR state
+        if (this.currentState !== this.STATES.ERROR && window.errorDiv) {
+            window.errorDiv.style.display = 'none';
+        }
     },
 
     // Handle state transitions
@@ -303,6 +308,10 @@ const StateManager = {
                     // Single tap in clock state plays most recent video
                     this.playLatestVideo();
                 } else if (this.currentState === this.STATES.ERROR) {
+                    // Hide errorDiv and return to clock
+                    if (window.errorDiv) {
+                        window.errorDiv.style.display = 'none';
+                    }
                     this.updateState(this.STATES.CLOCK);
                 }
                 break;

@@ -347,4 +347,23 @@ canvas {
 .startup-logo img {
     max-width: 100%;
     height: auto;
+}
+
+.error-div {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 1100;
+    color: red;
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 auto;
+    padding: 0rem 3rem 3rem 3rem;
+    display: none;
+    box-sizing: border-box;
 } 

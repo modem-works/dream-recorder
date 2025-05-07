@@ -42,6 +42,16 @@ window.socket.on('state_update', (state) => {
     console.log('Received state_update:', state);
     updateUI(state);
     
+    // Show or hide errorDiv based on state
+    if (window.errorDiv) {
+        if (state.status === 'error' && state.error_message) {
+            window.errorDiv.textContent = state.error_message;
+            window.errorDiv.style.display = 'block';
+        } else {
+            window.errorDiv.style.display = 'none';
+        }
+    }
+
     // Update StateManager based on server state
     if (window.StateManager) {
         // Don't update state if we're in startup sequence
@@ -117,6 +127,11 @@ window.socket.on('error', (data) => {
     console.log('Received error message:', data);
     window.messageDiv.textContent = data.message;
     
+    // Show errorDiv with the error message
+    if (window.errorDiv) {
+        window.errorDiv.textContent = data.message;
+        window.errorDiv.style.display = 'block';
+    }
     if (window.StateManager) {
         window.StateManager.updateState(window.StateManager.STATES.ERROR, data.message);
     }

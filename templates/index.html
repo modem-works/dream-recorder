@@ -55,6 +55,8 @@
                 Your browser does not support the video tag.
             </video>
         </div>
+
+        <div id="errorDiv" class="error-div">&nbsp;</div>
     </div>
 
     <div class="debug-console {% if not is_development %}hidden{% endif %}">
@@ -62,6 +64,13 @@
             <h3>Debug Console</h3>
         </div>
         
+        <div class="debug-section">
+            <div class="input-simulator">
+                <button id="singleTapBtn">Single Tap</button>
+                <button id="doubleTapBtn">Double Tap</button>
+            </div>
+        </div>
+
         <div class="debug-section">
             <h4>Status</h4>
             <div id="status">Ready</div>
@@ -80,14 +89,6 @@
         <div class="debug-section">
             <h4>Message</h4>
             <div id="message"></div>
-        </div>
-
-        <div class="debug-section">
-            <h4>Input Simulator</h4>
-            <div class="input-simulator">
-                <button id="singleTapBtn">Single Tap</button>
-                <button id="doubleTapBtn">Double Tap</button>
-            </div>
         </div>
     </div>
 
