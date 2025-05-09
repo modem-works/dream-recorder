@@ -1,7 +1,21 @@
 services:
   app:
+    build: .
+    ports:
+      - "${PORT}:${PORT}"
     volumes:
       - .:/app
+      - db-data:/app/db
+      - media-data:/app/media
+      - logs-data:/app/logs
+    env_file:
+      - .env
     environment:
+      - HOST=0.0.0.0
       - FLASK_ENV=development
     command: python app.py --reload 
+
+volumes:
+  db-data:
+  media-data:
+  logs-data:

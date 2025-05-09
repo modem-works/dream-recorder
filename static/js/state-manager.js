@@ -205,6 +205,7 @@ const StateManager = {
 
         // Handle clock display
         if (clockDisplay) {
+            console.log(`Handling clock display for state: ${newState}`);
             if (newState === this.STATES.CLOCK) {
                 // Fade in clock
                 clockDisplay.style.transition = `opacity ${this.config.clockFadeInDuration}ms ease-out`;

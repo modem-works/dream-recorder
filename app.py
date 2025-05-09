@@ -316,6 +316,12 @@ def clock_config_path():
         return jsonify({'error': 'CLOCK_CONFIG_PATH not set in config'}), 500
     return jsonify({'configPath': config_path})
 
+@app.route('/api/notify_config_reload', methods=['POST'])
+def notify_config_reload():
+    """Notify all clients to reload config."""
+    socketio.emit('reload_config')
+    return jsonify({'status': 'reload event emitted'})
+
 # -- Media Routes --
 @app.route('/media/<path:filename>')
 def serve_media(filename):

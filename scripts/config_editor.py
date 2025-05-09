@@ -1,6 +1,9 @@
 import curses
 import json
 import os
+import requests
+import time
+import subprocess
 
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), '..', 'config.template.json')
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), '..', 'config.json')

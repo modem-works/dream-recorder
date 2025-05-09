@@ -190,6 +190,11 @@ window.socket.on('play_video', (data) => {
     }
 });
 
+window.socket.on('reload_config', () => {
+    console.log('Received reload_config event, reloading page...');
+    window.location.reload();
+});
+
 // UI update functions
 function updateUI(state) {
     // Don't update status through this function since StateManager handles it
