@@ -12,13 +12,11 @@ import logging
 import requests
 import argparse
 from enum import Enum
-from config_loader import load_config
-
-config = load_config()
+from config_loader import get_config
 
 # Configure logging
 logging.basicConfig(
-    level=getattr(logging, config['LOG_LEVEL']),
+    level=getattr(logging, get_config()['LOG_LEVEL']),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -40,9 +38,9 @@ class GPIOController:
             debounce_time (float): Minimum time between state changes
             sampling_rate (float): How often to sample the pin state
         """
-        self.pin = pin or int(config['GPIO_PIN'])
-        self.debounce_time = debounce_time or float(config['GPIO_DEBOUNCE_TIME'])
-        self.sampling_rate = sampling_rate or float(config['GPIO_SAMPLING_RATE'])
+        self.pin = pin or int(get_config()['GPIO_PIN'])
+        self.debounce_time = debounce_time or float(get_config()['GPIO_DEBOUNCE_TIME'])
+        self.sampling_rate = sampling_rate or float(get_config()['GPIO_SAMPLING_RATE'])
         self.is_running = False
         self.callbacks = {}
         
@@ -81,8 +79,8 @@ class GPIOController:
             single_tap_max (float): Maximum duration for a single tap
             double_tap_max_interval (float): Maximum interval between taps for a double tap
         """
-        self.single_tap_max = single_tap_max or float(config['GPIO_SINGLE_TAP_MAX_DURATION'])
-        self.double_tap_max_interval = double_tap_max_interval or float(config['GPIO_DOUBLE_TAP_MAX_INTERVAL'])
+        self.single_tap_max = single_tap_max or float(get_config()['GPIO_SINGLE_TAP_MAX_DURATION'])
+        self.double_tap_max_interval = double_tap_max_interval or float(get_config()['GPIO_DOUBLE_TAP_MAX_INTERVAL'])
         self.is_running = True
         logger.info("Starting GPIO monitoring loop")
         
@@ -144,24 +142,24 @@ class GPIOController:
 def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='GPIO Service for Dream Recorder')
-    parser.add_argument('--flask-url', default=config['GPIO_FLASK_URL'], 
-                        help=f'Base URL of the Flask application (default: {config["GPIO_FLASK_URL"]})')
-    parser.add_argument('--single-tap-endpoint', default=config['GPIO_SINGLE_TAP_ENDPOINT'],
-                        help=f'Endpoint for single tap (default: {config["GPIO_SINGLE_TAP_ENDPOINT"]})')
-    parser.add_argument('--double-tap-endpoint', default=config['GPIO_DOUBLE_TAP_ENDPOINT'],
-                        help=f'Endpoint for double tap (default: {config["GPIO_DOUBLE_TAP_ENDPOINT"]})')
-    parser.add_argument('--pin', type=int, default=config['GPIO_PIN'],
-                        help=f'GPIO pin for touch sensor (default: {config["GPIO_PIN"]})')
-    parser.add_argument('--single-tap-max', type=float, default=config['GPIO_SINGLE_TAP_MAX_DURATION'],
-                        help=f'Maximum duration for a single tap in seconds (default: {config["GPIO_SINGLE_TAP_MAX_DURATION"]})')
-    parser.add_argument('--double-tap-max-interval', type=float, default=config['GPIO_DOUBLE_TAP_MAX_INTERVAL'],
-                        help=f'Maximum interval between taps for a double tap in seconds (default: {config["GPIO_DOUBLE_TAP_MAX_INTERVAL"]})')
-    parser.add_argument('--debounce-time', type=float, default=config['GPIO_DEBOUNCE_TIME'],
-                        help=f'Debounce time in seconds (default: {config["GPIO_DEBOUNCE_TIME"]})')
-    parser.add_argument('--sampling-rate', type=float, default=config['GPIO_SAMPLING_RATE'],
-                        help=f'Sampling rate in seconds (default: {config["GPIO_SAMPLING_RATE"]})')
-    parser.add_argument('--startup-delay', type=int, default=int(config['GPIO_STARTUP_DELAY']),
-                        help=f'Delay in seconds before starting (default: {config["GPIO_STARTUP_DELAY"]})')
+    parser.add_argument('--flask-url', default=get_config()['GPIO_FLASK_URL'], 
+                        help=f'Base URL of the Flask application (default: {get_config()["GPIO_FLASK_URL"]})')
+    parser.add_argument('--single-tap-endpoint', default=get_config()['GPIO_SINGLE_TAP_ENDPOINT'],
+                        help=f'Endpoint for single tap (default: {get_config()["GPIO_SINGLE_TAP_ENDPOINT"]})')
+    parser.add_argument('--double-tap-endpoint', default=get_config()['GPIO_DOUBLE_TAP_ENDPOINT'],
+                        help=f'Endpoint for double tap (default: {get_config()["GPIO_DOUBLE_TAP_ENDPOINT"]})')
+    parser.add_argument('--pin', type=int, default=get_config()['GPIO_PIN'],
+                        help=f'GPIO pin for touch sensor (default: {get_config()["GPIO_PIN"]})')
+    parser.add_argument('--single-tap-max', type=float, default=get_config()['GPIO_SINGLE_TAP_MAX_DURATION'],
+                        help=f'Maximum duration for a single tap in seconds (default: {get_config()["GPIO_SINGLE_TAP_MAX_DURATION"]})')
+    parser.add_argument('--double-tap-max-interval', type=float, default=get_config()['GPIO_DOUBLE_TAP_MAX_INTERVAL'],
+                        help=f'Maximum interval between taps for a double tap in seconds (default: {get_config()["GPIO_DOUBLE_TAP_MAX_INTERVAL"]})')
+    parser.add_argument('--debounce-time', type=float, default=get_config()['GPIO_DEBOUNCE_TIME'],
+                        help=f'Debounce time in seconds (default: {get_config()["GPIO_DEBOUNCE_TIME"]})')
+    parser.add_argument('--sampling-rate', type=float, default=get_config()['GPIO_SAMPLING_RATE'],
+                        help=f'Sampling rate in seconds (default: {get_config()["GPIO_SAMPLING_RATE"]})')
+    parser.add_argument('--startup-delay', type=int, default=int(get_config()['GPIO_STARTUP_DELAY']),
+                        help=f'Delay in seconds before starting (default: {get_config()["GPIO_STARTUP_DELAY"]})')
     parser.add_argument('--test', action='store_true', help='Run in test mode (simulate taps from CLI)')
     args = parser.parse_args()
 

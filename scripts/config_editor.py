@@ -38,6 +38,19 @@ def save_config(config):
     with open(OUTPUT_PATH, 'w') as f:
         json.dump(config, f, indent=2)
 
+    # Notify the app to emit reload event
+    try:
+        port = 5000
+        try:
+            with open(OUTPUT_PATH, 'r') as cf:
+                cfg = json.load(cf)
+                port = int(cfg.get('PORT', 5000))
+        except Exception:
+            pass
+        requests.post(f'http://localhost:{port}/api/notify_config_reload')
+    except Exception as e:
+        print(f"Failed to notify app for config reload: {e}")
+
 def load_current_config():
     if os.path.exists(OUTPUT_PATH):
         with open(OUTPUT_PATH, 'r') as f:

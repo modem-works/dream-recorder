@@ -5,16 +5,14 @@ import tempfile
 import ffmpeg
 import wave
 from functions.video import generate_video_prompt, generate_video
-from config_loader import load_config
-
-config = load_config()
+from config_loader import get_config
 
 def create_wav_file(audio_buffer):
     """Create a new WAV file in the audio buffer with the correct format."""
     wav_file = wave.open(audio_buffer, 'wb')
-    wav_file.setnchannels(int(config['AUDIO_CHANNELS']))
-    wav_file.setsampwidth(int(config['AUDIO_SAMPLE_WIDTH']))
-    wav_file.setframerate(int(config['AUDIO_FRAME_RATE']))
+    wav_file.setnchannels(int(get_config()['AUDIO_CHANNELS']))
+    wav_file.setsampwidth(int(get_config()['AUDIO_SAMPLE_WIDTH']))
+    wav_file.setframerate(int(get_config()['AUDIO_FRAME_RATE']))
     return wav_file
 
 def save_wav_file(audio_data, filename=None, logger=None):
@@ -23,8 +21,8 @@ def save_wav_file(audio_data, filename=None, logger=None):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"recording_{timestamp}.wav"
     # Ensure the recordings directory exists
-    os.makedirs(config['RECORDINGS_DIR'], exist_ok=True)
-    filepath = os.path.join(config['RECORDINGS_DIR'], filename)
+    os.makedirs(get_config()['RECORDINGS_DIR'], exist_ok=True)
+    filepath = os.path.join(get_config()['RECORDINGS_DIR'], filename)
     # Create a temporary file for the WebM data
     with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_webm:
         temp_webm.write(audio_data)
@@ -57,7 +55,7 @@ def process_audio(sid, client, socketio, dream_db, recording_state, audio_chunks
         # Transcribe the audio using OpenAI's Whisper API
         with open(temp_file_path, 'rb') as audio_file:
             transcription = client.audio.transcriptions.create(
-                model=config['WHISPER_MODEL'],
+                model=get_config()['WHISPER_MODEL'],
                 file=audio_file
             )
         # Update the transcription in the global state
@@ -68,9 +66,9 @@ def process_audio(sid, client, socketio, dream_db, recording_state, audio_chunks
         else:
             socketio.emit('transcription_update', {'text': transcription.text})
         # Check if LUMA_EXTEND is set
-        luma_extend = str(config['LUMA_EXTEND']).lower() in ('1', 'true', 'yes')
+        luma_extend = str(get_config()['LUMA_EXTEND']).lower() in ('1', 'true', 'yes')
         # Generate video prompt
-        video_prompt = generate_video_prompt(transcription=transcription.text, luma_extend=luma_extend, client=client, logger=logger, config=config)
+        video_prompt = generate_video_prompt(transcription=transcription.text, luma_extend=luma_extend, client=client, logger=logger, config=get_config())
         if not video_prompt:
             raise Exception("Failed to generate video prompt")
         recording_state['video_prompt'] = video_prompt

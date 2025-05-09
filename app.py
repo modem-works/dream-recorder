@@ -14,18 +14,17 @@ from openai import OpenAI
 import argparse
 from dream_db import DreamDB
 from functions.audio import create_wav_file, process_audio
-from config_loader import load_config
+from config_loader import load_config, get_config
 import subprocess
 
 # =============================
 # Load Configuration
 # =============================
-config = load_config()
 
 # =============================
 # Initialize sample dreams if DB does not exist
 # =============================
-DB_PATH = config['DB_PATH']
+DB_PATH = get_config()['DB_PATH']
 if not os.path.isfile(DB_PATH):
     try:
         print("[INFO] No dreams database found. Initializing sample dreams...")
@@ -40,7 +39,7 @@ if not os.path.isfile(DB_PATH):
         print(f"[ERROR] Exception while initializing sample dreams: {e}")
 
 # Configure logging
-logging.basicConfig(level=getattr(logging, config["LOG_LEVEL"]))
+logging.basicConfig(level=getattr(logging, get_config()["LOG_LEVEL"]))
 logger = logging.getLogger(__name__)
 
 # =============================
@@ -77,13 +76,13 @@ audio_chunks = []
 app = Flask(__name__)
 app.config.update(
     DEBUG=os.environ.get("FLASK_ENV", "production") == "development",
-    HOST=config["HOST"],
-    PORT=int(config["PORT"])
+    HOST=get_config()["HOST"],
+    PORT=int(get_config()["PORT"])
 )
 
 # Initialize OpenAI client
 client = OpenAI(
-    api_key=config["OPENAI_API_KEY"],
+    api_key=get_config()["OPENAI_API_KEY"],
     http_client=None
 )
 
@@ -226,7 +225,7 @@ def index():
     """Serve the main HTML page."""
     return render_template('index.html', 
                          is_development=app.config['DEBUG'],
-                         total_background_images=int(config["TOTAL_BACKGROUND_IMAGES"]))
+                         total_background_images=int(get_config()["TOTAL_BACKGROUND_IMAGES"]))
 
 @app.route('/dreams')
 def dreams():
@@ -236,8 +235,9 @@ def dreams():
 
 # -- API Routes --
 @app.route('/api/config')
-def get_config():
-    """Get application configuration for the frontend."""
+def api_get_config():
+    from config_loader import get_config
+    config = get_config()
     return jsonify({
         'is_development': app.config['DEBUG'],
         'playback_duration': int(config['PLAYBACK_DURATION']),
@@ -285,15 +285,15 @@ def delete_dream(dream_id):
             # Delete associated files
             try:
                 # Delete video file
-                video_path = os.path.join(config['VIDEOS_DIR'], dream['video_filename'])
+                video_path = os.path.join(get_config()['VIDEOS_DIR'], dream['video_filename'])
                 if os.path.exists(video_path):
                     os.remove(video_path)
                 # Delete thumbnail file
-                thumb_path = os.path.join(config['THUMBS_DIR'], dream['thumb_filename'])
+                thumb_path = os.path.join(get_config()['THUMBS_DIR'], dream['thumb_filename'])
                 if os.path.exists(thumb_path):
                     os.remove(thumb_path)
                 # Delete audio file
-                audio_path = os.path.join(config['RECORDINGS_DIR'], dream['audio_filename'])
+                audio_path = os.path.join(get_config()['RECORDINGS_DIR'], dream['audio_filename'])
                 if os.path.exists(audio_path):
                     os.remove(audio_path)
             except Exception as e:
@@ -311,7 +311,7 @@ def delete_dream(dream_id):
 @app.route('/api/clock-config-path')
 def clock_config_path():
     """Return the clock configuration path from config."""
-    config_path = config['CLOCK_CONFIG_PATH']
+    config_path = get_config()['CLOCK_CONFIG_PATH']
     if not config_path:
         return jsonify({'error': 'CLOCK_CONFIG_PATH not set in config'}), 500
     return jsonify({'configPath': config_path})
@@ -319,6 +319,7 @@ def clock_config_path():
 @app.route('/api/notify_config_reload', methods=['POST'])
 def notify_config_reload():
     """Notify all clients to reload config."""
+    load_config()
     socketio.emit('reload_config')
     return jsonify({'status': 'reload event emitted'})
 
@@ -335,7 +336,7 @@ def serve_media(filename):
 def serve_thumbnail(filename):
     """Serve thumbnail files from the thumbs directory."""
     try:
-        return send_file(os.path.join(config['THUMBS_DIR'], filename))
+        return send_file(os.path.join(get_config()['THUMBS_DIR'], filename))
     except FileNotFoundError:
         return "Thumbnail not found", 404
 

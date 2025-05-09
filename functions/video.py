@@ -5,9 +5,7 @@ import os
 import ffmpeg
 import shutil
 from datetime import datetime
-from config_loader import load_config
-
-config = load_config()
+from config_loader import get_config
 
 def process_video(input_path, logger=None):
     """Process the video using FFmpeg with specific filters from environment variables."""
@@ -17,11 +15,11 @@ def process_video(input_path, logger=None):
             temp_path = temp_file.name
         # Apply FFmpeg filters using environment variables
         stream = ffmpeg.input(input_path)
-        stream = ffmpeg.filter(stream, 'eq', brightness=float(config['FFMPEG_BRIGHTNESS']))
-        stream = ffmpeg.filter(stream, 'vibrance', intensity=float(config['FFMPEG_VIBRANCE']))
-        stream = ffmpeg.filter(stream, 'vaguedenoiser', threshold=float(config['FFMPEG_DENOISE_THRESHOLD']))
-        stream = ffmpeg.filter(stream, 'bilateral', sigmaS=float(config['FFMPEG_BILATERAL_SIGMA']))
-        stream = ffmpeg.filter(stream, 'noise', all_strength=float(config['FFMPEG_NOISE_STRENGTH']))
+        stream = ffmpeg.filter(stream, 'eq', brightness=float(get_config()['FFMPEG_BRIGHTNESS']))
+        stream = ffmpeg.filter(stream, 'vibrance', intensity=float(get_config()['FFMPEG_VIBRANCE']))
+        stream = ffmpeg.filter(stream, 'vaguedenoiser', threshold=float(get_config()['FFMPEG_DENOISE_THRESHOLD']))
+        stream = ffmpeg.filter(stream, 'bilateral', sigmaS=float(get_config()['FFMPEG_BILATERAL_SIGMA']))
+        stream = ffmpeg.filter(stream, 'noise', all_strength=float(get_config()['FFMPEG_NOISE_STRENGTH']))
         stream = ffmpeg.output(stream, temp_path)
         # Run FFmpeg
         ffmpeg.run(stream, overwrite_output=True, quiet=True)
@@ -49,7 +47,7 @@ def process_thumbnail(video_path, logger=None):
         x_offset = (width - crop_size) // 2
         y_offset = (height - crop_size) // 2
         # Create output directory if it doesn't exist
-        thumbs_dir = config['THUMBS_DIR']
+        thumbs_dir = get_config()['THUMBS_DIR']
         os.makedirs(thumbs_dir, exist_ok=True)
         # Generate simple timestamp-based filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -80,18 +78,18 @@ def process_thumbnail(video_path, logger=None):
             logger.error(f"Error generating thumbnail: {str(e)}")
         raise
 
-def generate_video_prompt(transcription, luma_extend=False, client=None, logger=None, config=config):
+def generate_video_prompt(transcription, luma_extend=False, client=None, logger=None, config=None):
     """Generate an enhanced video prompt from the transcription using GPT."""
     try:
-        system_prompt = config['GPT_SYSTEM_PROMPT_EXTEND'] if luma_extend else config['GPT_SYSTEM_PROMPT']
+        system_prompt = get_config()['GPT_SYSTEM_PROMPT_EXTEND'] if luma_extend else get_config()['GPT_SYSTEM_PROMPT']
         response = client.chat.completions.create(
-            model=config['GPT_MODEL'],
+            model=get_config()['GPT_MODEL'],
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"{transcription}"}
             ],
-            temperature=float(config['GPT_TEMPERATURE']),
-            max_tokens=int(config['GPT_MAX_TOKENS'])
+            temperature=float(get_config()['GPT_TEMPERATURE']),
+            max_tokens=int(get_config()['GPT_MAX_TOKENS'])
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
@@ -99,7 +97,7 @@ def generate_video_prompt(transcription, luma_extend=False, client=None, logger=
             logger.error(f"Error generating video prompt: {str(e)}")
         return None
 
-def generate_video(prompt, filename=None, luma_extend=False, logger=None, config=config):
+def generate_video(prompt, filename=None, luma_extend=False, logger=None, config=None):
     """Generate a video using Luma Labs API, with optional extension if LUMA_EXTEND is set."""
     try:
         # If luma_extend, split the prompt into two parts
@@ -110,18 +108,18 @@ def generate_video(prompt, filename=None, luma_extend=False, logger=None, config
             extension_prompt = 'Continue on with this video'  # fallback
         # Step 1: Create the initial generation request
         response = requests.post(
-            config['LUMA_GENERATIONS_ENDPOINT'],
+            get_config()['LUMA_GENERATIONS_ENDPOINT'],
             headers={
                 'accept': 'application/json',
-                'authorization': f"Bearer {config['LUMALABS_API_KEY']}",
+                'authorization': f"Bearer {get_config()['LUMALABS_API_KEY']}",
                 'content-type': 'application/json'
             },
             json={
                 'prompt': initial_prompt,
-                'model': config['LUMA_MODEL'],
-                'resolution': config['LUMA_RESOLUTION'],
-                'duration': config['LUMA_DURATION'],
-                "aspect_ratio": config['LUMA_ASPECT_RATIO'],
+                'model': get_config()['LUMA_MODEL'],
+                'resolution': get_config()['LUMA_RESOLUTION'],
+                'duration': get_config()['LUMA_DURATION'],
+                "aspect_ratio": get_config()['LUMA_ASPECT_RATIO'],
             }
         )
         if response.status_code not in [200, 201]:
@@ -136,14 +134,14 @@ def generate_video(prompt, filename=None, luma_extend=False, logger=None, config
             logger.info(f"Started video generation with ID: {generation_id}")
         def poll_for_completion(generation_id):
             """Poll the Luma API for video generation completion."""
-            max_attempts = int(config['LUMA_MAX_POLL_ATTEMPTS'])
-            poll_interval = float(config['LUMA_POLL_INTERVAL'])
+            max_attempts = int(get_config()['LUMA_MAX_POLL_ATTEMPTS'])
+            poll_interval = float(get_config()['LUMA_POLL_INTERVAL'])
             for attempt in range(max_attempts):
                 status_response = requests.get(
-                    f"{config['LUMA_API_URL']}/generations/{generation_id}",
+                    f"{get_config()['LUMA_API_URL']}/generations/{generation_id}",
                     headers={
                         'accept': 'application/json',
-                        'authorization': f"Bearer {config['LUMALABS_API_KEY']}"
+                        'authorization': f"Bearer {get_config()['LUMALABS_API_KEY']}"
                     }
                 )
                 if status_response.status_code not in [200, 201]:
@@ -185,10 +183,10 @@ def generate_video(prompt, filename=None, luma_extend=False, logger=None, config
                 logger.info("LUMA_EXTEND is set. Requesting video extension.")
             _ = poll_for_completion(generation_id)  # Wait for completion
             extend_response = requests.post(
-                config['LUMA_GENERATIONS_ENDPOINT'],
+                get_config()['LUMA_GENERATIONS_ENDPOINT'],
                 headers={
                     'accept': 'application/json',
-                    'authorization': f"Bearer {config['LUMALABS_API_KEY']}",
+                    'authorization': f"Bearer {get_config()['LUMALABS_API_KEY']}",
                     'content-type': 'application/json'
                 },
                 json={
@@ -220,8 +218,8 @@ def generate_video(prompt, filename=None, luma_extend=False, logger=None, config
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"generated_{timestamp}.mp4"
-        os.makedirs(config['VIDEOS_DIR'], exist_ok=True)
-        video_path = os.path.join(config['VIDEOS_DIR'], filename)
+        os.makedirs(get_config()['VIDEOS_DIR'], exist_ok=True)
+        video_path = os.path.join(get_config()['VIDEOS_DIR'], filename)
         with open(video_path, 'wb') as f:
             for chunk in video_response.iter_content(chunk_size=8192):
                 f.write(chunk)
