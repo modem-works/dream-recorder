@@ -9,6 +9,11 @@ TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), '..', 'config.template.j
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), '..', 'config.json')
 
 # ASCII art for DREAM RECORDER (GENERATED WITH https://patorjk.com/software/taag)
+# Font: Cola
+# Author : MikeChat
+# Date   : 2006/6/7 14:32:11
+# Version: 1.0
+
 ASCII_ART = [
 "   .-.                                         .-.                                                 ",
 "  (_) )-.                                     (_) )-.                               .'             ",
