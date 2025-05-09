@@ -28,6 +28,7 @@ COLOR_EDIT = 6
 COLOR_ERROR = 7
 COLOR_SUCCESS = 8
 COLOR_CATEGORY = 9
+COLOR_BOX_BG = 10
 
 # Load config template
 def load_template():
@@ -79,6 +80,7 @@ def init_colors():
     curses.init_pair(COLOR_ERROR, curses.COLOR_RED, -1)
     curses.init_pair(COLOR_SUCCESS, curses.COLOR_GREEN, -1)
     curses.init_pair(COLOR_CATEGORY, curses.COLOR_MAGENTA, -1)
+    curses.init_pair(COLOR_BOX_BG, curses.COLOR_WHITE, -1)
 
 def main(stdscr):
     curses.curs_set(0)
@@ -147,19 +149,43 @@ def main(stdscr):
                 pass  # Ignore if out of bounds
             y += 1
         # Show description and edit box
+        # --- Draw window box ---
+        box_top = h - 6
+        box_left = 1
+        box_height = 6
+        box_width = w - 2
+        # Draw box background
+        for by in range(box_top, box_top + box_height):
+            try:
+                stdscr.addstr(by, box_left, ' ' * box_width, curses.color_pair(COLOR_BOX_BG))
+            except curses.error:
+                pass
+        # Draw box border
+        try:
+            stdscr.addstr(box_top, box_left, '┌' + '─' * (box_width - 2) + '┐', curses.color_pair(COLOR_BOX_BG) | curses.A_BOLD)
+            for by in range(box_top + 1, box_top + box_height - 1):
+                stdscr.addstr(by, box_left, '│', curses.color_pair(COLOR_BOX_BG) | curses.A_BOLD)
+                stdscr.addstr(by, box_left + box_width - 1, '│', curses.color_pair(COLOR_BOX_BG) | curses.A_BOLD)
+            stdscr.addstr(box_top + box_height - 1, box_left, '└' + '─' * (box_width - 2) + '┘', curses.color_pair(COLOR_BOX_BG) | curses.A_BOLD)
+        except curses.error:
+            pass
+        # Draw content inside the box, offset by 1 row and 2 columns
         item = template[current]
-        desc = item['description'][:w-4]
-        stdscr.addstr(h-5, 2, desc, curses.color_pair(COLOR_DESC) | curses.A_UNDERLINE)
-        stdscr.addstr(h-4, 2, f"Type: {item['type']}", curses.color_pair(COLOR_INSTR))
+        desc = item['description'][:box_width-4]
+        stdscr.addstr(box_top+1, box_left+2, desc, curses.color_pair(COLOR_DESC) | curses.A_UNDERLINE)
+        stdscr.addstr(box_top+2, box_left+2, f"Type: {item['type']}", curses.color_pair(COLOR_INSTR))
+        y_in_box = box_top+3
         if 'options' in item:
-            opts_str = str(item['options'])[:w-4]
-            stdscr.addstr(h-3, 2, f"Options: {opts_str}", curses.color_pair(COLOR_INSTR))
+            opts_str = str(item['options'])[:box_width-4]
+            stdscr.addstr(y_in_box, box_left+2, f"Options: {opts_str}", curses.color_pair(COLOR_INSTR))
+            y_in_box += 1
         if editing:
             edit_prompt = f"Enter new value for {item['name']}: {edit_value}"
-            stdscr.addstr(h-2, 2, edit_prompt[:w-4], curses.color_pair(COLOR_EDIT) | curses.A_BOLD)
+            stdscr.addstr(y_in_box, box_left+2, edit_prompt[:box_width-4], curses.color_pair(COLOR_EDIT) | curses.A_BOLD)
+            y_in_box += 1
         if msg:
             color = curses.color_pair(COLOR_ERROR) if msg_is_error else curses.color_pair(COLOR_SUCCESS)
-            stdscr.addstr(h-1, 2, msg[:w-4], color | curses.A_BOLD)
+            stdscr.addstr(box_top+box_height-2, box_left+2, msg[:box_width-4], color | curses.A_BOLD)
         stdscr.refresh()
         key = stdscr.getch()
         msg = ''
