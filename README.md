@@ -126,6 +126,8 @@
 
 ### For Developers (Local/Development)
 To get the app running on your local machine:
+   - Note: You will need Docker (Compose) installed on your system - [Docker documentation](https://docs.docker.com/compose/install)
+
    ```bash
    git clone <repo_url>
    cd dream-recorder
@@ -138,12 +140,15 @@ To get the app running on your local machine:
    # Edit the default config options (optional)
    docker compose exec app python3 scripts/config_editor.py
    ```
+
 The app will be available at [http://localhost:5000](http://localhost:5000)
 
 To simulate sensor button presses:
-```bash
-python gpio_service.py --test
-```
+   - Note: You will need Python 3.12 installed on your system - [Python documentation](https://wiki.python.org/moin/BeginnersGuide/Download)
+
+   ```bash
+   python gpio_service.py --test
+   ```
 
 <details>
    <summary>See step-by-step images 🖼️</summary>
