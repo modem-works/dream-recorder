@@ -23,10 +23,14 @@ jobs:
       - name: Commit and push version bump
         run: |
           git add VERSION
-          git commit -m "chore: bump version [skip ci]"
+          git diff --cached --quiet || git commit -m "chore: bump version [skip ci]"
           git push
-      - name: Create Tag
+      - name: Create Tag (if not exists)
         run: |
           version=$(cat VERSION)
-          git tag "v$version"
-          git push origin "v$version" 
+          if ! git rev-parse "v$version" >/dev/null 2>&1; then
+            git tag "v$version"
+            git push origin "v$version"
+          else
+            echo "Tag v$version already exists"
+          fi 
