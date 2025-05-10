@@ -168,3 +168,23 @@ def test_process_audio_exception_and_finally(monkeypatch, mock_config, mock_logg
     audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
     # Should emit error and not crash
     fake_socketio.emit.assert_any_call('error', {'message': 'fail'}) 
+
+def test_process_audio_emit_sid_and_no_sid(monkeypatch, mock_config, mock_logger):
+    # Patch dependencies
+    monkeypatch.setattr(audio, 'save_wav_file', lambda *a, **k: 'file.wav')
+    fake_transcription = mock.Mock(text='hello world')
+    monkeypatch.setattr(audio.client.audio.transcriptions, 'create', lambda **kwargs: fake_transcription)
+    monkeypatch.setattr(audio, 'generate_video_prompt', lambda *a, **k: 'video prompt')
+    monkeypatch.setattr(audio, 'generate_video', lambda *a, **k: ('video.mp4', 'thumb.png'))
+    fake_db = mock.Mock()
+    fake_socketio = mock.Mock()
+    recording_state = {}
+    audio_chunks = [b'audio']
+    # Call with sid=None
+    audio.process_audio(None, fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
+    # Call with sid set
+    audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
+    # Check that emit was called with and without room
+    calls = [c for c in fake_socketio.emit.call_args_list]
+    assert any('room' in c[1] for c in calls)  # with sid
+    assert any('room' not in c[1] for c in calls)  # without sid 

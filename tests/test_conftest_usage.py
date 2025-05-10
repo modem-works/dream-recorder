@@ -10,4 +10,9 @@ def test_socketio_client_fixture(socketio_client):
 def test_mock_dream_db_fixture(mock_dream_db):
     # Should be a MagicMock
     from unittest.mock import MagicMock
-    assert isinstance(mock_dream_db, MagicMock) 
+    assert isinstance(mock_dream_db, MagicMock)
+
+def test_conftest_fixtures_run(test_client, socketio_client, mock_dream_db):
+    assert test_client is not None
+    assert socketio_client is not None
+    assert mock_dream_db is not None 
