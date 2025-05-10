@@ -5,7 +5,7 @@ import tempfile
 import ffmpeg
 import wave
 from functions.video import generate_video_prompt, generate_video
-from config_loader import get_config
+from functions.config_loader import get_config
 
 def create_wav_file(audio_buffer):
     """Create a new WAV file in the audio buffer with the correct format."""
@@ -80,7 +80,7 @@ def process_audio(sid, client, socketio, dream_db, recording_state, audio_chunks
         # Save to database
         DreamData = None
         try:
-            from dream_db import DreamData
+            from functions.dream_db import DreamData
         except ImportError:
             pass
         dream_data = DreamData(

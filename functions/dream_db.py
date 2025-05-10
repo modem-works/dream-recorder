@@ -6,7 +6,7 @@ import logging
 from pydantic import BaseModel
 from typing import Optional
 import os
-from config_loader import get_config
+from functions.config_loader import get_config
 
 logger = logging.getLogger(__name__)
 

@@ -12,9 +12,9 @@ import gevent
 import io
 from openai import OpenAI
 import argparse
-from dream_db import DreamDB
+from functions.dream_db import DreamDB
 from functions.audio import create_wav_file, process_audio
-from config_loader import load_config, get_config
+from functions.config_loader import load_config, get_config
 import subprocess
 
 # =============================
@@ -236,7 +236,7 @@ def dreams():
 # -- API Routes --
 @app.route('/api/config')
 def api_get_config():
-    from config_loader import get_config
+    from functions.config_loader import get_config
     config = get_config()
     return jsonify({
         'is_development': app.config['DEBUG'],

@@ -5,7 +5,7 @@ import shutil
 # Ensure parent directory is in sys.path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from dream_db import DreamDB, DreamData
+from functions.dream_db import DreamDB, DreamData
 
 # Paths
 SAMPLES_DIR = os.path.join(os.path.dirname(__file__), '..', 'dream_samples')

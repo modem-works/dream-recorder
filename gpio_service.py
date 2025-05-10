@@ -12,7 +12,7 @@ import logging
 import requests
 import argparse
 from enum import Enum
-from config_loader import get_config
+from functions.config_loader import get_config
 
 # Configure logging
 logging.basicConfig(

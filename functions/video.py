@@ -5,7 +5,7 @@ import os
 import ffmpeg
 import shutil
 from datetime import datetime
-from config_loader import get_config
+from functions.config_loader import get_config
 
 def process_video(input_path, logger=None):
     """Process the video using FFmpeg with specific filters from environment variables."""

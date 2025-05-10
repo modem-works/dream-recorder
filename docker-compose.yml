@@ -12,7 +12,7 @@ services:
       - .env
     environment:
       - HOST=0.0.0.0
-    command: python app.py
+    command: python dream-recorder.py
 
 volumes:
   db-data:
