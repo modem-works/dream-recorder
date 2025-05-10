@@ -94,4 +94,58 @@ def test_handle_show_previous_dream_error(monkeypatch, mocker):
     monkeypatch.setattr(dream_recorder.socketio, 'emit', lambda name, data=None: emitted.append((name, data)))
     dream_recorder.handle_show_previous_dream()
     assert any('Error in socket handle_show_previous_dream' in msg for msg in logs)
-    assert any(name == 'error' for name, _ in emitted) 
+    assert any(name == 'error' for name, _ in emitted)
+
+def test_handle_show_previous_dream_no_dream(monkeypatch, mocker):
+    import dream_recorder
+    # Patch dream_db.get_all_dreams to return an empty list
+    monkeypatch.setattr(dream_recorder.dream_db, 'get_all_dreams', lambda: [])
+    # Patch logger to record warnings
+    logs = []
+    class FakeLogger:
+        def warning(self, msg): logs.append(msg)
+        def info(self, msg): pass
+        def error(self, msg): pass
+    monkeypatch.setattr(dream_recorder, 'logger', FakeLogger())
+    # Set video_playback_state to simulate playing
+    dream_recorder.video_playback_state['is_playing'] = True
+    dream_recorder.video_playback_state['current_index'] = 0
+    dream_recorder.handle_show_previous_dream()
+    assert any('No dreams found to cycle through.' in msg for msg in logs)
+
+def test_api_gpio_single_tap_error(test_client, mocker):
+    mocker.patch('dream_recorder.socketio.emit', side_effect=Exception('fail'))
+    resp = test_client.post('/api/gpio_single_tap')
+    data = resp.get_json()
+    assert resp.status_code == 500
+    assert data['status'] == 'error'
+    assert 'fail' in data['message']
+
+def test_api_gpio_double_tap_error(test_client, mocker):
+    mocker.patch('dream_recorder.socketio.emit', side_effect=Exception('fail'))
+    resp = test_client.post('/api/gpio_double_tap')
+    data = resp.get_json()
+    assert resp.status_code == 500
+    assert data['status'] == 'error'
+    assert 'fail' in data['message']
+
+def test_api_delete_dream_error(test_client, mocker):
+    mocker.patch('dream_recorder.dream_db.get_dream', side_effect=Exception('fail'))
+    resp = test_client.delete('/api/dreams/1')
+    data = resp.get_json()
+    assert resp.status_code == 500
+    assert data['success'] is False
+    assert 'fail' in data['message']
+
+def test_serve_media_error(test_client, mocker):
+    mocker.patch('dream_recorder.send_file', side_effect=FileNotFoundError)
+    resp = test_client.get('/media/missingfile.mp4')
+    assert resp.status_code == 404
+    assert b'File not found' in resp.data
+
+def test_serve_thumbnail_error(test_client, mocker):
+    mocker.patch('dream_recorder.send_file', side_effect=FileNotFoundError)
+    mocker.patch('functions.config_loader.get_config', return_value={'THUMBS_DIR': 'thumbs'})
+    resp = test_client.get('/media/thumbs/missingthumb.jpg')
+    assert resp.status_code == 404
+    assert b'Thumbnail not found' in resp.data 

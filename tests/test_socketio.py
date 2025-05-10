@@ -24,7 +24,10 @@ def test_start_and_stop_recording(socketio_client, mocker):
 
 def test_playback_flow(mocker):
     # Patch dream_db before creating the client
-    from dream_recorder import socketio, app
+    from dream_recorder import socketio, app, video_playback_state
+    # Reset playback state
+    video_playback_state['current_index'] = 0
+    video_playback_state['is_playing'] = False
     mock_db = mocker.MagicMock()
     mock_db.get_all_dreams.return_value = [
         {'video_filename': 'dream1.mp4'},
