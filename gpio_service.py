@@ -13,6 +13,7 @@ import requests
 import argparse
 from enum import Enum
 from functions.config_loader import get_config
+import sys
 
 # Configure logging
 logging.basicConfig(
@@ -165,8 +166,6 @@ def main():
 
     # If test mode, run CLI loop for simulating taps
     if args.test:
-        import sys
-        
         single_tap_url = f"{args.flask_url}{args.single_tap_endpoint}"
         double_tap_url = f"{args.flask_url}{args.double_tap_endpoint}"
 
