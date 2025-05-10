@@ -230,17 +230,20 @@ def dreams():
 # -- API Routes --
 @app.route('/api/config')
 def api_get_config():
-    from functions.config_loader import get_config
-    config = get_config()
-    return jsonify({
-        'is_development': app.config['DEBUG'],
-        'playback_duration': int(config['PLAYBACK_DURATION']),
-        'logo_fade_in_duration': int(config['LOGO_FADE_IN_DURATION']),
-        'logo_fade_out_duration': int(config['LOGO_FADE_OUT_DURATION']),
-        'clock_fade_in_duration': int(config['CLOCK_FADE_IN_DURATION']),
-        'clock_fade_out_duration': int(config['CLOCK_FADE_OUT_DURATION']),
-        'transition_delay': int(config['TRANSITION_DELAY'])
-    })
+    try:
+        from functions.config_loader import get_config
+        config = get_config()
+        return jsonify({
+            'is_development': app.config['DEBUG'],
+            'playback_duration': int(config['PLAYBACK_DURATION']),
+            'logo_fade_in_duration': int(config['LOGO_FADE_IN_DURATION']),
+            'logo_fade_out_duration': int(config['LOGO_FADE_OUT_DURATION']),
+            'clock_fade_in_duration': int(config['CLOCK_FADE_IN_DURATION']),
+            'clock_fade_out_duration': int(config['CLOCK_FADE_OUT_DURATION']),
+            'transition_delay': int(config['TRANSITION_DELAY'])
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/gpio_single_tap', methods=['POST'])
 def gpio_single_tap():
@@ -304,8 +307,8 @@ def delete_dream(dream_id):
 
 @app.route('/api/clock-config-path')
 def clock_config_path():
-    """Return the clock configuration path from config."""
-    config_path = get_config()['CLOCK_CONFIG_PATH']
+    from functions.config_loader import get_config
+    config_path = get_config().get('CLOCK_CONFIG_PATH')
     if not config_path:
         return jsonify({'error': 'CLOCK_CONFIG_PATH not set in config'}), 500
     return jsonify({'configPath': config_path})
