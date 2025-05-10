@@ -1,0 +1,25 @@
+name: Test and Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Compose
+        run: docker compose up -d
+
+      - name: Run tests with coverage
+        run: docker compose exec app pytest --cov=. --cov-report=term-missing
+
+      - name: Tear down Docker Compose
+        if: always()
+        run: docker compose down 
