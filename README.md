@@ -142,7 +142,7 @@ docker compose exec app python3 scripts/config_editor.py
 
 The app will be available at [http://localhost:5000](http://localhost:5000)
 
-To simulate sensor button presses:
+To simulate sensor button pressesm you can either use the on-screen developer console (available when running in dev mode), or:
    - Note: You will need Python 3.12 installed on your system - [Python documentation](https://wiki.python.org/moin/BeginnersGuide/Download)
 
    ```bash
