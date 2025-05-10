@@ -118,7 +118,7 @@ def process_audio(sid, socketio, dream_db, recording_state, audio_chunks, logger
             thumb_filename=thumb_filename,
             status='completed',
         )
-        dream_db.save_dream(dream_data.dict())
+        dream_db.save_dream(dream_data.model_dump())
         recording_state['status'] = 'complete'
         recording_state['video_url'] = f"/media/video/{video_filename}"
         # Emit the video ready event to trigger playback

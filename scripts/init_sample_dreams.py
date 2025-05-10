@@ -48,7 +48,7 @@ def main():
                 thumb_filename=sample['thumb_dest'],
                 status='completed',
             )
-            db.save_dream(dream_data.dict())
+            db.save_dream(dream_data.model_dump())
             print(f"Inserted sample dream {i}")
         else:
             print(f"Sample dream {i} already exists in DB")
