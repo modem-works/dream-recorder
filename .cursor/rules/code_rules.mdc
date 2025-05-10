@@ -1,0 +1,50 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Cursor Rules for Dream Recorder Project
+
+## 1. Docker-Only Execution
+- All commands related to running, building, or testing the project **must** be executed inside the Docker container.
+- **Never** suggest or attempt to run `pip install`, Python scripts, or any project code directly on the local machine. Always use the appropriate `docker compose` commands.
+
+## 2. Development Workflow
+- To build the development environment, use:
+  ```bash
+  docker compose -f docker-compose.dev.yml build
+  ```
+- To start the development environment, use:
+  ```bash
+  docker compose -f docker-compose.dev.yml up -d
+  ```
+
+## 3. Testing
+- To run unit tests, use:
+  ```bash
+  docker compose exec app pytest
+  ```
+- To run unit tests with a coverage report, use:
+  ```bash
+  docker compose exec app pytest --cov=. --cov-report=term-missing
+  ```
+- Always ensure that any new code is covered by unit tests. If new functionality is added, corresponding tests **must** be created or suggested.
+
+## 4. Code Suggestions and Maintenance
+- When suggesting code changes, always consider the impact on existing tests and the need for new tests.
+- If a code change is made, check for the presence of relevant tests. If missing, create or recommend new tests to maintain or improve test coverage.
+- **Never** suggest running or installing dependencies outside of Docker.
+
+## 5. General Best Practices
+- Always refer to the Docker Compose configuration for service names and commands.
+- When troubleshooting or managing services, use the documented Docker Compose and service management commands from the README.
+- Keep documentation and configuration files up to date with any changes to the development or deployment process.
+
+## 6. Use Mermaid Diagrams for Application Understanding
+- Whenever understanding of the application's architecture, flow, or high-level design is required, always reference the Mermaid diagrams in the `docs/diagrams` directory as a primary source.
+- **Diagram Reference Priority:** Always check for relevant Mermaid diagrams in `docs/diagrams` before making assumptions or inferences about the application's structure or flow.
+- **Diagram-Driven Reasoning:** Use the information from these diagrams (e.g., `application_architecture.mmd`, `conversation_flow.mmd`) as the main source for understanding system structure, component interactions, and workflows.
+- **Diagram Summarization:** When referencing a diagram, summarize its key points or flow in natural language before proceeding with further analysis or code changes.
+- **Diagram Consistency Check:** If there is a discrepancy between code and diagrams, flag it and clarify which should be considered the source of truth, or ask the user for guidance.
+- **Diagram Update Suggestion:** If a code change alters the application's architecture or flow, suggest updating the relevant Mermaid diagram(s) to keep documentation in sync.
+- **Explicit Diagram Mention:** When answering questions about the application's design, explicitly mention which diagram(s) were referenced and which parts informed the answer.

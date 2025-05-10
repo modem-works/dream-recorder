@@ -26,4 +26,4 @@ Whenever understanding of the application's architecture, flow, or high-level de
    If a code change alters the application's architecture or flow, suggest updating the relevant Mermaid diagram(s) to keep documentation in sync.
 
 6. **Explicit Diagram Mention**  
-   When answering questions about the application's design, explicitly mention which diagram(s) were referenced and which parts informed the answer.
+   When answering questions about the application's design, explicitly mention which diagram(s) were referenced and which parts informed the answer. 

@@ -115,7 +115,7 @@
    - `cd dream-recorder`
 - Run this command:
    `docker compose exec app python3 scripts/config_editor.py`
-- After saving (s) and quitting (q), reload the application by running:
+- After saving (s) and quitting (q), reload the application (if you've changed any core, non-superficial configurations) by running:
    - `docker compose restart app`
 
 
