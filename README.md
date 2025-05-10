@@ -190,6 +190,24 @@ In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. Th
 - OpenAI text-to-speech and video prompt generation: < $ 0.01 per dream - [OpenAI Pricing](https://openai.com/api/pricing)
 - LumaLabs dream generation (using 540p, 21:9, 5 seconds, ray-flash-2): $ 0.14 per dream - [LumaLabs Pricing](https://lumalabs.ai/api/pricing)
 
+## Shopping list / Bill Of Materials
+To build a Dream Recorder, these are the components you will need. The overall cost for these components from the provided links is approx. €210 (Last updated May 2025).
+
+| Item | URL |
+| - | - |
+| 90 degree right-angled FPV male-male HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B08C7G4J6B |
+| 90 degree right-angled FPV male-male Micro-HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B0177EWVMQ |
+| Up-angled USB 2.0 male Type-A to male Micro-USB ribbon cable (20cm) | https://www.amazon.nl/dp/B095LVLTLJ |
+| M2.5 nylon screwset (you need 4 x 15mm male-female stands) | https://www.amazon.nl/dp/B0DCS5C7SN |
+| Waveshare Active Cooler | https://www.amazon.nl/dp/B0CPLQB4RK |
+| USB-C adapter for 5.1V, 5A, 27W (these specs are important) | https://www.amazon.nl/dp/B0D41VN574 |
+| 90 degree USB-C adapter | https://www.amazon.nl/dp/B0DGD52DL3 |
+| MicroSDXC UHS-I-Card - 64 GB | https://www.amazon.nl/dp/B0B7NXBM6P |
+| Dupont Jumper Wires - 10 cm (you need 3 x female-female) | https://www.amazon.nl/dp/B07GJLCGG8 |
+| Raspberry Pi 5 8GB | https://www.amazon.nl/Raspberry-Pi-SC1112-5-8GB/dp/B0CK2FCG1K |
+| USB microphone | https://www.amazon.nl/dp/B0BWFTQL95 |
+| PLA filament - 1.75mm, transparant | https://www.amazon.nl/dp/B07Q1PGH4B |
+
 ## Troubleshooting
 - **Logs:**
   - App logs: `docker compose logs -f`
@@ -211,8 +229,16 @@ In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. Th
   systemctl --user start dream_recorder_gpio.service
   ```
 
-## Questions?
+## Wishlist / Roadmap / Todos
+If you would like to contribute to the project, here are some areas we would love help / contribution towards:
+- Improving on the shopping list:
+   - Including better, more local options (globally) that are not Amazon
+   - Finding more efficient purchases for larger packaged items, such as the Dupont cables, nylon screwsets, etc...
+- Building out support for multiple (by configuration) AI providers:
+   - Support for alternative STT and/or prompt generation providers (Claude, Gemini, etc...)
+   - Support for alternative video generation providers
 
+## Questions / Issues / Feedback
 Open an issue or contact the lead maintainer for help:
 
 <a href="https://github.com/markhinch.png"><img src="https://github.com/markhinch.png" width="80px;"/></a><br /><a href="https://github.com/markhinch">@markhinch</a>
