@@ -32,15 +32,16 @@ sequenceDiagram
     Note over U,DM: Viewing dream
     U ->> TS: Single tap plays latest dream
     TS ->> GPIO: Detects single tap pattern
-    GPIO ->> DM: Sends show dream request
+    GPIO ->> DM: Sends single tap request
+    DM ->> DM: State manager decides: show latest dream
     DM ->> U: Plays dream video
     U ->> TS: Single tap shows previous dream
     TS ->> GPIO: Detects single tap pattern
-    GPIO ->> DM: Sends next dream request
-    DM ->> U: Plays next dream video
+    GPIO ->> DM: Sends single tap pattern
+    DM ->> DM: State manager decides: show previous dream
+    DM ->> U: Plays dream video
     U ->> TS: Double tap returns to clock
     TS ->> GPIO: Detects double tap pattern
-    GPIO ->> DM: Sends return to clock request
+    GPIO ->> DM: Sends double tap pattern
+    DM ->> DM: State manager decides: show clock view
     DM ->> U: Shows clock view
-
-    
