@@ -227,3 +227,47 @@ def test_main_callback_error_handling(monkeypatch, mock_config, mock_gpio):
     # Assert error logs were recorded
     assert any("Error sending single tap" in msg for msg in error_logs)
     assert any("Error sending double tap" in msg for msg in error_logs) 
+
+def test_main_cli_test_mode(monkeypatch, mock_config, mock_gpio):
+    import gpio_service
+    import builtins
+    import sys as real_sys
+
+    # Patch input to simulate 's', 'd', 'q'
+    inputs = iter(['s', 'd', 'q'])
+    monkeypatch.setattr(builtins, 'input', lambda _: next(inputs))
+
+    # Patch requests.post to simulate successful responses
+    class FakeResponse:
+        status_code = 200
+        text = 'ok'
+    monkeypatch.setattr(gpio_service.requests, 'post', lambda *a, **kw: FakeResponse())
+
+    # Patch print to suppress output
+    monkeypatch.setattr(builtins, 'print', lambda *a, **kw: None)
+
+    # Patch sys.stdout.flush to no-op
+    monkeypatch.setattr(real_sys.stdout, 'flush', lambda: None)
+
+    # Patch time.sleep to no-op
+    monkeypatch.setattr('time.sleep', lambda s: None)
+
+    # Patch argparse to set args.test = True
+    class FakeArgs:
+        flask_url = 'http://localhost:5000'
+        single_tap_endpoint = '/single'
+        double_tap_endpoint = '/double'
+        pin = 17
+        single_tap_max = 0.2
+        double_tap_max_interval = 0.3
+        debounce_time = 0.01
+        sampling_rate = 0.01
+        startup_delay = 0
+        test = True
+    fake_parser = mock.Mock()
+    fake_parser.parse_args.return_value = FakeArgs()
+    monkeypatch.setattr(gpio_service, 'argparse', mock.Mock())
+    gpio_service.argparse.ArgumentParser.return_value = fake_parser
+
+    # Run main and ensure it completes without error
+    gpio_service.main() 
