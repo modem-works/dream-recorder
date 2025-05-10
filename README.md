@@ -1,5 +1,5 @@
 # Dream Recorder
-<img src="./static/images/Logo.png" width="100%" bgcolor="black"/>
+<img src="./docs/images/Logo.png" width="100%" />
 
 ## Getting started
 
