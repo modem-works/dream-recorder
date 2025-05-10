@@ -349,4 +349,33 @@ def test_generate_video_outer_exception(monkeypatch, mock_config, mock_logger):
     monkeypatch.setattr(video.requests, 'post', raise_exc)
     with pytest.raises(Exception):
         video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=mock_logger)
-    mock_logger.error.assert_called() 
+    mock_logger.error.assert_called()
+
+def test_process_video_generic_exception(monkeypatch, mock_config, mock_logger):
+    import functions.video as video
+    monkeypatch.setattr(video.ffmpeg, 'input', lambda x: x)
+    monkeypatch.setattr(video.ffmpeg, 'filter', lambda s, *a, **k: s)
+    monkeypatch.setattr(video.ffmpeg, 'output', lambda s, p: (s, p))
+    def raise_exc(*a, **k): raise Exception('fail')
+    monkeypatch.setattr(video.ffmpeg, 'run', lambda *a, **k: None)
+    monkeypatch.setattr(video.shutil, 'move', raise_exc)
+    with pytest.raises(Exception):
+        video.process_video('input.mp4', logger=mock_logger)
+    with pytest.raises(Exception):
+        video.process_video('input.mp4', logger=None)
+
+def test_process_thumbnail_generic_exception(monkeypatch, mock_config, mock_logger):
+    import functions.video as video
+    def raise_exc(*a, **k): raise Exception('fail')
+    monkeypatch.setattr(video.ffmpeg, 'probe', raise_exc)
+    with pytest.raises(Exception):
+        video.process_thumbnail('video.mp4', logger=mock_logger)
+    with pytest.raises(Exception):
+        video.process_thumbnail('video.mp4', logger=None)
+
+def test_generate_video_outer_exception_no_logger(monkeypatch, mock_config):
+    import functions.video as video
+    def raise_exc(*a, **k): raise Exception('outer fail')
+    monkeypatch.setattr(video.requests, 'post', raise_exc)
+    with pytest.raises(Exception):
+        video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=None) 

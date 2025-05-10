@@ -115,6 +115,27 @@ def test_handle_show_previous_dream_no_dream(monkeypatch, mocker):
     dream_recorder.handle_show_previous_dream()
     assert any('No dreams found to cycle through.' in msg for msg in logs)
 
+def test_handle_show_previous_dream_dream_is_none(monkeypatch, mocker):
+    import dream_recorder
+    # Patch dream_db.get_all_dreams to return a list with None
+    monkeypatch.setattr(dream_recorder.dream_db, 'get_all_dreams', lambda: [None])
+    # Patch logger to record warnings
+    logs = []
+    class FakeLogger:
+        def warning(self, msg): logs.append(msg)
+        def info(self, msg): pass
+        def error(self, msg): pass
+    monkeypatch.setattr(dream_recorder, 'logger', FakeLogger())
+    # Patch socketio.emit to record calls
+    emitted = []
+    monkeypatch.setattr(dream_recorder.socketio, 'emit', lambda name, data=None: emitted.append((name, data)))
+    # Set video_playback_state to simulate playing
+    dream_recorder.video_playback_state['is_playing'] = True
+    dream_recorder.video_playback_state['current_index'] = 0
+    dream_recorder.handle_show_previous_dream()
+    # Should emit error
+    assert any(name == 'error' for name, _ in emitted)
+
 def test_delete_dream_file_deletion_error(test_client, mocker, mock_dream_db):
     # Simulate dream exists and delete_dream returns True
     mock_dream_db.get_dream.return_value = {

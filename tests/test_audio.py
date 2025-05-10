@@ -149,3 +149,22 @@ def test_process_audio_emit_else_branches(monkeypatch, mock_config, mock_logger)
     assert ('transcription_update', {'text': 'hello world'}) in [tuple(c[0]) for c in calls]
     assert ('video_prompt_update', {'text': 'video prompt'}) in [tuple(c[0]) for c in calls]
     assert ('video_ready', {'url': recording_state['video_url']}) in [tuple(c[0]) for c in calls] 
+
+def test_process_audio_exception_and_finally(monkeypatch, mock_config, mock_logger):
+    # Patch save_wav_file to work
+    monkeypatch.setattr(audio, 'save_wav_file', lambda *a, **k: 'file.wav')
+    # Patch transcription to raise after temp_file_path is set
+    def raise_exc(**kwargs):
+        raise Exception('fail')
+    monkeypatch.setattr(audio.client.audio.transcriptions, 'create', raise_exc)
+    monkeypatch.setattr(audio, 'generate_video_prompt', lambda *a, **k: 'video prompt')
+    monkeypatch.setattr(audio, 'generate_video', lambda *a, **k: ('video.mp4', 'thumb.png'))
+    fake_db = mock.Mock()
+    fake_socketio = mock.Mock()
+    recording_state = {}
+    audio_chunks = [b'audio']
+    # Patch os.unlink to raise to hit the except in finally
+    monkeypatch.setattr(audio.os, 'unlink', lambda path: (_ for _ in ()).throw(Exception('fail unlink')))
+    audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
+    # Should emit error and not crash
+    fake_socketio.emit.assert_any_call('error', {'message': 'fail'}) 
