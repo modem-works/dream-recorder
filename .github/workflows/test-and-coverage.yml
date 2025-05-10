@@ -9,6 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      PORT: 5000
 
     steps:
       - name: Checkout code
