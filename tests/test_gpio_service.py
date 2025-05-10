@@ -271,3 +271,235 @@ def test_main_cli_test_mode(monkeypatch, mock_config, mock_gpio):
 
     # Run main and ensure it completes without error
     gpio_service.main() 
+
+def test_start_monitoring_double_tap(monkeypatch, mock_config, mock_gpio):
+    import gpio_service
+    ctrl = gpio_service.GPIOController()
+
+    # Simulate: press, release, short wait, press, release (all within double tap interval)
+    states = [False, True, False, True, False] + [False]*15
+    # t=0: idle, t=0.01: press, t=0.02: release, t=0.03: press, t=0.04: release
+    times = [0, 0.01, 0.02, 0.03, 0.04] + [0.05 + i*0.1 for i in range(15)]
+    state_iter = iter(states)
+    time_iter = iter(times)
+
+    ctrl.GPIO.input = lambda pin: next(state_iter, False)
+    ctrl.GPIO.HIGH = True
+    monkeypatch.setattr('time.time', lambda: next(time_iter, 1))
+
+    single_called = {}
+    double_called = {}
+    def single_cb(): single_called['x'] = True
+    def double_cb(): double_called['x'] = True
+    ctrl.register_callback(gpio_service.TouchPattern.SINGLE_TAP, single_cb)
+    ctrl.register_callback(gpio_service.TouchPattern.DOUBLE_TAP, double_cb)
+
+    sleep_calls = {'count': 0}
+    def fake_sleep(s):
+        sleep_calls['count'] += 1
+        if sleep_calls['count'] > 20:
+            ctrl.is_running = False
+    monkeypatch.setattr('time.sleep', fake_sleep)
+    monkeypatch.setattr(ctrl, 'cleanup', lambda: None)
+    ctrl.is_running = True
+    ctrl.start_monitoring(single_tap_max=0.2, double_tap_max_interval=0.3)
+
+    # After running, double tap callback should be called
+    assert 'x' in double_called 
+
+def test_main_cli_test_mode_errors(monkeypatch, mock_config, mock_gpio):
+    import gpio_service
+    import builtins
+    import sys as real_sys
+
+    # Simulate 's', 'd', 's', 'd', 'q' to test all error/response branches
+    inputs = iter(['s', 'd', 's', 'd', 'q'])
+    monkeypatch.setattr(builtins, 'input', lambda _: next(inputs))
+
+    # Simulate: first 's' returns non-200, first 'd' raises, second 's' raises, second 'd' returns non-200
+    call_count = {'count': 0}
+    class FakeResponse:
+        def __init__(self, code):
+            self.status_code = code
+            self.text = 'fail'
+    def fake_post(*a, **kw):
+        call_count['count'] += 1
+        if call_count['count'] == 1:
+            return FakeResponse(500)  # single tap non-200
+        elif call_count['count'] == 2:
+            raise Exception('fail')   # double tap exception
+        elif call_count['count'] == 3:
+            raise Exception('fail')   # single tap exception
+        elif call_count['count'] == 4:
+            return FakeResponse(400)  # double tap non-200
+        return FakeResponse(200)
+    monkeypatch.setattr(gpio_service.requests, 'post', fake_post)
+
+    # Patch print to record output
+    printed = []
+    monkeypatch.setattr(builtins, 'print', lambda *a, **kw: printed.append(a))
+
+    # Patch sys.stdout.flush to no-op
+    monkeypatch.setattr(real_sys.stdout, 'flush', lambda: None)
+
+    # Patch time.sleep to no-op
+    monkeypatch.setattr('time.sleep', lambda s: None)
+
+    # Patch argparse to set args.test = True
+    class FakeArgs:
+        flask_url = 'http://localhost:5000'
+        single_tap_endpoint = '/single'
+        double_tap_endpoint = '/double'
+        pin = 17
+        single_tap_max = 0.2
+        double_tap_max_interval = 0.3
+        debounce_time = 0.01
+        sampling_rate = 0.01
+        startup_delay = 0
+        test = True
+    fake_parser = mock.Mock()
+    fake_parser.parse_args.return_value = FakeArgs()
+    monkeypatch.setattr(gpio_service, 'argparse', mock.Mock())
+    gpio_service.argparse.ArgumentParser.return_value = fake_parser
+
+    # Run main and ensure it completes without error
+    gpio_service.main()
+
+    # Check that error/response print statements were executed
+    assert any('Single tap response:' in str(x) for x in printed)
+    assert any('Double tap response:' in str(x) for x in printed)
+    assert any('Error sending single tap:' in str(x) for x in printed)
+    assert any('Error sending double tap:' in str(x) for x in printed) 
+
+def test_main_cli_test_mode_unknown_command(monkeypatch, mock_config, mock_gpio):
+    import gpio_service
+    import builtins
+    import sys as real_sys
+
+    # Simulate 'x', 'q' to trigger unknown command then exit
+    inputs = iter(['x', 'q'])
+    monkeypatch.setattr(builtins, 'input', lambda _: next(inputs))
+
+    # Patch requests.post to avoid real calls
+    monkeypatch.setattr(gpio_service.requests, 'post', lambda *a, **kw: None)
+
+    # Patch print to record output
+    printed = []
+    monkeypatch.setattr(builtins, 'print', lambda *a, **kw: printed.append(a))
+
+    # Patch sys.stdout.flush to no-op
+    monkeypatch.setattr(real_sys.stdout, 'flush', lambda: None)
+
+    # Patch time.sleep to no-op
+    monkeypatch.setattr('time.sleep', lambda s: None)
+
+    # Patch argparse to set args.test = True
+    class FakeArgs:
+        flask_url = 'http://localhost:5000'
+        single_tap_endpoint = '/single'
+        double_tap_endpoint = '/double'
+        pin = 17
+        single_tap_max = 0.2
+        double_tap_max_interval = 0.3
+        debounce_time = 0.01
+        sampling_rate = 0.01
+        startup_delay = 0
+        test = True
+    fake_parser = mock.Mock()
+    fake_parser.parse_args.return_value = FakeArgs()
+    monkeypatch.setattr(gpio_service, 'argparse', mock.Mock())
+    gpio_service.argparse.ArgumentParser.return_value = fake_parser
+
+    # Run main and ensure it completes without error
+    gpio_service.main()
+
+    # Check that the unknown command print statement was executed
+    assert any('Unknown command' in str(x) for x in printed) 
+
+def test_main_keyboardinterrupt_and_exception(monkeypatch, mock_config, mock_gpio):
+    import gpio_service
+    # Patch GPIOController to return a fake controller
+    class FakeController:
+        def __init__(self, *a, **kw): pass
+        def register_callback(self, *a, **kw): pass
+        def cleanup(self):
+            cleanup_called['x'] = True
+        def start_monitoring(self, *a, **kw):
+            raise KeyboardInterrupt()
+    class FakeController2(FakeController):
+        def start_monitoring(self, *a, **kw):
+            raise Exception('fail')
+    # Patch logger to record logs
+    logs = []
+    class FakeLogger:
+        def info(self, msg): logs.append(('info', msg))
+        def error(self, msg): logs.append(('error', msg))
+    monkeypatch.setattr(gpio_service, 'logger', FakeLogger())
+    # Patch argparse to avoid parsing real CLI args
+    class FakeArgs:
+        flask_url = 'http://localhost:5000'
+        single_tap_endpoint = '/single'
+        double_tap_endpoint = '/double'
+        pin = 17
+        single_tap_max = 0.2
+        double_tap_max_interval = 0.3
+        debounce_time = 0.01
+        sampling_rate = 0.01
+        startup_delay = 0
+        test = False
+    fake_parser = mock.Mock()
+    fake_parser.parse_args.return_value = FakeArgs()
+    monkeypatch.setattr(gpio_service, 'argparse', mock.Mock())
+    gpio_service.argparse.ArgumentParser.return_value = fake_parser
+    # Patch time.sleep to no-op
+    monkeypatch.setattr('time.sleep', lambda s: None)
+    # Patch requests.post to avoid real calls
+    monkeypatch.setattr(gpio_service.requests, 'post', lambda *a, **kw: None)
+    # Test KeyboardInterrupt
+    cleanup_called = {}
+    monkeypatch.setattr(gpio_service, 'GPIOController', FakeController)
+    gpio_service.main()
+    assert any('GPIO Service shutting down' in msg for level, msg in logs)
+    assert 'x' in cleanup_called
+    # Test Exception
+    logs.clear()
+    cleanup_called.clear()
+    monkeypatch.setattr(gpio_service, 'GPIOController', FakeController2)
+    gpio_service.main()
+    assert any('Error during GPIO monitoring' in msg for level, msg in logs)
+    assert 'x' in cleanup_called 
+
+def test_start_monitoring_single_tap_timeout(monkeypatch, mock_config, mock_gpio):
+    import gpio_service
+    ctrl = gpio_service.GPIOController()
+
+    # Simulate: press, release, then idle long enough for single tap timeout
+    states = [False, True, False] + [False]*15
+    # t=0: idle, t=0.01: press, t=0.02: release, then t=0.5, 0.6, ...
+    times = [0, 0.01, 0.02] + [0.5 + i*0.1 for i in range(15)]
+    state_iter = iter(states)
+    time_iter = iter(times)
+
+    ctrl.GPIO.input = lambda pin: next(state_iter, False)
+    ctrl.GPIO.HIGH = True
+    monkeypatch.setattr('time.time', lambda: next(time_iter, 1))
+
+    single_called = {}
+    double_called = {}
+    def single_cb(): single_called['x'] = True
+    def double_cb(): double_called['x'] = True
+    ctrl.register_callback(gpio_service.TouchPattern.SINGLE_TAP, single_cb)
+    ctrl.register_callback(gpio_service.TouchPattern.DOUBLE_TAP, double_cb)
+
+    sleep_calls = {'count': 0}
+    def fake_sleep(s):
+        sleep_calls['count'] += 1
+        if sleep_calls['count'] > 20:
+            ctrl.is_running = False
+    monkeypatch.setattr('time.sleep', fake_sleep)
+    monkeypatch.setattr(ctrl, 'cleanup', lambda: None)
+    ctrl.is_running = True
+    ctrl.start_monitoring(single_tap_max=0.2, double_tap_max_interval=0.3)
+
+    # After running, single tap callback should be called
+    assert 'x' in single_called 
