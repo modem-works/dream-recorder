@@ -7,6 +7,8 @@ import importlib
 import subprocess
 import shutil
 import tempfile
+import types
+from unittest import mock
 
 class FakeResponse:
     def __init__(self, status_code, text=''):
@@ -65,4 +67,13 @@ def test_main_block_missing_key_subprocess(tmp_path):
     env.pop('LUMALABS_API_KEY', None)
     result = subprocess.run([sys.executable, script], capture_output=True, text=True, env=env)
     assert 'Usage:' in result.stdout
-    assert result.returncode == 1 
+    assert result.returncode == 1
+
+def test_no_api_key(monkeypatch):
+    pass
+
+def test_invalid_api_key(monkeypatch):
+    pass
+
+def test_valid_api_key(monkeypatch):
+    pass 
