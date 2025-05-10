@@ -60,7 +60,7 @@
 #### 💻️ <u>On your computer</u>
 
 - [Download RealVNC](https://www.realvnc.com/en/connect/download), install and run it
-   - Connect to the Dream Recorder's IP address using the username (dreamer) and your simple password
+   - Connect to the Dream Recorder using the hostname (dreamer), the username (dreamer) and your simple password
    - You now have remote desktop access to the Raspberry Pi
    - Change the screen's orientation:
       - Click the Raspberry Pi icon (top left) -> Preferences -> Screen Configuration
@@ -79,7 +79,6 @@
    <img style="display: block; width: 800px;" src="./docs/images/vnc_viewer_4.png"/>
 
    <img style="display: block; width: 800px;" src="./docs/images/vnc_viewer_5.png"/>
-
 </details>
 
 #### 💻️ <u>On your computer (in a web browser)</u>
@@ -94,7 +93,7 @@
    - Add a few dollars of credits to your account (~$20 suggested)
 - Copy the URL of the Git repository at the top of this Github page by clicking on the blue Code button at the top right and copying the 'SSH' url
 
-#### 💻️ <u>On your computer (in the previously opened Terminal window)</u>
+#### 💻️ <u>On your computer (in the Terminal window)</u>
 - Make sure you are still connected to the Dream Recorder
    - If not, connect again:
       - `ssh dreamer@dreamer`
@@ -116,8 +115,13 @@
 - Run this command:
    `docker compose exec app python3 scripts/config_editor.py`
 - After saving (s) and quitting (q), reload the application (if you've changed any core, non-superficial configurations) by running:
-   - `docker compose restart app`
+   - `docker compose restart`
 
+<details>
+   <summary>See step-by-step images 🖼️</summary>
+
+   <img style="display: block; width: 500px;" src="./docs/images/config_tool_1.png"/>
+</details>
 
 ### For Developers (Local/Development)
 To get the app running on your local machine:
@@ -139,6 +143,15 @@ To simulate sensor button presses:
 ```bash
 python gpio_service.py --test
 ```
+
+<details>
+   <summary>See step-by-step images 🖼️</summary>
+
+   <img style="display: block; width: 500px;" src="./docs/images/gpio_service_1.png"/>
+</details>
+
+<br />
+
 To stop the app:
 ```bash
 docker compose down
@@ -149,6 +162,12 @@ Run this command to run the tests:
    - `docker compose exec app pytest`
 Run this command to run the tests and see overall test coverage:
    - `docker compose exec app pytest --cov=. --cov-report=term-missing`
+
+<details>
+   <summary>See step-by-step images 🖼️</summary>
+
+   <img style="display: block; width: 500px;" src="./docs/images/unit_tests_1.png"/>
+</details>
 
 ## Using the Dream Recorder
 - Single tap: Play the latest dream
