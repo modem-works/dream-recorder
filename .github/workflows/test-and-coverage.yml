@@ -17,7 +17,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Copy .env.example to .env
-        run: cp config_templates/.env.example .env
+        run: cp .env.example .env
+
+      - name: Copy config.example.json to config.json
+        run: cp ./config.example.json ./config.json
 
       - name: Set up Python
         uses: actions/setup-python@v4

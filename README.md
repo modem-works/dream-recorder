@@ -124,8 +124,8 @@ To get the app running on your local machine:
    ```bash
    git clone <repo_url>
    cd dream-recorder
-   cp ./config_examples/.env.example ./.env
-   cp ./config_examples/config.example.json ./config.json
+   cp ./.env.example ./.env
+   cp ./config.example.json ./config.json
    # Add your API keys using vim, nano or any text editor you're compfortable with
    vim .env
    docker compose -f docker-compose.dev.yml build

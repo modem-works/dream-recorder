@@ -41,12 +41,12 @@ echo -e "=========================================${NC}"
 log_step "Pre-checks and Initialization"
 
 # .env.example check
-if [ ! -f "$SCRIPT_DIR/config_examples/.env.example" ]; then
+if [ ! -f "$SCRIPT_DIR/.env.example" ]; then
     log_error ".env.example not found! Please add it to the project root."
     exit 1
 fi
 # config.example.json check
-if [ ! -f "$SCRIPT_DIR/config_examples/config.example.json" ]; then
+if [ ! -f "$SCRIPT_DIR/config.example.json" ]; then
     log_error "config.example.json not found! Please add it to the project root."
     exit 1
 fi
@@ -68,14 +68,14 @@ if [ ! -f "$SCRIPT_DIR/.env" ]; then
     # Create .env from template, replacing placeholders
     sed -e "s|OPENAI_API_KEY=your-openai-api-key-here|OPENAI_API_KEY=$OPENAI_API_KEY|" \
         -e "s|LUMALABS_API_KEY=your-luma-labs-api-key-here|LUMALABS_API_KEY=$LUMALABS_API_KEY|" \
-        "$SCRIPT_DIR/config_examples/.env.example" > "$SCRIPT_DIR/.env"
+        "$SCRIPT_DIR/.env.example" > "$SCRIPT_DIR/.env"
     log_info "Created .env with provided API keys."
 else
     log_info ".env already exists. Skipping."
 fi
 # Copy config.json if missing
 if [ ! -f "$CONFIG_PATH" ]; then
-    cp "$SCRIPT_DIR/config_examples/config.example.json" "$CONFIG_PATH"
+    cp "$SCRIPT_DIR/config.example.json" "$CONFIG_PATH"
     log_info "Copied config.example.json to config.json."
 else
     log_info "config.json already exists. Skipping."
