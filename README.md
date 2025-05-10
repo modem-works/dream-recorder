@@ -160,6 +160,12 @@ Run this command to run the tests and see overall test coverage:
 ## Managing your dreams
 You can access the dream management page from your computer by going to http://dreamer:5000/dreams
 
+## What it costs to dream
+In order to generate dreams, this applicaiton uses OpenAI and LumaLabs' APIs. The approximate costs are as follows (last updated May 2025):
+
+- OpenAI text-to-speech and video prompt generation: < $ 0.01 per dream - [OpenAI Pricing](https://openai.com/api/pricing)
+- LumaLabs dream generation (using 540p, 21:9, 5 seconds, ray-flash-2): $ 0.14 per dream - [LumaLabs Pricing](https://lumalabs.ai/api/pricing)
+
 ## Troubleshooting
 - **Logs:**
   - App logs: `docker compose logs -f`
