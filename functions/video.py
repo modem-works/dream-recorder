@@ -172,6 +172,10 @@ def generate_video(prompt, filename=None, luma_extend=False, logger=None, config
                     'content-type': 'application/json'
                 },
                 json={
+                    'model': get_config()['LUMA_MODEL'],
+                    'resolution': get_config()['LUMA_RESOLUTION'],
+                    'duration': get_config()['LUMA_DURATION'],
+                    "aspect_ratio": get_config()['LUMA_ASPECT_RATIO'],
                     'prompt': extension_prompt,
                     'keyframes': {
                         'frame0': {
