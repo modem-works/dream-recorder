@@ -1,0 +1,32 @@
+flowchart TD
+    A["Python Application"]
+
+    subgraph GPIO
+        B["GPIO Service"]
+    end
+
+    subgraph Frontend
+        C["Main Page (/)"]
+        D["Dreams Page (/dreams)"]
+    end
+
+    subgraph Data
+        E["Dreams Database"]
+        H["Local Storage (/media)"]
+    end
+
+    subgraph External
+        F["OpenAI API"]
+        G["Luma Labs API"]
+    end
+
+    %% Connections
+    C -- "WebSocket connection" --> A
+    D -- "HTTP requests" --> A
+    B -- "HTTP requests" --> A
+    A -- "Database access" --> E
+    A -- "API calls" --> F
+    A -- "API calls" --> G
+    A -- "Store and load media files" --> H
+    C -- "Loads media files" --> H
+    D -- "Loads media files" --> H

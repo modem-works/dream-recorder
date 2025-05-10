@@ -1,49 +1,46 @@
 sequenceDiagram
     autonumber
 
-    participant U as User 🧔
-    participant TS as Touch Sensor 🔘
-    participant GPIO as GPIO Service 🔄
-    participant DM as Dream Machine 🖥️
-    participant OpenAI as OpenAI 🤖
-    participant LL as LumaLabs 🤖
+    participant U as User
+    participant TS as Touch Sensor
+    participant GPIO as GPIO Service
+    participant DM as Dream Machine
+    participant OpenAI as OpenAI
+    participant LL as LumaLabs
     
-    Note over U,DM: Device in Clock View
-    U ->> TS: Double tap 👆👆 (start recording)
+    Note over U,DM: Recording dream
+    U ->> TS: Double tap starts
     TS ->> GPIO: Detects double tap pattern
     GPIO ->> DM: Sends start recording request
-    DM ->> U: Shows recording UI 🔴
-    U ->> DM: Voices dream 🗣️
-    U ->> TS: Single tap 👆 (stop recording)
+    U ->> DM: Voices dream
+    U ->> TS: Single tap stops
     TS ->> GPIO: Detects single tap pattern
     GPIO ->> DM: Sends stop recording request
     
-    Note over DM,OpenAI: Processing Dream
-    DM ->> OpenAI: Sends dream voice for STT 🎶
-    OpenAI -->> DM: Returns voice text 📃
-    DM ->> U: Shows transcription 📝
+    Note over DM,LL: Processing dream
+    DM ->> OpenAI: Sends dream voice for STT
+    OpenAI -->> DM: Returns voice text
+    DM ->> OpenAI: Sends voice text for Video Prompt creation
+    OpenAI -->> DM: Returns Video Prompt
+    DM ->> LL: Sends Video Prompt for video creation
+    DM -->> LL: Pings for finished response
+    DM -->> DM: Waits
+    DM -->> LL: Fetches video from URL
+    DM -->> DM: Applies dream filters
+    DM ->> U: Plays video
     
-    DM ->> OpenAI: Sends voice text for Video Prompt creation 📃
-    OpenAI -->> DM: Returns Video Prompt 📃
-    
-    DM ->> LL: Sends Video Prompt for video creation 📃
-    DM -->> DM: Awaits response 💤
-    
-    LL -->> DM: Returns video URL 🔗
-    DM ->> U: Plays video 📺️
-    
-    Note over U,DM: Viewing Dreams
-    U ->> TS: Single tap 👆 (view dream)
+    Note over U,DM: Viewing dream
+    U ->> TS: Single tap plays latest dream
     TS ->> GPIO: Detects single tap pattern
     GPIO ->> DM: Sends show dream request
-    DM ->> U: Plays dream video 📽️
-    U ->> TS: Single tap 👆 (next dream)
+    DM ->> U: Plays dream video
+    U ->> TS: Single tap shows previous dream
     TS ->> GPIO: Detects single tap pattern
     GPIO ->> DM: Sends next dream request
-    DM ->> U: Plays next dream video 📽️
-    U ->> TS: Double tap 👆👆 (return to clock)
+    DM ->> U: Plays next dream video
+    U ->> TS: Double tap returns to clock
     TS ->> GPIO: Detects double tap pattern
     GPIO ->> DM: Sends return to clock request
-    DM ->> U: Shows clock view 🕐
+    DM ->> U: Shows clock view
 
-    % DM -->> DM: Proprietary conversion ⁉️
+    
