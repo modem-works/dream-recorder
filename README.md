@@ -1,5 +1,5 @@
 # Dream Recorder
-<img src="./docs/images/logo.png" width="100%" />
+<a href="./docs/images/logo.png" target="_blank" rel="noopener noreferrer"><img src="./docs/images/logo.png" width="100%" /></a>
 
 ## Getting started
 
@@ -24,13 +24,13 @@
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   |<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_1.png"/>|<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_2.png"/>|
+   |<a href="./docs/images/rpi_imager_1.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_1.png"/></a>|<a href="./docs/images/rpi_imager_2.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_2.png"/></a>|
    |--|--|
-   |<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_3.png"/>|<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_4.png"/>|
-   |<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_5.png"/>|<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_6.png"/>|
-   |<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_7.png"/>|<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_8.png"/>|
-   |<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_9.png"/>|<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_10.png"/>|
-   |<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_11.png"/>|<img style="display: block; width: 450px;" src="./docs/images/rpi_imager_12.png"/>|
+   |<a href="./docs/images/rpi_imager_3.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_3.png"/></a>|<a href="./docs/images/rpi_imager_4.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_4.png"/></a>|
+   |<a href="./docs/images/rpi_imager_5.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_5.png"/></a>|<a href="./docs/images/rpi_imager_6.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_6.png"/></a>|
+   |<a href="./docs/images/rpi_imager_7.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_7.png"/></a>|<a href="./docs/images/rpi_imager_8.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_8.png"/></a>|
+   |<a href="./docs/images/rpi_imager_9.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_9.png"/></a>|<a href="./docs/images/rpi_imager_10.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_10.png"/></a>|
+   |<a href="./docs/images/rpi_imager_11.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_11.png"/></a>|<a href="./docs/images/rpi_imager_12.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/rpi_imager_12.png"/></a>|
 </details>
 
 #### 🍓 <u>On the Raspberry Pi</u>
@@ -52,10 +52,10 @@
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   |<img style="display: block; width: 450px;" src="./docs/images/raspi_config_1.png"/>|<img style="display: block; width: 450px;" src="./docs/images/raspi_config_2.png"/>|
+   |<a href="./docs/images/raspi_config_1.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/raspi_config_1.png"/></a>|<a href="./docs/images/raspi_config_2.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/raspi_config_2.png"/></a>|
    |--|--|
-   |<img style="display: block; width: 450px;" src="./docs/images/raspi_config_3.png"/>|<img style="display: block; width: 450px;" src="./docs/images/raspi_config_4.png"/>|
-   |<img style="display: block; width: 450px;" src="./docs/images/raspi_config_5.png"/>|<img style="display: block; width: 450px;" src="./docs/images/raspi_config_6.png"/>|
+   |<a href="./docs/images/raspi_config_3.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/raspi_config_3.png"/></a>|<a href="./docs/images/raspi_config_4.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/raspi_config_4.png"/></a>|
+   |<a href="./docs/images/raspi_config_5.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/raspi_config_5.png"/></a>|<a href="./docs/images/raspi_config_6.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/raspi_config_6.png"/></a>|
 </details>
 
 #### 💻️ <u>On your computer</u>
@@ -74,12 +74,12 @@
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   |<img style="display: block; width: 250px;" src="./docs/images/vnc_viewer_1.png"/>|<img style="display: block; width: 250px;" src="./docs/images/vnc_viewer_2.png"/>|<img style="display: block; width: 250px;" src="./docs/images/vnc_viewer_3.png"/>|
+   |<a href="./docs/images/vnc_viewer_1.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 250px;" src="./docs/images/vnc_viewer_1.png"/></a>|<a href="./docs/images/vnc_viewer_2.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 250px;" src="./docs/images/vnc_viewer_2.png"/></a>|<a href="./docs/images/vnc_viewer_3.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 250px;" src="./docs/images/vnc_viewer_3.png"/></a>|
    |--|--|--|
 
-   <img style="display: block; width: 800px;" src="./docs/images/vnc_viewer_4.png"/>
+   <a href="./docs/images/vnc_viewer_4.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 800px;" src="./docs/images/vnc_viewer_4.png"/></a>
 
-   <img style="display: block; width: 800px;" src="./docs/images/vnc_viewer_5.png"/>
+   <a href="./docs/images/vnc_viewer_5.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 800px;" src="./docs/images/vnc_viewer_5.png"/></a>
 </details>
 
 #### 💻️ <u>On your computer (in a web browser)</u>
@@ -121,7 +121,7 @@
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   <img style="display: block; width: 450px;" src="./docs/images/config_tool_1.png"/>
+   <a href="./docs/images/config_tool_1.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/config_tool_1.png"/></a>
 </details>
 
 ### For Developers (Local/Development)
@@ -153,7 +153,7 @@ To simulate sensor button presses:
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   <img style="display: block; width: 450px;" src="./docs/images/gpio_service_1.png"/>
+   <a href="./docs/images/gpio_service_1.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/gpio_service_1.png"/></a>
 </details>
 
 <br />
@@ -172,7 +172,7 @@ Run this command to run the tests and see overall test coverage:
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   <img style="display: block; width: 450px;" src="./docs/images/unit_tests_1.png"/>
+   <a href="./docs/images/unit_tests_1.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/unit_tests_1.png"/></a>
 </details>
 
 ## Using the Dream Recorder
@@ -188,7 +188,7 @@ You can access the dream management page from your computer by going to http://d
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   |<img style="display: block; width: 450px;" src="./docs/images/dreams_page_1.png"/>|<img style="display: block; width: 450px;" src="./docs/images/dreams_page_2.png"/>|
+   |<a href="./docs/images/dreams_page_1.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/dreams_page_1.png"/></a>|<a href="./docs/images/dreams_page_2.png" target="_blank" rel="noopener noreferrer"><img style="display: block; width: 450px;" src="./docs/images/dreams_page_2.png"/></a>|
    |--|--|
 </details>
 
@@ -223,4 +223,4 @@ In order to generate dreams, this applicaiton uses OpenAI and LumaLabs' APIs. Th
 
 Open an issue or contact the lead maintainer for help:
 
-<img src="https://github.com/markhinch.png" width="80px;"/><br /><a href="https://github.com/markhinch">@markhinch</a>
+<a href="https://github.com/markhinch.png" target="_blank" rel="noopener noreferrer"><img src="https://github.com/markhinch.png" width="80px;"/></a><br /><a href="https://github.com/markhinch">@markhinch</a>
