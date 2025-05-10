@@ -24,8 +24,7 @@ from functions.config_loader import load_config, get_config
 # =============================
 # Initialize sample dreams if DB does not exist
 # =============================
-DB_PATH = get_config()['DB_PATH']
-if not os.path.isfile(DB_PATH):
+def init_sample_dreams_if_missing():
     try:
         print("[INFO] No dreams database found. Initializing sample dreams...")
         result = subprocess.run([
@@ -37,6 +36,9 @@ if not os.path.isfile(DB_PATH):
             print(f"[WARN] Failed to initialize sample dreams.\n{result.stderr}")
     except Exception as e:
         print(f"[ERROR] Exception while initializing sample dreams: {e}")
+
+# Call the function at the top-level where the block was
+init_sample_dreams_if_missing()
 
 # Configure logging
 logging.basicConfig(level=getattr(logging, get_config()["LOG_LEVEL"]))
