@@ -116,3 +116,20 @@ def test_process_audio_finally_cleanup(monkeypatch, mock_config, mock_logger):
     # Actually call the real function to hit finally
     audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
     # We can't directly check finally, but this ensures no error 
+
+def test_process_audio_finally_cleanup_unlink_error(monkeypatch, mock_config, mock_logger):
+    monkeypatch.setattr(audio, 'save_wav_file', lambda *a, **k: 'file.wav')
+    fake_transcription = mock.Mock(text='hello world')
+    monkeypatch.setattr(audio.client.audio.transcriptions, 'create', lambda **kwargs: fake_transcription)
+    monkeypatch.setattr(audio, 'generate_video_prompt', lambda *a, **k: 'video prompt')
+    monkeypatch.setattr(audio, 'generate_video', lambda *a, **k: ('video.mp4', 'thumb.png'))
+    fake_db = mock.Mock()
+    fake_socketio = mock.Mock()
+    recording_state = {}
+    audio_chunks = [b'audio']
+    # Patch os.unlink to raise
+    def raise_unlink(path): raise Exception('fail')
+    monkeypatch.setattr(audio.os, 'unlink', raise_unlink)
+    # Actually call the real function to hit finally except
+    audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
+    # No assertion needed, just ensure no crash 
