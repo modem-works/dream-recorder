@@ -124,22 +124,21 @@
    <a href="./docs/images/config_tool_1.png"><img style="display: block; width: 450px;" src="./docs/images/config_tool_1.png"/></a>
 </details>
 
-### For Developers (Local/Development)
-To get the app running on your local machine:
-   - Note: You will need Docker (Compose) installed on your system - [Docker documentation](https://docs.docker.com/compose/install)
+### To get the Dream Recorder up and running on your local machine (for developers & devs)
+- Note: You will need Docker (Compose) installed on your system - [Docker documentation](https://docs.docker.com/compose/install)
 
-   ```bash
-   git clone <repo_url>
-   cd dream-recorder
-   cp ./.env.example ./.env
-   cp ./config.example.json ./config.json
-   # Add your API keys using vim, nano or any text editor you're compfortable with
-   vim .env
-   docker compose -f docker-compose.dev.yml build
-   docker compose -f docker-compose.dev.yml up -d
-   # Edit the default config options (optional)
-   docker compose exec app python3 scripts/config_editor.py
-   ```
+```bash
+git clone <repo_url>
+cd dream-recorder
+cp ./.env.example ./.env
+cp ./config.example.json ./config.json
+# Add your API keys using vim, nano or any text editor you're compfortable with
+vim .env
+docker compose -f docker-compose.dev.yml build
+docker compose -f docker-compose.dev.yml up -d
+# Edit the default config options (optional)
+docker compose exec app python3 scripts/config_editor.py
+```
 
 The app will be available at [http://localhost:5000](http://localhost:5000)
 
@@ -155,13 +154,6 @@ To simulate sensor button presses:
 
    <a href="./docs/images/gpio_service_1.png"><img style="display: block; width: 450px;" src="./docs/images/gpio_service_1.png"/></a>
 </details>
-
-<br />
-
-To stop the app:
-```bash
-docker compose down
-```
 
 #### Running unit tests
 Run this command to run the tests:
@@ -193,7 +185,7 @@ You can access the dream management page from your computer by going to http://d
 </details>
 
 ## What it costs to dream
-In order to generate dreams, this applicaiton uses OpenAI and LumaLabs' APIs. The approximate costs are as follows (last updated May 2025):
+In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. The approximate costs are as follows (last updated May 2025):
 
 - OpenAI text-to-speech and video prompt generation: < $ 0.01 per dream - [OpenAI Pricing](https://openai.com/api/pricing)
 - LumaLabs dream generation (using 540p, 21:9, 5 seconds, ray-flash-2): $ 0.14 per dream - [LumaLabs Pricing](https://lumalabs.ai/api/pricing)
