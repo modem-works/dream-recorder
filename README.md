@@ -1,4 +1,5 @@
 # Dream Recorder
+<img src="./static/images/Logo.png" width="800px"/>
 
 ## Getting started
 
