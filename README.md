@@ -121,7 +121,7 @@
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   <img style="display: block; width: 500px;" src="./docs/images/config_tool_1.png"/>
+   <img style="display: block; width: 450px;" src="./docs/images/config_tool_1.png"/>
 </details>
 
 ### For Developers (Local/Development)
@@ -153,7 +153,7 @@ To simulate sensor button presses:
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   <img style="display: block; width: 500px;" src="./docs/images/gpio_service_1.png"/>
+   <img style="display: block; width: 450px;" src="./docs/images/gpio_service_1.png"/>
 </details>
 
 <br />
@@ -172,7 +172,7 @@ Run this command to run the tests and see overall test coverage:
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   <img style="display: block; width: 500px;" src="./docs/images/unit_tests_1.png"/>
+   <img style="display: block; width: 450px;" src="./docs/images/unit_tests_1.png"/>
 </details>
 
 ## Using the Dream Recorder
@@ -184,6 +184,13 @@ Run this command to run the tests and see overall test coverage:
 
 ## Managing your dreams
 You can access the dream management page from your computer by going to http://dreamer:5000/dreams
+
+<details>
+   <summary>See step-by-step images 🖼️</summary>
+
+   |<img style="display: block; width: 450px;" src="./docs/images/dreams_page_1.png"/>|<img style="display: block; width: 450px;" src="./docs/images/dreams_page_2.png"/>|
+   |--|--|
+</details>
 
 ## What it costs to dream
 In order to generate dreams, this applicaiton uses OpenAI and LumaLabs' APIs. The approximate costs are as follows (last updated May 2025):
