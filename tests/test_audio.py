@@ -133,3 +133,19 @@ def test_process_audio_finally_cleanup_unlink_error(monkeypatch, mock_config, mo
     # Actually call the real function to hit finally except
     audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
     # No assertion needed, just ensure no crash 
+
+def test_process_audio_emit_else_branches(monkeypatch, mock_config, mock_logger):
+    monkeypatch.setattr(audio, 'save_wav_file', lambda *a, **k: 'file.wav')
+    fake_transcription = mock.Mock(text='hello world')
+    monkeypatch.setattr(audio.client.audio.transcriptions, 'create', lambda **kwargs: fake_transcription)
+    monkeypatch.setattr(audio, 'generate_video_prompt', lambda *a, **k: 'video prompt')
+    monkeypatch.setattr(audio, 'generate_video', lambda *a, **k: ('video.mp4', 'thumb.png'))
+    fake_db = mock.Mock()
+    fake_socketio = mock.Mock()
+    recording_state = {}
+    audio_chunks = [b'audio']
+    audio.process_audio(None, fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
+    calls = [c for c in fake_socketio.emit.call_args_list]
+    assert ('transcription_update', {'text': 'hello world'}) in [tuple(c[0]) for c in calls]
+    assert ('video_prompt_update', {'text': 'video prompt'}) in [tuple(c[0]) for c in calls]
+    assert ('video_ready', {'url': recording_state['video_url']}) in [tuple(c[0]) for c in calls] 

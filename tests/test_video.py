@@ -184,3 +184,128 @@ def test_generate_video_error_no_logger(monkeypatch, mock_config):
     monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
     with pytest.raises(Exception):
         video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=None) 
+
+def test_generate_video_luma_extend(monkeypatch, mock_config, mock_logger):
+    # Patch requests.post and requests.get for both initial and extension
+    fake_post = mock.Mock()
+    fake_post.status_code = 200
+    fake_post.json.side_effect = [
+        {'id': 'genid'},  # initial
+        {'id': 'extendid'}  # extension
+    ]
+    monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
+    # poll_for_completion returns a video_url for both
+    def fake_get(*a, **k):
+        resp = mock.Mock()
+        resp.status_code = 200
+        resp.json.return_value = {'state': 'completed', 'assets': {'video': 'http://video.url'}}
+        resp.iter_content = lambda chunk_size: [b'data']
+        resp.raise_for_status = lambda: None
+        return resp
+    monkeypatch.setattr(video.requests, 'get', fake_get)
+    monkeypatch.setattr(video.os, 'makedirs', lambda d, exist_ok: None)
+    monkeypatch.setattr(video, 'process_video', lambda *a, **k: 'processed.mp4')
+    monkeypatch.setattr(video, 'process_thumbnail', lambda *a, **k: 'thumb.png')
+    result = video.generate_video('prompt ***** extension', filename='file.mp4', luma_extend=True, logger=mock_logger)
+    assert result == ('file.mp4', 'thumb.png')
+
+def test_generate_video_poll_for_completion_failed(monkeypatch, mock_config, mock_logger):
+    fake_post = mock.Mock()
+    fake_post.status_code = 200
+    fake_post.json.return_value = {'id': 'genid'}
+    monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
+    def fake_get(*a, **k):
+        resp = mock.Mock()
+        resp.status_code = 200
+        resp.json.return_value = {'state': 'failed', 'failure_reason': 'bad'}
+        return resp
+    monkeypatch.setattr(video.requests, 'get', fake_get)
+    with pytest.raises(Exception) as exc:
+        video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=mock_logger)
+    assert 'Video generation failed' in str(exc.value)
+
+def test_generate_video_poll_for_completion_error(monkeypatch, mock_config, mock_logger):
+    fake_post = mock.Mock()
+    fake_post.status_code = 200
+    fake_post.json.return_value = {'id': 'genid'}
+    monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
+    def fake_get(*a, **k):
+        resp = mock.Mock()
+        resp.status_code = 200
+        resp.json.return_value = {'state': 'error', 'error': 'api error'}
+        return resp
+    monkeypatch.setattr(video.requests, 'get', fake_get)
+    with pytest.raises(Exception) as exc:
+        video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=mock_logger)
+    assert 'Video generation failed' in str(exc.value)
+
+def test_generate_video_poll_for_completion_timeout(monkeypatch, mock_config, mock_logger):
+    fake_post = mock.Mock()
+    fake_post.status_code = 200
+    fake_post.json.return_value = {'id': 'genid'}
+    monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
+    # Always return running state
+    def fake_get(*a, **k):
+        resp = mock.Mock()
+        resp.status_code = 200
+        resp.json.return_value = {'state': 'running'}
+        return resp
+    monkeypatch.setattr(video.requests, 'get', fake_get)
+    # Patch get_config to set max_attempts=1 for quick timeout
+    monkeypatch.setattr(video, 'get_config', lambda: {
+        'LUMA_GENERATIONS_ENDPOINT': 'http://fake/api',
+        'LUMALABS_API_KEY': 'fake-key',
+        'LUMA_MODEL': 'model',
+        'LUMA_RESOLUTION': 'res',
+        'LUMA_DURATION': 1,
+        'LUMA_ASPECT_RATIO': '1:1',
+        'LUMA_MAX_POLL_ATTEMPTS': 1,
+        'LUMA_POLL_INTERVAL': 0.01,
+        'LUMA_API_URL': 'http://fake/api',
+        'VIDEOS_DIR': '/tmp',
+    })
+    with pytest.raises(Exception) as exc:
+        video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=mock_logger)
+    assert 'Timed out waiting for video generation' in str(exc.value)
+
+def test_generate_video_missing_extend_id(monkeypatch, mock_config, mock_logger):
+    fake_post = mock.Mock()
+    fake_post.status_code = 200
+    fake_post.json.side_effect = [
+        {'id': 'genid'},  # initial
+        {}  # extension missing id
+    ]
+    monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
+    def fake_get(*a, **k):
+        resp = mock.Mock()
+        resp.status_code = 200
+        resp.json.return_value = {'state': 'completed', 'assets': {'video': 'http://video.url'}}
+        resp.iter_content = lambda chunk_size: [b'data']
+        resp.raise_for_status = lambda: None
+        return resp
+    monkeypatch.setattr(video.requests, 'get', fake_get)
+    monkeypatch.setattr(video.os, 'makedirs', lambda d, exist_ok: None)
+    monkeypatch.setattr(video, 'process_video', lambda *a, **k: 'processed.mp4')
+    monkeypatch.setattr(video, 'process_thumbnail', lambda *a, **k: 'thumb.png')
+    with pytest.raises(Exception) as exc:
+        video.generate_video('prompt ***** extension', filename='file.mp4', luma_extend=True, logger=mock_logger)
+    assert 'Failed to get extend generation ID' in str(exc.value)
+
+def test_generate_video_missing_video_url_extension(monkeypatch, mock_config, mock_logger):
+    fake_post = mock.Mock()
+    fake_post.status_code = 200
+    fake_post.json.side_effect = [
+        {'id': 'genid'},  # initial
+        {'id': 'extendid'}  # extension
+    ]
+    monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
+    # poll_for_completion returns no video_url for extension
+    def fake_get(*a, **k):
+        resp = mock.Mock()
+        resp.status_code = 200
+        resp.json.return_value = {'state': 'completed', 'assets': {}}
+        return resp
+    monkeypatch.setattr(video.requests, 'get', fake_get)
+    with pytest.raises(Exception) as exc:
+        video.generate_video('prompt ***** extension', filename='file.mp4', luma_extend=True, logger=mock_logger)
+    assert 'Video URL not found' in str(exc.value) 
