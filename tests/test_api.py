@@ -92,4 +92,38 @@ def test_serve_thumbnail_not_found(test_client, mocker):
     mocker.patch('dream_recorder.send_file', side_effect=FileNotFoundError)
     mocker.patch('functions.config_loader.get_config', return_value={'THUMBS_DIR': 'thumbs'})
     resp = test_client.get('/media/thumbs/missingthumb.jpg')
-    assert resp.status_code == 404 
+    assert resp.status_code == 404
+
+def test_delete_dream_removes_files(test_client, mocker, mock_dream_db, tmp_path):
+    video = tmp_path / "dream1.mp4"
+    thumb = tmp_path / "thumb1.jpg"
+    audio = tmp_path / "audio1.wav"
+    for f in (video, thumb, audio):
+        f.write_text("data")
+    # Patch get_config in the dream_recorder module
+    mocker.patch('dream_recorder.get_config', return_value={
+        'VIDEOS_DIR': str(tmp_path),
+        'THUMBS_DIR': str(tmp_path),
+        'RECORDINGS_DIR': str(tmp_path)
+    })
+    mock_dream_db.get_dream.return_value = {
+        'id': 1, 'video_filename': video.name, 'thumb_filename': thumb.name, 'audio_filename': audio.name
+    }
+    mock_dream_db.delete_dream.return_value = True
+    mock_remove = mocker.patch('os.remove')
+    resp = test_client.delete('/api/dreams/1')
+    assert resp.status_code == 200
+    mock_remove.assert_any_call(str(video))
+    mock_remove.assert_any_call(str(thumb))
+    mock_remove.assert_any_call(str(audio))
+    assert mock_remove.call_count == 3
+
+def test_404_page(test_client):
+    resp = test_client.get('/nonexistent')
+    assert resp.status_code == 404
+
+def test_notify_config_reload_multiple_clients(test_client, mocker):
+    mock_emit = mocker.patch('dream_recorder.socketio.emit')
+    resp = test_client.post('/api/notify_config_reload')
+    assert resp.status_code == 200
+    mock_emit.assert_any_call('reload_config') 
