@@ -144,6 +144,12 @@ To stop the app:
 docker compose down
 ```
 
+#### Running unit tests
+Run this command to run the tests:
+   - `docker compose exec app pytest`
+Run this command to run the tests and see overall test coverage:
+   - `docker compose exec app pytest --cov=. --cov-report=term-missing`
+
 ## Using the Dream Recorder
 - Single tap: Play the latest dream
    - Single tapping while a dream is playing will play the previous dream
