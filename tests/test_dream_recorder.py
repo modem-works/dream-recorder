@@ -1,6 +1,8 @@
 import pytest
 import sys
 import types
+import os
+import subprocess
 
 def test_sample_dreams_initialization_success_and_failure(monkeypatch):
     # Patch os.path.exists to always return False (simulate missing DB)
@@ -112,6 +114,29 @@ def test_handle_show_previous_dream_no_dream(monkeypatch, mocker):
     dream_recorder.video_playback_state['current_index'] = 0
     dream_recorder.handle_show_previous_dream()
     assert any('No dreams found to cycle through.' in msg for msg in logs)
+
+def test_delete_dream_file_deletion_error(test_client, mocker, mock_dream_db):
+    # Simulate dream exists and delete_dream returns True
+    mock_dream_db.get_dream.return_value = {
+        'id': 1, 'video_filename': 'dream1.mp4', 'thumb_filename': 'thumb1.jpg', 'audio_filename': 'audio1.wav'
+    }
+    mock_dream_db.delete_dream.return_value = True
+    # Patch os.path.exists to True so it tries to remove
+    mocker.patch('os.path.exists', return_value=True)
+    # Patch os.remove to raise exception
+    mocker.patch('os.remove', side_effect=Exception('fail'))
+    # Patch get_config
+    mocker.patch('dream_recorder.get_config', return_value={
+        'VIDEOS_DIR': '.', 'THUMBS_DIR': '.', 'RECORDINGS_DIR': '.'
+    })
+    # Patch logger
+    mock_logger = mocker.Mock()
+    mocker.patch('dream_recorder.logger', mock_logger)
+    resp = test_client.delete('/api/dreams/1')
+    # Should still succeed, but logger.error should be called
+    assert resp.status_code == 200
+    assert resp.get_json()['success'] is True
+    assert mock_logger.error.called
 
 def test_api_gpio_single_tap_error(test_client, mocker):
     mocker.patch('dream_recorder.socketio.emit', side_effect=Exception('fail'))
