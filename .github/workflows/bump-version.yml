@@ -1,0 +1,32 @@
+name: Bump Version
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Set up Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Make bump_version.sh executable
+        run: chmod +x bump_version.sh
+      - name: Bump version (minor)
+        run: ./bump_version.sh minor
+      - name: Commit and push version bump
+        run: |
+          git add VERSION
+          git commit -m "chore: bump version [skip ci]"
+          git push
+      - name: Create Tag
+        run: |
+          version=$(cat VERSION)
+          git tag "v$version"
+          git push origin "v$version" 
