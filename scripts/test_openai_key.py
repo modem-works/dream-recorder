@@ -14,7 +14,7 @@ def check_openai_api_key(api_key):
     else:
         return True
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     api_key = None
     if len(sys.argv) > 1:
         api_key = sys.argv[1]

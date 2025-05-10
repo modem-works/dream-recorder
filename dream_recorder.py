@@ -343,7 +343,7 @@ def serve_thumbnail(filename):
 # Main Execution Block
 # =============================
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--reload', action='store_true', help='Enable auto-reloader')

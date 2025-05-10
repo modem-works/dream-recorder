@@ -18,7 +18,7 @@ def check_luma_api_key(api_key):
         print(f"Error: {e}")
         return False
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     api_key = None
     if len(sys.argv) > 1:
         api_key = sys.argv[1]
