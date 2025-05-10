@@ -166,12 +166,12 @@ You can access the dream management page from your computer by going to http://d
 - **Stop the services:**
   ```bash
   docker compose down
-  systemctl --user stop dream-recorder-gpio.service
+  systemctl --user stop dream_recorder_gpio.service
   ```
 - **Restart the services:**
   ```bash
   docker compose up -d
-  systemctl --user start dream-recorder-gpio.service
+  systemctl --user start dream_recorder_gpio.service
   ```
 
 ## Questions?

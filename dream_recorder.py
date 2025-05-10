@@ -4,18 +4,18 @@
 from gevent import monkey
 monkey.patch_all()
 
-from flask import Flask, render_template, jsonify, request, send_file
-from flask_socketio import SocketIO, emit
 import os
 import logging
 import gevent
 import io
-from openai import OpenAI
 import argparse
+import subprocess
+
+from flask import Flask, render_template, jsonify, request, send_file
+from flask_socketio import SocketIO, emit
 from functions.dream_db import DreamDB
 from functions.audio import create_wav_file, process_audio
 from functions.config_loader import load_config, get_config
-import subprocess
 
 # =============================
 # Load Configuration
@@ -78,12 +78,6 @@ app.config.update(
     DEBUG=os.environ.get("FLASK_ENV", "production") == "development",
     HOST=get_config()["HOST"],
     PORT=int(get_config()["PORT"])
-)
-
-# Initialize OpenAI client
-client = OpenAI(
-    api_key=get_config()["OPENAI_API_KEY"],
-    http_client=None
 )
 
 # Initialize SocketIO

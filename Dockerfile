@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 5000
 
 # Default command (can be overridden by docker compose)
-CMD ["python", "dream-recorder.py"] 
+CMD ["python", "dream_recorder.py"] 

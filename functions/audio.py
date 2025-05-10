@@ -1,11 +1,19 @@
 import wave
 import os
-from datetime import datetime
 import tempfile
 import ffmpeg
 import wave
-from functions.video import generate_video_prompt, generate_video
+
+from datetime import datetime
+from functions.video import generate_video
 from functions.config_loader import get_config
+from openai import OpenAI
+
+# Initialize OpenAI client
+client = OpenAI(
+    api_key=get_config()["OPENAI_API_KEY"],
+    http_client=None
+)
 
 def create_wav_file(audio_buffer):
     """Create a new WAV file in the audio buffer with the correct format."""
@@ -40,6 +48,25 @@ def save_wav_file(audio_data, filename=None, logger=None):
             os.unlink(temp_webm_path)
         except:
             pass
+
+def generate_video_prompt(transcription, luma_extend=False, client=None, logger=None, config=None):
+    """Generate an enhanced video prompt from the transcription using GPT."""
+    try:
+        system_prompt = get_config()['GPT_SYSTEM_PROMPT_EXTEND'] if luma_extend else get_config()['GPT_SYSTEM_PROMPT']
+        response = client.chat.completions.create(
+            model=get_config()['GPT_MODEL'],
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"{transcription}"}
+            ],
+            temperature=float(get_config()['GPT_TEMPERATURE']),
+            max_tokens=int(get_config()['GPT_MAX_TOKENS'])
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        if logger:
+            logger.error(f"Error generating video prompt: {str(e)}")
+        return None
 
 def process_audio(sid, client, socketio, dream_db, recording_state, audio_chunks, logger = None):
     """Process the recorded audio and generate video, then update state and emit events."""

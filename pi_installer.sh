@@ -135,7 +135,7 @@ fi
 log_step "Setting up Docker Compose auto-start as a user systemd service"
 SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SYSTEMD_USER_DIR"
-SERVICE_FILE="$SYSTEMD_USER_DIR/dream-recorder-docker.service"
+SERVICE_FILE="$SYSTEMD_USER_DIR/dream_recorder_docker.service"
 
 cat > "$SERVICE_FILE" <<EOL
 [Unit]
@@ -157,12 +157,12 @@ log_info "Created user systemd service at $SERVICE_FILE."
 
 log_step "Reloading user systemd daemon and enabling Docker Compose service"
 systemctl --user daemon-reload
-systemctl --user enable dream-recorder-docker.service && \
-    log_info "Enabled dream-recorder-docker.service for user $USER." || \
-    log_warn "Could not enable dream-recorder-docker.service. You may need to log in with a desktop session first."
+systemctl --user enable dream_recorder_docker.service && \
+    log_info "Enabled dream_recorder_docker.service for user $USER." || \
+    log_warn "Could not enable dream_recorder_docker.service. You may need to log in with a desktop session first."
 
 log_step "Starting Docker Compose service now"
-systemctl --user start dream-recorder-docker.service && \
+systemctl --user start dream_recorder_docker.service && \
     log_info "Docker Compose service started." || \
     log_warn "Could not start Docker Compose service. You may need to log in with a desktop session first."
 
@@ -176,12 +176,12 @@ docker compose build
 # API Key Validation (inside container)
 # =============================
 log_step "Testing API keys inside the container"
-if docker compose exec dream-recorder python scripts/test_openai_key.py; then
+if docker compose exec dream_recorder python scripts/test_openai_key.py; then
     log_info "OpenAI API key is valid."
 else
     log_warn "OpenAI API key is invalid. Please check your .env file."
 fi
-if docker compose exec dream-recorder python scripts/test_luma_key.py; then
+if docker compose exec dream_recorder python scripts/test_luma_key.py; then
     log_info "Luma Labs API key is valid."
 else
     log_warn "Luma Labs API key is invalid. Please check your .env file."
@@ -195,14 +195,14 @@ else
 fi
 
 log_step "Setting up GPIO service as a user systemd service"
-GPIO_SERVICE_FILE="$SYSTEMD_USER_DIR/dream-recorder-gpio.service"
+GPIO_SERVICE_FILE="$SYSTEMD_USER_DIR/dream_recorder_gpio.service"
 LOGS_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOGS_DIR"
 
 cat > "$GPIO_SERVICE_FILE" <<EOL
 [Unit]
 Description=Dream Recorder GPIO Service
-After=network.target dream-recorder-docker.service
+After=network.target dream_recorder_docker.service
 
 [Service]
 Type=simple
@@ -220,12 +220,12 @@ log_info "Created user systemd service at $GPIO_SERVICE_FILE."
 
 log_step "Reloading user systemd daemon and enabling GPIO service"
 systemctl --user daemon-reload
-systemctl --user enable dream-recorder-gpio.service && \
-    log_info "Enabled dream-recorder-gpio.service for user $USER." || \
-    log_warn "Could not enable dream-recorder-gpio.service. You may need to log in with a desktop session first."
+systemctl --user enable dream_recorder_gpio.service && \
+    log_info "Enabled dream_recorder_gpio.service for user $USER." || \
+    log_warn "Could not enable dream_recorder_gpio.service. You may need to log in with a desktop session first."
 
 log_step "Starting GPIO service now"
-systemctl --user start dream-recorder-gpio.service && \
+systemctl --user start dream_recorder_gpio.service && \
     log_info "GPIO service started." || \
     log_warn "Could not start GPIO service. You may need to log in with a desktop session first."
 
@@ -235,7 +235,7 @@ systemctl --user start dream-recorder-gpio.service && \
 log_step "Setting up Chromium kiosk mode autostart"
 AUTOSTART_DIR="$HOME/.config/autostart"
 mkdir -p "$AUTOSTART_DIR"
-KIOSK_DESKTOP_FILE="$AUTOSTART_DIR/dream-recorder-kiosk.desktop"
+KIOSK_DESKTOP_FILE="$AUTOSTART_DIR/dream_recorder_kiosk.desktop"
 
 # Path to the loading screen HTML (absolute path)
 LOADING_SCREEN_SRC="$SCRIPT_DIR/templates/loading.html"

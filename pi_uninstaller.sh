@@ -48,7 +48,7 @@ fi
 # 2. Remove systemd user services
 # =============================
 log_step "Disabling and removing systemd user services"
-SERVICES=(dream-recorder-docker.service dream-recorder-gpio.service)
+SERVICES=(dream_recorder_docker.service dream_recorder_gpio.service)
 for SERVICE in "${SERVICES[@]}"; do
     SERVICE_PATH="$SYSTEMD_USER_DIR/$SERVICE"
     if [ -f "$SERVICE_PATH" ]; then
@@ -72,8 +72,8 @@ systemctl --user daemon-reload || true
 # 3. Remove autostart desktop entries
 # =============================
 log_step "Removing autostart desktop entries"
-KIOSK_DESKTOP_FILE="$AUTOSTART_DIR/dream-recorder-kiosk.desktop"
-BLANKING_AUTOSTART="$AUTOSTART_DIR/disable-screen-blanking.desktop"
+KIOSK_DESKTOP_FILE="$AUTOSTART_DIR/dream_recorder_kiosk.desktop"
+BLANKING_AUTOSTART="$AUTOSTART_DIR/disable_screen_blanking.desktop"
 for FILE in "$KIOSK_DESKTOP_FILE" "$BLANKING_AUTOSTART"; do
     if [ -f "$FILE" ]; then
         rm -f "$FILE"
@@ -126,7 +126,7 @@ fi
 # =============================
 log_step "Force removing any remaining project containers and named volumes"
 # Remove any remaining containers related to the project
-PROJECT_CONTAINERS=$(docker ps -a --filter "name=dream-recorder" -q)
+PROJECT_CONTAINERS=$(docker ps -a --filter "name=dream_recorder" -q)
 if [ -n "$PROJECT_CONTAINERS" ]; then
     docker rm -f $PROJECT_CONTAINERS || true
     log_info "Force removed remaining project containers."
@@ -135,7 +135,7 @@ else
 fi
 
 # Remove named volumes if they still exist
-VOLUMES=("dream-recorder_logs-data" "dream-recorder_db-data" "dream-recorder_media-data")
+VOLUMES=("dream_recorder_logs-data" "dream_recorder_db-data" "dream_recorder_media-data")
 for VOLUME in "${VOLUMES[@]}"; do
     if docker volume inspect "$VOLUME" >/dev/null 2>&1; then
         docker volume rm -f "$VOLUME" || true

@@ -4,6 +4,7 @@ import time
 import os
 import ffmpeg
 import shutil
+
 from datetime import datetime
 from functions.config_loader import get_config
 
@@ -77,25 +78,6 @@ def process_thumbnail(video_path, logger=None):
         if logger:
             logger.error(f"Error generating thumbnail: {str(e)}")
         raise
-
-def generate_video_prompt(transcription, luma_extend=False, client=None, logger=None, config=None):
-    """Generate an enhanced video prompt from the transcription using GPT."""
-    try:
-        system_prompt = get_config()['GPT_SYSTEM_PROMPT_EXTEND'] if luma_extend else get_config()['GPT_SYSTEM_PROMPT']
-        response = client.chat.completions.create(
-            model=get_config()['GPT_MODEL'],
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"{transcription}"}
-            ],
-            temperature=float(get_config()['GPT_TEMPERATURE']),
-            max_tokens=int(get_config()['GPT_MAX_TOKENS'])
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        if logger:
-            logger.error(f"Error generating video prompt: {str(e)}")
-        return None
 
 def generate_video(prompt, filename=None, luma_extend=False, logger=None, config=None):
     """Generate a video using Luma Labs API, with optional extension if LUMA_EXTEND is set."""
