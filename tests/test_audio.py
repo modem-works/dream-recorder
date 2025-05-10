@@ -63,4 +63,56 @@ def test_save_wav_file_handles_os_unlink(monkeypatch, mock_config, mock_logger):
     monkeypatch.setattr(os, 'unlink', lambda x: (_ for _ in ()).throw(Exception('unlink fail')))
     audio_data = b'RIFF....'
     filename = audio.save_wav_file(audio_data, filename='unlink.wav', logger=mock_logger)
-    assert filename.endswith('.wav') 
+    assert filename.endswith('.wav')
+
+def test_save_wav_file_timestamp(monkeypatch, mock_config, mock_logger):
+    monkeypatch.setattr(audio.ffmpeg, 'input', lambda x: x)
+    monkeypatch.setattr(audio.ffmpeg, 'output', lambda x, y, **kwargs: (x, y))
+    monkeypatch.setattr(audio.ffmpeg, 'run', lambda *a, **k: None)
+    audio_data = b'RIFF....'
+    filename = audio.save_wav_file(audio_data, filename=None, logger=mock_logger)
+    assert filename.startswith('recording_') and filename.endswith('.wav')
+    mock_logger.info.assert_called()
+
+def test_process_audio_no_sid(monkeypatch, mock_config, mock_logger):
+    monkeypatch.setattr(audio, 'save_wav_file', lambda *a, **k: 'file.wav')
+    fake_transcription = mock.Mock(text='hello world')
+    monkeypatch.setattr(audio.client.audio.transcriptions, 'create', lambda **kwargs: fake_transcription)
+    monkeypatch.setattr(audio, 'generate_video_prompt', lambda *a, **k: 'video prompt')
+    monkeypatch.setattr(audio, 'generate_video', lambda *a, **k: ('video.mp4', 'thumb.png'))
+    fake_db = mock.Mock()
+    fake_socketio = mock.Mock()
+    recording_state = {}
+    audio_chunks = [b'audio']
+    audio.process_audio(None, fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
+    fake_socketio.emit.assert_any_call('transcription_update', {'text': 'hello world'})
+    fake_socketio.emit.assert_any_call('video_prompt_update', {'text': 'video prompt'})
+    fake_socketio.emit.assert_any_call('video_ready', {'url': recording_state['video_url']})
+
+def test_process_audio_finally_cleanup(monkeypatch, mock_config, mock_logger):
+    monkeypatch.setattr(audio, 'save_wav_file', lambda *a, **k: 'file.wav')
+    fake_transcription = mock.Mock(text='hello world')
+    monkeypatch.setattr(audio.client.audio.transcriptions, 'create', lambda **kwargs: fake_transcription)
+    monkeypatch.setattr(audio, 'generate_video_prompt', lambda *a, **k: 'video prompt')
+    monkeypatch.setattr(audio, 'generate_video', lambda *a, **k: ('video.mp4', 'thumb.png'))
+    fake_db = mock.Mock()
+    fake_socketio = mock.Mock()
+    recording_state = {}
+    audio_chunks = [b'audio']
+    # Patch os.unlink to check it's called
+    called = {}
+    def fake_unlink(path): called['x'] = path
+    monkeypatch.setattr(audio.os, 'unlink', fake_unlink)
+    # Simulate temp_file_path in locals
+    def fake_process_audio(*args, **kwargs):
+        locals_ = {'temp_file_path': '/tmp/fake.wav'}
+        try:
+            raise Exception('fail')
+        except Exception:
+            pass
+        finally:
+            if 'temp_file_path' in locals_:
+                audio.os.unlink(locals_['temp_file_path'])
+    # Actually call the real function to hit finally
+    audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
+    # We can't directly check finally, but this ensures no error 

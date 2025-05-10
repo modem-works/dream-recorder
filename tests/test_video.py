@@ -47,6 +47,16 @@ def test_process_video_error(monkeypatch, mock_config, mock_logger):
         video.process_video('input.mp4', logger=mock_logger)
     mock_logger.error.assert_called()
 
+def test_process_video_logs_error(monkeypatch, mock_config, mock_logger):
+    monkeypatch.setattr(video.ffmpeg, 'input', lambda x: x)
+    monkeypatch.setattr(video.ffmpeg, 'filter', lambda s, *a, **k: s)
+    monkeypatch.setattr(video.ffmpeg, 'output', lambda s, p: (s, p))
+    def raise_exc(*a, **k): raise Exception('fail')
+    monkeypatch.setattr(video.ffmpeg, 'run', raise_exc)
+    with pytest.raises(Exception):
+        video.process_video('input.mp4', logger=mock_logger)
+    assert any('Error processing video' in str(c[0][0]) for c in mock_logger.error.call_args_list)
+
 def test_process_thumbnail_success(monkeypatch, mock_config, mock_logger):
     fake_probe = {'streams': [{'codec_type': 'video', 'width': 100, 'height': 80}]}
     monkeypatch.setattr(video.ffmpeg, 'probe', lambda x: fake_probe)
@@ -75,6 +85,13 @@ def test_process_thumbnail_ffmpeg_error(monkeypatch, mock_config, mock_logger):
         video.process_thumbnail('video.mp4', logger=mock_logger)
     mock_logger.error.assert_called()
 
+def test_process_thumbnail_logs_error(monkeypatch, mock_config, mock_logger):
+    def raise_exc(*a, **k): raise Exception('fail')
+    monkeypatch.setattr(video.ffmpeg, 'probe', raise_exc)
+    with pytest.raises(Exception):
+        video.process_thumbnail('video.mp4', logger=mock_logger)
+    assert any('Error generating thumbnail' in str(c[0][0]) for c in mock_logger.error.call_args_list)
+
 def test_generate_video_success(monkeypatch, mock_config, mock_logger):
     # Patch requests.post and requests.get
     fake_post = mock.Mock()
@@ -101,3 +118,46 @@ def test_generate_video_api_error(monkeypatch, mock_config, mock_logger):
     monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
     with pytest.raises(Exception):
         video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=mock_logger) 
+
+def test_generate_video_missing_video_url(monkeypatch, mock_config, mock_logger):
+    fake_post = mock.Mock()
+    fake_post.status_code = 200
+    fake_post.json.return_value = {'id': 'genid'}
+    monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
+    fake_get = mock.Mock()
+    fake_get.status_code = 200
+    fake_get.json.return_value = {'state': 'completed', 'assets': {}}
+    fake_get.iter_content = lambda chunk_size: [b'data']
+    fake_get.raise_for_status = lambda: None
+    monkeypatch.setattr(video.requests, 'get', lambda *a, **k: fake_get)
+    with pytest.raises(Exception):
+        video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=mock_logger)
+    assert any('Video URL not found' in str(c[0][0]) for c in mock_logger.error.call_args_list)
+
+def test_generate_video_failed_api(monkeypatch, mock_config, mock_logger):
+    fake_post = mock.Mock()
+    fake_post.status_code = 500
+    fake_post.text = 'fail'
+    monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
+    with pytest.raises(Exception):
+        video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=mock_logger)
+    assert any('Luma API error' in str(e) for e in [str(c[0][0]) for c in mock_logger.error.call_args_list] + [str(a) for a in mock_logger.info.call_args_list])
+
+def test_generate_video_fallback(monkeypatch, mock_config, mock_logger):
+    # luma_extend False, no ***** in prompt
+    fake_post = mock.Mock()
+    fake_post.status_code = 200
+    fake_post.json.return_value = {'id': 'genid'}
+    monkeypatch.setattr(video.requests, 'post', lambda *a, **k: fake_post)
+    fake_get = mock.Mock()
+    fake_get.status_code = 200
+    fake_get.json.return_value = {'state': 'completed', 'assets': {'video': 'http://video.url'}}
+    fake_get.iter_content = lambda chunk_size: [b'data']
+    fake_get.raise_for_status = lambda: None
+    monkeypatch.setattr(video.requests, 'get', lambda *a, **k: fake_get)
+    monkeypatch.setattr(video.os, 'makedirs', lambda d, exist_ok: None)
+    monkeypatch.setattr(video, 'process_video', lambda *a, **k: 'processed.mp4')
+    monkeypatch.setattr(video, 'process_thumbnail', lambda *a, **k: 'thumb.png')
+    # Should not raise
+    result = video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=mock_logger)
+    assert result == ('file.mp4', 'thumb.png') 

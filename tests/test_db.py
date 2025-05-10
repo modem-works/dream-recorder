@@ -84,4 +84,26 @@ def test_row_to_dict(dream_db):
     dream_id = dream_db.save_dream(data)
     dream = dream_db.get_dream(dream_id)
     # _row_to_dict is used internally, but we can check the output is a dict
-    assert isinstance(dream, dict) 
+    assert isinstance(dream, dict)
+
+def test_update_dream_none_updates(dream_db):
+    # Should return None if updates is None
+    data = DreamData(
+        user_prompt='u', generated_prompt='g', audio_filename='a', video_filename='v'
+    ).model_dump()
+    dream_id = dream_db.save_dream(data)
+    assert dream_db.update_dream(dream_id, None) is None
+
+def test_update_dream_invalid_field_logs_error(dream_db, caplog):
+    data = DreamData(
+        user_prompt='u', generated_prompt='g', audio_filename='a', video_filename='v'
+    ).model_dump()
+    dream_id = dream_db.save_dream(data)
+    with caplog.at_level('ERROR'):
+        with pytest.raises(Exception):
+            dream_db.update_dream(dream_id, {'not_a_column': 'x'})
+    assert "Database error" in caplog.text
+
+def test_delete_dream_not_found_return(dream_db):
+    # Should return False if rowcount is 0
+    assert dream_db.delete_dream(99999) is False 
