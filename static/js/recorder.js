@@ -22,12 +22,10 @@ function drawVisualizer() {
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteFrequencyData(dataArray);
-    console.log('drawVisualizer: frequency dataArray =', dataArray);
 
     // Try time-domain data
     const timeDomainArray = new Uint8Array(bufferLength);
     analyser.getByteTimeDomainData(timeDomainArray);
-    console.log('drawVisualizer: timeDomain dataArray =', timeDomainArray);
 
     // Calculate intensity using RMS of time-domain data
     let sum = 0;
@@ -37,7 +35,6 @@ function drawVisualizer() {
     }
     const rms = Math.sqrt(sum / timeDomainArray.length); // Root mean square
     const intensity = rms; // 0 (silence) to ~1 (loud)
-    console.log('drawVisualizer: intensity (RMS) =', intensity);
 
     // Animate the recording icon
     const recordingContainer = document.querySelector('.recording-animation');
@@ -107,7 +104,7 @@ window.startRecording = async function() {
                     // Emit through the global socket object
                     if (window.socket) {
                         window.socket.emit('stream_recording', audioData);
-                        console.log('Sent audio_data chunk, size:', audioData.data.length);
+                        // console.log('Sent audio_data chunk, size:', audioData.data.length);
                     }
                 });
             }

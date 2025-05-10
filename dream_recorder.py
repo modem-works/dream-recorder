@@ -162,7 +162,7 @@ def handle_stop_recording():
 
         # Process the audio in a background task, passing all required arguments
         gevent.spawn(
-            process_audio, sid, client, socketio, dream_db, recording_state, audio_chunks, logger
+            process_audio, sid, socketio, dream_db, recording_state, audio_chunks, logger
         )
 
         # Emit the comprehensive state update after finalizing

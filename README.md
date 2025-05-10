@@ -128,7 +128,8 @@ To get the app running on your local machine:
    cp ./config_examples/config.example.json ./config.json
    # Add your API keys using vim, nano or any text editor you're compfortable with
    vim .env
-   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+   docker compose -f docker-compose.dev.yml build
+   docker compose -f docker-compose.dev.yml up -d
    # Edit the default config options (optional)
    docker compose exec app python3 scripts/config_editor.py
    ```

@@ -49,7 +49,7 @@ def save_wav_file(audio_data, filename=None, logger=None):
         except:
             pass
 
-def generate_video_prompt(transcription, luma_extend=False, client=None, logger=None, config=None):
+def generate_video_prompt(transcription, luma_extend=False, logger=None, config=None):
     """Generate an enhanced video prompt from the transcription using GPT."""
     try:
         system_prompt = get_config()['GPT_SYSTEM_PROMPT_EXTEND'] if luma_extend else get_config()['GPT_SYSTEM_PROMPT']
@@ -68,7 +68,7 @@ def generate_video_prompt(transcription, luma_extend=False, client=None, logger=
             logger.error(f"Error generating video prompt: {str(e)}")
         return None
 
-def process_audio(sid, client, socketio, dream_db, recording_state, audio_chunks, logger = None):
+def process_audio(sid, socketio, dream_db, recording_state, audio_chunks, logger = None):
     """Process the recorded audio and generate video, then update state and emit events."""
     try:
         audio_data = b''.join(audio_chunks)
@@ -95,7 +95,7 @@ def process_audio(sid, client, socketio, dream_db, recording_state, audio_chunks
         # Check if LUMA_EXTEND is set
         luma_extend = str(get_config()['LUMA_EXTEND']).lower() in ('1', 'true', 'yes')
         # Generate video prompt
-        video_prompt = generate_video_prompt(transcription=transcription.text, luma_extend=luma_extend, client=client, logger=logger, config=get_config())
+        video_prompt = generate_video_prompt(transcription=transcription.text, luma_extend=luma_extend, logger=logger, config=get_config())
         if not video_prompt:
             raise Exception("Failed to generate video prompt")
         recording_state['video_prompt'] = video_prompt
