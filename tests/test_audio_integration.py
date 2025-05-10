@@ -76,4 +76,43 @@ def test_process_audio_error(monkeypatch, mock_config, mock_logger):
     audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
     assert recording_state['status'] == 'error'
     fake_socketio.emit.assert_any_call('error', {'message': 'fail'})
-    mock_logger.error.assert_called() 
+    mock_logger.error.assert_called()
+
+def test_process_audio_finally_clears_chunks(monkeypatch, mock_config, mock_logger):
+    # Patch save_wav_file
+    monkeypatch.setattr(audio, 'save_wav_file', lambda *a, **k: 'file.wav')
+    # Patch OpenAI Whisper
+    fake_transcription = mock.Mock(text='hello world')
+    monkeypatch.setattr(audio.client.audio.transcriptions, 'create', lambda **kwargs: fake_transcription)
+    # Patch generate_video_prompt
+    monkeypatch.setattr(audio, 'generate_video_prompt', lambda *a, **k: 'video prompt')
+    # Patch generate_video
+    monkeypatch.setattr(audio, 'generate_video', lambda *a, **k: ('video.mp4', 'thumb.png'))
+    fake_db = mock.Mock()
+    fake_socketio = mock.Mock()
+    recording_state = {}
+    audio_chunks = [b'audio']
+    audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
+    # The local audio_chunks variable is cleared in finally, but the caller's list is not affected
+    # So we just ensure the function completes and does not error
+    assert recording_state['status'] == 'complete'
+
+def test_process_audio_finally_unlink_exception(monkeypatch, mock_config, mock_logger):
+    # Patch save_wav_file
+    monkeypatch.setattr(audio, 'save_wav_file', lambda *a, **k: 'file.wav')
+    # Patch OpenAI Whisper
+    fake_transcription = mock.Mock(text='hello world')
+    monkeypatch.setattr(audio.client.audio.transcriptions, 'create', lambda **kwargs: fake_transcription)
+    # Patch generate_video_prompt
+    monkeypatch.setattr(audio, 'generate_video_prompt', lambda *a, **k: 'video prompt')
+    # Patch generate_video
+    monkeypatch.setattr(audio, 'generate_video', lambda *a, **k: ('video.mp4', 'thumb.png'))
+    # Patch os.unlink to raise
+    monkeypatch.setattr(audio.os, 'unlink', lambda path: (_ for _ in ()).throw(Exception('fail')))
+    fake_db = mock.Mock()
+    fake_socketio = mock.Mock()
+    recording_state = {}
+    audio_chunks = [b'audio']
+    audio.process_audio('sid', fake_socketio, fake_db, recording_state, audio_chunks, logger=mock_logger)
+    # Should complete without raising, even though os.unlink fails
+    assert recording_state['status'] == 'complete' 

@@ -66,6 +66,17 @@ def test_process_video_error_no_logger(monkeypatch, mock_config):
     with pytest.raises(Exception):
         video.process_video('input.mp4', logger=None)
 
+def test_process_video_exception(monkeypatch, mock_config, mock_logger):
+    monkeypatch.setattr(video.ffmpeg, 'input', lambda x: x)
+    monkeypatch.setattr(video.ffmpeg, 'filter', lambda s, *a, **k: s)
+    monkeypatch.setattr(video.ffmpeg, 'output', lambda s, p: (s, p))
+    monkeypatch.setattr(video.ffmpeg, 'run', lambda *a, **k: None)
+    def raise_exc(*a, **k): raise Exception('move fail')
+    monkeypatch.setattr(video.shutil, 'move', raise_exc)
+    with pytest.raises(Exception):
+        video.process_video('input.mp4', logger=mock_logger)
+    mock_logger.error.assert_called()
+
 def test_process_thumbnail_success(monkeypatch, mock_config, mock_logger):
     fake_probe = {'streams': [{'codec_type': 'video', 'width': 100, 'height': 80}]}
     monkeypatch.setattr(video.ffmpeg, 'probe', lambda x: fake_probe)
@@ -85,7 +96,7 @@ def test_process_thumbnail_ffmpeg_error(monkeypatch, mock_config, mock_logger):
     monkeypatch.setattr(video.ffmpeg, 'input', lambda *a, **k: 'stream')
     monkeypatch.setattr(video.ffmpeg, 'filter', lambda s, *a, **k: s)
     monkeypatch.setattr(video.ffmpeg, 'output', lambda s, p, vframes: (s, p, vframes))
-    class FakeFFmpegError(Exception):
+    class FakeFFmpegError(video.ffmpeg.Error):
         def __init__(self):
             self.stderr = b'fail'
     def raise_ffmpeg(*a, **k): raise video.ffmpeg.Error('fail', b'fail', b'fail')
@@ -106,6 +117,29 @@ def test_process_thumbnail_error_no_logger(monkeypatch, mock_config):
     monkeypatch.setattr(video.ffmpeg, 'probe', raise_exc)
     with pytest.raises(Exception):
         video.process_thumbnail('video.mp4', logger=None)
+
+def test_process_thumbnail_ffmpeg_error_block(monkeypatch, mock_config, mock_logger):
+    fake_probe = {'streams': [{'codec_type': 'video', 'width': 100, 'height': 80}]}
+    monkeypatch.setattr(video.ffmpeg, 'probe', lambda x: fake_probe)
+    monkeypatch.setattr(video.os, 'makedirs', lambda d, exist_ok: None)
+    monkeypatch.setattr(video.ffmpeg, 'input', lambda *a, **k: 'stream')
+    monkeypatch.setattr(video.ffmpeg, 'filter', lambda s, *a, **k: s)
+    monkeypatch.setattr(video.ffmpeg, 'output', lambda s, p, vframes: (s, p, vframes))
+    class FakeFFmpegError(video.ffmpeg.Error):
+        def __init__(self):
+            self.stderr = b'fail'
+    def raise_ffmpeg(*a, **k): raise video.ffmpeg.Error('fail', b'fail', b'fail')
+    monkeypatch.setattr(video.ffmpeg, 'run', raise_ffmpeg)
+    with pytest.raises(Exception):
+        video.process_thumbnail('video.mp4', logger=mock_logger)
+    mock_logger.error.assert_called()
+
+def test_process_thumbnail_outer_exception(monkeypatch, mock_config, mock_logger):
+    def raise_exc(*a, **k): raise Exception('outer fail')
+    monkeypatch.setattr(video.ffmpeg, 'probe', raise_exc)
+    with pytest.raises(Exception):
+        video.process_thumbnail('video.mp4', logger=mock_logger)
+    mock_logger.error.assert_called()
 
 def test_generate_video_success(monkeypatch, mock_config, mock_logger):
     # Patch requests.post and requests.get
@@ -308,4 +342,11 @@ def test_generate_video_missing_video_url_extension(monkeypatch, mock_config, mo
     monkeypatch.setattr(video.requests, 'get', fake_get)
     with pytest.raises(Exception) as exc:
         video.generate_video('prompt ***** extension', filename='file.mp4', luma_extend=True, logger=mock_logger)
-    assert 'Video URL not found' in str(exc.value) 
+    assert 'Video URL not found' in str(exc.value)
+
+def test_generate_video_outer_exception(monkeypatch, mock_config, mock_logger):
+    def raise_exc(*a, **k): raise Exception('outer fail')
+    monkeypatch.setattr(video.requests, 'post', raise_exc)
+    with pytest.raises(Exception):
+        video.generate_video('prompt', filename='file.mp4', luma_extend=False, logger=mock_logger)
+    mock_logger.error.assert_called() 

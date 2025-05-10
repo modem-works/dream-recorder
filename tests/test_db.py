@@ -106,4 +106,17 @@ def test_update_dream_invalid_field_logs_error(dream_db, caplog):
 
 def test_delete_dream_not_found_return(dream_db):
     # Should return False if rowcount is 0
-    assert dream_db.delete_dream(99999) is False 
+    assert dream_db.delete_dream(99999) is False
+
+def test_update_dream_outer_exception(dream_db, caplog):
+    data = DreamData(
+        user_prompt='u', generated_prompt='g', audio_filename='a', video_filename='v'
+    ).model_dump()
+    dream_id = dream_db.save_dream(data)
+    class BadUpdates:
+        def items(self):
+            raise RuntimeError('fail outer')
+    with caplog.at_level('ERROR'):
+        with pytest.raises(RuntimeError):
+            dream_db.update_dream(dream_id, BadUpdates())
+    assert "Error updating dream" in caplog.text 
