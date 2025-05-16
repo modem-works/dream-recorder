@@ -1,7 +1,42 @@
 # Dream Recorder
 <a href="./docs/images/logo.png"><img src="./docs/images/logo.png" width="100%" /></a>
 
-## Getting started
+## About the physical device
+
+### Shopping list / Bill Of Materials
+To build a Dream Recorder, these are the components you will need. The overall cost for these components from the provided links is approximately €210 (Last updated May 2025).
+
+| Item | URL |
+| - | - |
+| 90 degree right-angled FPV male-male HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B08C7G4J6B |
+| 90 degree right-angled FPV male-male Micro-HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B0177EWVMQ |
+| Up-angled USB 2.0 male Type-A to male Micro-USB ribbon cable (20cm) | https://www.amazon.nl/dp/B095LVLTLJ |
+| M2.5 nylon screwset (you need 4 x 15mm male-female stands) | https://www.amazon.nl/dp/B0DCS5C7SN |
+| TTP223B Capacitive Touch Sensor | https://www.amazon.nl/dp/B07XPMH2NZ |
+| Waveshare Active Cooler | https://www.amazon.nl/dp/B0CPLQB4RK |
+| USB-C adapter for 5.1V, 5A, 27W (these specs are important) | https://www.amazon.nl/dp/B0D41VN574 |
+| 90 degree USB-C adapter | https://www.amazon.nl/dp/B0DGD52DL3 |
+| MicroSDXC UHS-I-Card - 64 GB | https://www.amazon.nl/dp/B0B7NXBM6P |
+| Dupont Jumper Wires - 10 cm (you need 3 x female-female) | https://www.amazon.nl/dp/B07GJLCGG8 |
+| Raspberry Pi 5 8GB | https://www.amazon.nl/Raspberry-Pi-SC1112-5-8GB/dp/B0CK2FCG1K |
+| USB microphone | https://www.amazon.nl/dp/B0BWFTQL95 |
+| PLA filament - 1.75mm, transparant | https://www.amazon.nl/dp/B07Q1PGH4B |
+
+### What it costs to dream
+In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. The approximate costs are as follows (last updated May 2025):
+
+- OpenAI text-to-speech and video prompt generation: < $ 0.01 per dream - [OpenAI Pricing](https://openai.com/api/pricing)
+- LumaLabs dream generation (using 540p, 21:9, 5 seconds, ray-flash-2): $ 0.14 per dream - [LumaLabs Pricing](https://lumalabs.ai/api/pricing)
+
+## Getting your Dream Recorder set up
+
+### Building the device
+
+#### 👩‍🔧 <u>With your hardware components</u>
+
+![Dream Recorder components](./docs/images/components.gif "Dream Recorder components")
+
+_TODO - (insert a link to the build PDF here)_
 
 ### To get the Dream Recorder up and running on your Raspberry Pi
 
@@ -124,6 +159,11 @@
    <a href="./docs/images/config_tool_1.png"><img style="display: block; width: 450px;" src="./docs/images/config_tool_1.png"/></a>
 </details>
 
+
+*You should be good to go with your Dream Recorder now! <br />Everything below is mostly for those that want to take things further to start tinkering and contributing*
+
+## Taking things further
+
 ### To get the Dream Recorder up and running on your local machine (for developers & devs)
 - Note: You will need Docker (Compose) installed on your system - [Docker documentation](https://docs.docker.com/compose/install)
 
@@ -183,30 +223,6 @@ You can access the dream management page from your computer by going to http://d
    |<a href="./docs/images/dreams_page_1.png"><img style="display: block; width: 450px;" src="./docs/images/dreams_page_1.png"/></a>|<a href="./docs/images/dreams_page_2.png"><img style="display: block; width: 450px;" src="./docs/images/dreams_page_2.png"/></a>|
    |--|--|
 </details>
-
-## What it costs to dream
-In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. The approximate costs are as follows (last updated May 2025):
-
-- OpenAI text-to-speech and video prompt generation: < $ 0.01 per dream - [OpenAI Pricing](https://openai.com/api/pricing)
-- LumaLabs dream generation (using 540p, 21:9, 5 seconds, ray-flash-2): $ 0.14 per dream - [LumaLabs Pricing](https://lumalabs.ai/api/pricing)
-
-## Shopping list / Bill Of Materials
-To build a Dream Recorder, these are the components you will need. The overall cost for these components from the provided links is approx. €210 (Last updated May 2025).
-
-| Item | URL |
-| - | - |
-| 90 degree right-angled FPV male-male HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B08C7G4J6B |
-| 90 degree right-angled FPV male-male Micro-HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B0177EWVMQ |
-| Up-angled USB 2.0 male Type-A to male Micro-USB ribbon cable (20cm) | https://www.amazon.nl/dp/B095LVLTLJ |
-| M2.5 nylon screwset (you need 4 x 15mm male-female stands) | https://www.amazon.nl/dp/B0DCS5C7SN |
-| Waveshare Active Cooler | https://www.amazon.nl/dp/B0CPLQB4RK |
-| USB-C adapter for 5.1V, 5A, 27W (these specs are important) | https://www.amazon.nl/dp/B0D41VN574 |
-| 90 degree USB-C adapter | https://www.amazon.nl/dp/B0DGD52DL3 |
-| MicroSDXC UHS-I-Card - 64 GB | https://www.amazon.nl/dp/B0B7NXBM6P |
-| Dupont Jumper Wires - 10 cm (you need 3 x female-female) | https://www.amazon.nl/dp/B07GJLCGG8 |
-| Raspberry Pi 5 8GB | https://www.amazon.nl/Raspberry-Pi-SC1112-5-8GB/dp/B0CK2FCG1K |
-| USB microphone | https://www.amazon.nl/dp/B0BWFTQL95 |
-| PLA filament - 1.75mm, transparant | https://www.amazon.nl/dp/B07Q1PGH4B |
 
 ## Troubleshooting
 - **Logs:**
