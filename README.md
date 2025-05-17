@@ -210,6 +210,11 @@ Run this command to run the tests and see overall test coverage:
    <a href="./docs/images/unit_tests_1.jpg"><img style="display: block; width: 450px;" src="./docs/images/unit_tests_1.jpg"/></a>
 </details>
 
+#### Visual diagrams
+To see how the application's architecture and communication works visually, please refer to the Mermaid diagrams:
+- 📈 [Application Architecture](./docs/diagrams/application_architecture.mmd)
+- 📈 [Conversation flow](./docs/diagrams/conversation_flow.mmd)
+
 ## Using the Dream Recorder
 - Single tap: Play the latest dream
    - Single tapping while a dream is playing will play the previous dream
