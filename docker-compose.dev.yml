@@ -4,6 +4,7 @@ services:
     ports:
       - "${PORT}:${PORT}"
     volumes:
+      - .:/app
       - db-data:/app/db
       - media-data:/app/media
       - logs-data:/app/logs
@@ -12,7 +13,6 @@ services:
     environment:
       - HOST=0.0.0.0
       - FLASK_ENV=development
-
     command: python dream_recorder.py --reload 
 
 volumes:

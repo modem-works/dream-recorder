@@ -9,7 +9,6 @@ import logging
 import gevent
 import io
 import argparse
-import subprocess
 
 from flask import Flask, render_template, jsonify, request, send_file
 from flask_socketio import SocketIO, emit
@@ -83,6 +82,21 @@ def initiate_recording():
     wav_file = create_wav_file(audio_buffer)
     if logger:
         logger.debug("Initiated recording: state set, buffers reset, wav file created.")
+
+def init_sample_dreams_if_missing():
+    """Attempt to initialize sample dreams by running the init_sample_dreams script."""
+    import subprocess
+    import sys
+    import os
+    try:
+        script_path = os.path.join(os.path.dirname(__file__), 'scripts', 'init_sample_dreams.py')
+        result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
+        if result.returncode == 0:
+            print("Sample dreams initialized.")
+        else:
+            print("Failed to initialize sample dreams.")
+    except Exception as e:
+        print(f"Exception while initializing sample dreams: {e}")
 
 # =============================
 # SocketIO Event Handlers

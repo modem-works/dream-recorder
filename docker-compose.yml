@@ -4,6 +4,7 @@ services:
     ports:
       - "${PORT}:${PORT}"
     volumes:
+      - .:/app
       - db-data:/app/db
       - media-data:/app/media
       - logs-data:/app/logs

@@ -31,7 +31,8 @@ def test_sample_dreams_initialization_success_and_failure(monkeypatch):
     import importlib
     import dream_recorder
     importlib.reload(dream_recorder)
-    # Call the function again to simulate failure
+    # Call the function twice: first for success, second for failure
+    dream_recorder.init_sample_dreams_if_missing()
     dream_recorder.init_sample_dreams_if_missing()
     # The first call should print success, the second should print warning
     assert any('Sample dreams initialized.' in str(x) for x in printed)
