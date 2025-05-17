@@ -246,21 +246,6 @@ You can access the dream management page from your computer by going to http://d
   docker compose up -d
   systemctl --user start dream_recorder_gpio.service
   ```
-
-## Wishlist / Roadmap / Todos
-If you would like to contribute to the project, here are some areas we would love help / contribution towards:
-- Improving on the shopping list:
-   - Including better, more local options (globally) that are not Amazon
-   - Finding more efficient purchases for larger packaged items, such as the Dupont cables, nylon screwsets, etc...
-- Building out support for multiple (by configuration) AI providers:
-   - Support for alternative STT and/or prompt generation providers (Claude, Gemini, etc...)
-   - Support for alternative video generation providers
-
-## Questions / Issues / Feedback
-Open an issue or contact the lead maintainer for help:
-
-<img src="https://github.com/markhinch.png" width="80px;"/><br /><a href="https://github.com/markhinch">@markhinch</a>
-
 ## dreamctl: Simple Command Runner
 
 To make working with the Dream Recorder easier, you can use the `dreamctl` script in the project root. This script simplifies running common commands inside the Docker container.
@@ -283,3 +268,19 @@ For example:
 - `./dreamctl test-cov` will run the test suite with coverage reporting
 
 You can extend `dreamctl` to add more commands as needed.
+
+## Wishlist / Roadmap / Todos
+If you would like to contribute to the project, here are some areas we would love help / contribution towards:
+- Improving on the shopping list:
+   - Including better, more local options (globally) that are not Amazon
+   - Finding more efficient purchases for larger packaged items, such as the Dupont cables, nylon screwsets, etc...
+- Building out support for multiple (by configuration) AI providers:
+   - Support for alternative STT and/or prompt generation providers (Claude, Gemini, etc...)
+   - Support for alternative video generation providers
+- Adding in support for config-based screen-blanking between configurable times
+
+## Questions / Issues / Feedback
+Open an issue or contact the lead maintainer for help:
+
+<img src="https://github.com/markhinch.png" width="80px;"/><br /><a href="https://github.com/markhinch">@markhinch</a>
+
