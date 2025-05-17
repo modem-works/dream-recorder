@@ -82,15 +82,19 @@ else
 fi
 
 # =============================
-# 3. Docker Installation
+# 3. Update System
+# =============================
+sudo apt update
+
+# =============================
+# 4. Docker Installation
 # =============================
 log_step "Checking for Docker"
 if command -v docker &> /dev/null; then
     log_info "Docker is already installed."
 else
     log_warn "Docker not found. Installing Docker..."
-    sudo apt-get update
-    sudo apt-get install -y ca-certificates curl
+    sudo apt install -y ca-certificates curl
     sudo install -m 0755 -d /etc/apt/keyrings
     sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
     sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -98,27 +102,27 @@ else
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
       $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | \
       sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    sudo apt-get update
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    sudo apt update
+    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     sudo usermod -aG docker $USER
     log_info "Docker installed. You may need to log out and back in for group changes to take effect."
 fi
 
 # =============================
-# 4. jq Installation
+# 5. jq Installation
 # =============================
 log_step "Checking for jq (JSON parser)"
 if command -v jq &> /dev/null; then
     log_info "jq is already installed."
 else
     log_warn "jq not found. Installing jq..."
-    sudo apt-get update
-    sudo apt-get install -y jq
+    sudo apt update
+    sudo apt install -y jq
     log_info "jq installed."
 fi
 
 # =============================
-# 5. Parse config.json for URLs
+# 6. Parse config.json for URLs
 # =============================
 log_step "Parsing GPIO_FLASK_URL from config.json"
 KIOSK_URL=$(jq -r '.GPIO_FLASK_URL' "$CONFIG_PATH")
@@ -130,7 +134,7 @@ else
 fi
 
 # =============================
-# 6. Systemd Service Setup
+# 7. Systemd Service Setup
 # =============================
 log_step "Setting up Docker Compose auto-start as a user systemd service"
 SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
@@ -167,13 +171,13 @@ systemctl --user start dream_recorder_docker.service && \
     log_warn "Could not start Docker Compose service. You may need to log in with a desktop session first."
 
 # =============================
-# Build Docker container
+# 8. Build Docker container
 # =============================
 log_step "Building Docker images (docker compose build)"
 docker compose build
 
 # =============================
-# API Key Validation (inside container)
+# 9. API Key Validation (inside container)
 # =============================
 log_step "Testing API keys inside the container"
 if docker compose exec dream_recorder python scripts/test_openai_key.py; then
@@ -230,7 +234,7 @@ systemctl --user start dream_recorder_gpio.service && \
     log_warn "Could not start GPIO service. You may need to log in with a desktop session first."
 
 # =============================
-# 7. Chromium Kiosk Autostart Setup
+# 10. Chromium Kiosk Autostart Setup
 # =============================
 log_step "Setting up Chromium kiosk mode autostart"
 AUTOSTART_DIR="$HOME/.config/autostart"
@@ -277,7 +281,7 @@ else
 fi
 
 # =============================
-# 8. Screen Blanking Disable Script
+# 11. Screen Blanking Disable Script
 # =============================
 log_step "Creating script to disable screen blanking"
 SCREEN_SCRIPT="$HOME/disable-screen-blanking.sh"
@@ -305,7 +309,7 @@ else
 fi
 
 # =============================
-# 9. Final Summary
+# 12. Final Summary
 # =============================
 log_step "Setting desktop wallpaper to @0.jpg"
 python3 "$SCRIPT_DIR/scripts/set_pi_background.py"
