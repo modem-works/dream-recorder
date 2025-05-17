@@ -8,19 +8,19 @@ To build a Dream Recorder, these are the components you will need. The overall c
 
 | Item | URL |
 | - | - |
-| 90 degree right-angled FPV male-male HDMI ribbon cable (20cm) | [https://www.tinytronics.nl/nl/displays...](https://www.tinytronics.nl/nl/displays/tft/waveshare-7.9-inch-hdmi-ips-tft-lcd-display-1280*400-pixels-met-touchscreen-raspberry-pi-compatible) |
+| Waveshare 7.9 inch HDMI IPS-TFT-LCD Display 1280x400 | [https://www.tinytronics.nl/nl/displays...](https://www.tinytronics.nl/nl/displays/tft/waveshare-7.9-inch-hdmi-ips-tft-lcd-display-1280*400-pixels-met-touchscreen-raspberry-pi-compatible) |
+| Raspberry Pi 5 8GB | [https://www.amazon.nl/Raspberry-Pi...](https://www.amazon.nl/Raspberry-Pi-SC1112-5-8GB/dp/B0CK2FCG1K) |
+| USB-C adapter for 5.1V, 5A, 27W (these specs are important) | https://www.amazon.nl/dp/B0D41VN574 |
+| Waveshare Active Cooler | https://www.amazon.nl/dp/B0CPLQB4RK |
+| MicroSDXC UHS-I-Card - 64 GB | https://www.amazon.nl/dp/B0B7NXBM6P |
+| TTP223B Capacitive Touch Sensor | https://www.amazon.nl/dp/B07XPMH2NZ |
+| Dupont Jumper Wires - 10 cm (you need 3 x female-female) | https://www.amazon.nl/dp/B07GJLCGG8 |
+| USB microphone | https://www.amazon.nl/dp/B0BWFTQL95 |
 | 90 degree right-angled FPV male-male HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B08C7G4J6B |
 | 90 degree right-angled FPV male-male Micro-HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B0177EWVMQ |
 | Up-angled USB 2.0 male Type-A to male Micro-USB ribbon cable (20cm) | https://www.amazon.nl/dp/B095LVLTLJ |
-| M2.5 nylon screwset (you need 4 x 15mm male-female stands) | https://www.amazon.nl/dp/B0DCS5C7SN |
-| TTP223B Capacitive Touch Sensor | https://www.amazon.nl/dp/B07XPMH2NZ |
-| Waveshare Active Cooler | https://www.amazon.nl/dp/B0CPLQB4RK |
-| USB-C adapter for 5.1V, 5A, 27W (these specs are important) | https://www.amazon.nl/dp/B0D41VN574 |
 | 90 degree USB-C adapter | https://www.amazon.nl/dp/B0DGD52DL3 |
-| MicroSDXC UHS-I-Card - 64 GB | https://www.amazon.nl/dp/B0B7NXBM6P |
-| Dupont Jumper Wires - 10 cm (you need 3 x female-female) | https://www.amazon.nl/dp/B07GJLCGG8 |
-| Raspberry Pi 5 8GB | [https://www.amazon.nl/Raspberry-Pi...](https://www.amazon.nl/Raspberry-Pi-SC1112-5-8GB/dp/B0CK2FCG1K) |
-| USB microphone | https://www.amazon.nl/dp/B0BWFTQL95 |
+| M2.5 nylon screwset (you need 4 x 15mm male-female stands) | https://www.amazon.nl/dp/B0DCS5C7SN |
 | PLA filament - 1.75mm, transparant | https://www.amazon.nl/dp/B07Q1PGH4B |
 
 ### What it costs to dream
