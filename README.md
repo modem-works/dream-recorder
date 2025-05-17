@@ -32,13 +32,11 @@ In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. Th
 
 ### Building the device
 
-#### 👩‍🔧 <u>With your hardware components</u>
-
 ![Dream Recorder components](./docs/images/components.gif "Dream Recorder components")
 
-_TODO - (insert a link to the build PDF here)_
+📄 [Assembly Guide (PDF)](./docs/manuals/assembly_guide.pdf)
 
-### To get the Dream Recorder up and running on your Raspberry Pi
+### Installing & configuring the OS
 
 #### 💻️ <u>On your computer</u>
 
@@ -93,6 +91,8 @@ _TODO - (insert a link to the build PDF here)_
    |<a href="./docs/images/raspi_config_5.png"><img style="display: block; width: 450px;" src="./docs/images/raspi_config_5.png"/></a>|<a href="./docs/images/raspi_config_6.png"><img style="display: block; width: 450px;" src="./docs/images/raspi_config_6.png"/></a>|
 </details>
 
+### Getting yourself connected to the Pi
+
 #### 💻️ <u>On your computer</u>
 
 - [Download RealVNC](https://www.realvnc.com/en/connect/download), install and run it
@@ -143,6 +143,10 @@ _TODO - (insert a link to the build PDF here)_
 - Reboot the Raspberry Pi: `sudo reboot`
 - You are now up and running once the Pi has rebooted!
 
+<br />
+
+> <br />*You should be good to go with your Dream Recorder now! Everything below is mostly for those that want to take things further to start tinkering and contributing*<br /><br />
+
 #### Adjusting the configuration of the Dream Recorder
 - SSH into the Dream Recorder with the following command, using the simple password you created in the Raspberry Pi imager:
    - `ssh dreamer@dreamer`
@@ -159,12 +163,9 @@ _TODO - (insert a link to the build PDF here)_
    <a href="./docs/images/config_tool_1.png"><img style="display: block; width: 450px;" src="./docs/images/config_tool_1.png"/></a>
 </details>
 
-
-*You should be good to go with your Dream Recorder now! <br />Everything below is mostly for those that want to take things further to start tinkering and contributing*
-
 ## Taking things further
 
-### To get the Dream Recorder up and running on your local machine (for developers & devs)
+### To get the Dream Recorder up and running on your local machine (for developers & contributors)
 - Note: You will need Docker (Compose) installed on your system - [Docker documentation](https://docs.docker.com/compose/install)
 
 ```bash
@@ -180,9 +181,9 @@ docker compose -f docker-compose.dev.yml up -d
 docker compose exec app python3 scripts/config_editor.py
 ```
 
-The app will be available at [http://localhost:5000](http://localhost:5000)
+The app will be available at [http://localhost:5000](http://localhost:5000) (unless you choose to change the default port in the config)
 
-To simulate sensor button pressesm you can either use the on-screen developer console (available when running in dev mode), or:
+To simulate sensor button presses, you can either use the on-screen developer console (available when running in dev mode), or:
    - Note: You will need Python 3.12 installed on your system - [Python documentation](https://wiki.python.org/moin/BeginnersGuide/Download)
 
    ```bash
@@ -192,7 +193,8 @@ To simulate sensor button pressesm you can either use the on-screen developer co
 <details>
    <summary>See step-by-step images 🖼️</summary>
 
-   <a href="./docs/images/gpio_service_1.png"><img style="display: block; width: 450px;" src="./docs/images/gpio_service_1.png"/></a>
+   |<a href="./docs/images/debug_tools_1.png"><img style="display: block; width: 450px;" src="./docs/images/debug_tools_1.png"/></a>|<a href="./docs/images/gpio_service_1.png"><img style="display: block; width: 450px;" src="./docs/images/gpio_service_1.png"/></a>|
+   |--|--|
 </details>
 
 #### Running unit tests
