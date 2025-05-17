@@ -1,7 +1,10 @@
 # Project specific
-db/
-media/
-logs/
+db/*
+!db/.gitkeep
+logs/*
+!logs/.gitkeep
+media/*
+!media/.gitkeep
 temp_scripts/
 templates/loading.kiosk.html
 config.json
