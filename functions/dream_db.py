@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from typing import Optional
 import os
 from functions.config_loader import get_config
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +27,15 @@ class DreamDB:
         self._init_db()
     
     def _init_db(self):
-        """Initialize the database and create tables if they don't exist."""
+        """Initialize the database and create tables if they don't exist. If the dreams table is created, also initialize sample dreams."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
+            # Check if the dreams table exists
+            cursor.execute("""
+                SELECT name FROM sqlite_master WHERE type='table' AND name='dreams';
+            """)
+            table_exists = cursor.fetchone() is not None
+            # Create the table if it doesn't exist
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS dreams (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,6 +49,62 @@ class DreamDB:
                 )
             ''')
             conn.commit()
+            # If the table did not exist before, initialize sample dreams
+            if not table_exists:
+                self._init_sample_dreams()
+
+    def _init_sample_dreams(self):
+        """Copy sample dreams and insert them into the database if missing."""
+        SAMPLES_DIR = os.path.join(os.path.dirname(__file__), '..', 'dream_samples')
+        VIDEO_DEST = os.path.join(os.path.dirname(__file__), '..', get_config()['VIDEOS_DIR'])
+        THUMB_DEST = os.path.join(os.path.dirname(__file__), '..', get_config()['THUMBS_DIR'])
+        SAMPLES = [
+            {'video': 'video_1.mp4', 'thumb': 'thumb_1.png', 'video_dest': 'dream_1.mp4', 'thumb_dest': 'dream_1.png'},
+            {'video': 'video_2.mp4', 'thumb': 'thumb_2.png', 'video_dest': 'dream_2.mp4', 'thumb_dest': 'dream_2.png'},
+            {'video': 'video_3.mp4', 'thumb': 'thumb_3.png', 'video_dest': 'dream_3.mp4', 'thumb_dest': 'dream_3.png'},
+            {'video': 'video_4.mp4', 'thumb': 'thumb_4.png', 'video_dest': 'dream_4.mp4', 'thumb_dest': 'dream_4.png'},
+        ]
+        # Ensure destination directories exist
+        os.makedirs(VIDEO_DEST, exist_ok=True)
+        os.makedirs(THUMB_DEST, exist_ok=True)
+        # Get existing video filenames
+        existing = self.get_all_dreams()
+        existing_videos = {d['video_filename'] for d in existing}
+        for i, sample in enumerate(SAMPLES, 1):
+            # Copy video
+            src_video = os.path.join(SAMPLES_DIR, sample['video'])
+            dst_video = os.path.join(VIDEO_DEST, sample['video_dest'])
+            if not os.path.exists(dst_video):
+                try:
+                    shutil.copy2(src_video, dst_video)
+                except Exception as e:
+                    if logger:
+                        logger.warning(f"Could not copy sample video {src_video} to {dst_video}: {e}")
+            # Copy thumb
+            src_thumb = os.path.join(SAMPLES_DIR, sample['thumb'])
+            dst_thumb = os.path.join(THUMB_DEST, sample['thumb_dest'])
+            if not os.path.exists(dst_thumb):
+                try:
+                    shutil.copy2(src_thumb, dst_thumb)
+                except Exception as e:
+                    if logger:
+                        logger.warning(f"Could not copy sample thumb {src_thumb} to {dst_thumb}: {e}")
+            # Insert into DB if not present
+            if sample['video_dest'] not in existing_videos:
+                dream_data = DreamData(
+                    user_prompt='',
+                    generated_prompt='',
+                    audio_filename='',
+                    video_filename=sample['video_dest'],
+                    thumb_filename=sample['thumb_dest'],
+                    status='completed',
+                )
+                self.save_dream(dream_data.model_dump())
+                if logger:
+                    logger.info(f"Inserted sample dream {i}")
+            else:
+                if logger:
+                    logger.info(f"Sample dream {i} already exists in DB")
     
     def save_dream(self, dream_data):
         """Save a new dream record to the database."""

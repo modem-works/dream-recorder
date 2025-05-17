@@ -17,29 +17,6 @@ from functions.dream_db import DreamDB
 from functions.audio import create_wav_file, process_audio
 from functions.config_loader import load_config, get_config
 
-# =============================
-# Load Configuration
-# =============================
-
-# =============================
-# Initialize sample dreams if DB does not exist
-# =============================
-def init_sample_dreams_if_missing():
-    try:
-        print("[INFO] No dreams database found. Initializing sample dreams...")
-        result = subprocess.run([
-            'python3', os.path.join(os.path.dirname(__file__), 'scripts', 'init_sample_dreams.py')
-        ], capture_output=True, text=True)
-        if result.returncode == 0:
-            print("[INFO] Sample dreams initialized.")
-        else:
-            print(f"[WARN] Failed to initialize sample dreams.\n{result.stderr}")
-    except Exception as e:
-        print(f"[ERROR] Exception while initializing sample dreams: {e}")
-
-# Call the function at the top-level where the block was
-init_sample_dreams_if_missing()
-
 # Configure logging
 logging.basicConfig(level=getattr(logging, get_config()["LOG_LEVEL"]))
 logger = logging.getLogger(__name__)
@@ -112,7 +89,7 @@ def initiate_recording():
 # =============================
 
 @socketio.on('connect')
-def handle_connect():
+def handle_connect(auth=None):
     """Handle new client connection."""
     if logger:
         logger.info('Client connected')
