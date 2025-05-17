@@ -153,7 +153,7 @@ In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. Th
 - Navigate to the Dream Recorder's root folder:
    - `cd dream-recorder`
 - Run this command:
-   `docker compose exec app python3 scripts/config_editor.py`
+   `./dreamctl config`
 - After saving (s) and quitting (q), reload the application (if you've changed any core, non-superficial configurations) by running:
    - `docker compose restart`
 
@@ -178,7 +178,7 @@ vim .env
 docker compose -f docker-compose.dev.yml build
 docker compose -f docker-compose.dev.yml up -d
 # Edit the default config options (optional)
-docker compose exec app python3 scripts/config_editor.py
+./dreamctl config
 ```
 
 The app will be available at [http://localhost:5000](http://localhost:5000) (unless you choose to change the default port in the config)
@@ -199,9 +199,9 @@ To simulate sensor button presses, you can either use the on-screen developer co
 
 #### Running unit tests
 Run this command to run the tests:
-   - `docker compose exec app pytest`
+   - `./dreamctl test`
 Run this command to run the tests and see overall test coverage:
-   - `docker compose exec app pytest --cov=. --cov-report=term-missing`
+   - `./dreamctl test-cov`
 
 <details>
    <summary>See step-by-step images 🖼️</summary>
@@ -260,3 +260,26 @@ If you would like to contribute to the project, here are some areas we would lov
 Open an issue or contact the lead maintainer for help:
 
 <img src="https://github.com/markhinch.png" width="80px;"/><br /><a href="https://github.com/markhinch">@markhinch</a>
+
+## dreamctl: Simple Command Runner
+
+To make working with the Dream Recorder easier, you can use the `dreamctl` script in the project root. This script simplifies running common commands inside the Docker container.
+
+**Usage:**
+
+```bash
+./dreamctl <command>
+```
+
+**Available commands:**
+- `config`      Edit the Dream Recorder configuration
+- `test`        Run unit tests
+- `test-cov`    Run unit tests with coverage report
+- `help`        Show help message
+
+For example:
+- `./dreamctl config` will open the configuration editor
+- `./dreamctl test` will run the test suite
+- `./dreamctl test-cov` will run the test suite with coverage reporting
+
+You can extend `dreamctl` to add more commands as needed.

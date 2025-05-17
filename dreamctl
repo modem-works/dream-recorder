@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+import sys
+import subprocess
+
+COMMANDS = {
+    'config': ['python3', 'scripts/config_editor.py'],
+    'test': ['pytest'],
+    'test-cov': ['pytest', '--cov=.', '--cov-report=term-missing'],
+}
+
+HELP = """
+Dream Recorder Control Script
+
+Usage:
+  ./dreamctl <command>
+
+Commands:
+  config      Edit the Dream Recorder configuration
+  test        Run unit tests
+  test-cov    Run unit tests with coverage report
+  help        Show this help message
+"""
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] in ('help', '-h', '--help'):
+        print(HELP)
+        sys.exit(0)
+    cmd = sys.argv[1]
+    if cmd not in COMMANDS:
+        print(f"Unknown command: {cmd}\n")
+        print(HELP)
+        sys.exit(1)
+    docker_cmd = ['docker', 'compose', 'exec', 'app'] + COMMANDS[cmd]
+    try:
+        subprocess.run(docker_cmd, check=True)
+    except subprocess.CalledProcessError as e:
+        sys.exit(e.returncode)
+
+if __name__ == '__main__':
+    main() 
