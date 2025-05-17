@@ -4,10 +4,11 @@
 ## About the physical device
 
 ### Shopping list / Bill Of Materials
-To build a Dream Recorder, these are the components you will need. The overall cost for these components from the provided links is approximately €210 (Last updated May 2025).
+To build a Dream Recorder, these are the components you will need. The overall cost for these components from the provided links is approximately €285 (Last updated May 2025).
 
 | Item | URL |
 | - | - |
+| 90 degree right-angled FPV male-male HDMI ribbon cable (20cm) | [https://www.tinytronics.nl/nl/displays...](https://www.tinytronics.nl/nl/displays/tft/waveshare-7.9-inch-hdmi-ips-tft-lcd-display-1280*400-pixels-met-touchscreen-raspberry-pi-compatible) |
 | 90 degree right-angled FPV male-male HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B08C7G4J6B |
 | 90 degree right-angled FPV male-male Micro-HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B0177EWVMQ |
 | Up-angled USB 2.0 male Type-A to male Micro-USB ribbon cable (20cm) | https://www.amazon.nl/dp/B095LVLTLJ |
@@ -18,7 +19,7 @@ To build a Dream Recorder, these are the components you will need. The overall c
 | 90 degree USB-C adapter | https://www.amazon.nl/dp/B0DGD52DL3 |
 | MicroSDXC UHS-I-Card - 64 GB | https://www.amazon.nl/dp/B0B7NXBM6P |
 | Dupont Jumper Wires - 10 cm (you need 3 x female-female) | https://www.amazon.nl/dp/B07GJLCGG8 |
-| Raspberry Pi 5 8GB | https://www.amazon.nl/Raspberry-Pi-SC1112-5-8GB/dp/B0CK2FCG1K |
+| Raspberry Pi 5 8GB | [https://www.amazon.nl/Raspberry-Pi...](https://www.amazon.nl/Raspberry-Pi-SC1112-5-8GB/dp/B0CK2FCG1K) |
 | USB microphone | https://www.amazon.nl/dp/B0BWFTQL95 |
 | PLA filament - 1.75mm, transparant | https://www.amazon.nl/dp/B07Q1PGH4B |
 
@@ -227,9 +228,16 @@ You can access the dream management page from your computer by going to http://d
 </details>
 
 ## Troubleshooting
+- **Connecting to the Raspberry Pi:**
+   - If you struggle to connect to the Raspberry Pi using "dreamer" as the hostname, you might need to find its IP address and use that instead of x.x.x.x or http://dreamer. Sometimes this is due to issues with local DNS due to network router configuration.
+   - To find the IP address, you can use one of three methods:
+      - Connect a mouse to the Raspberry Pi and find the IP address by hovering over the Wifi symbol on the system tray at the top right of the screen
+      - Use your router's admin console to find the IP address by finding what devices are connected to your network
+      - Use nmap to scan for network device in the same range as your computer's IP address (eg. 192.168.1.x)
 - **Logs:**
   - App logs: `docker compose logs -f`
-  - GPIO logs: `tail -f logs/gpio_service.log`
+  - GPIO logs: `./dreamctl gpio-logs` (for on the Dream Recorder)
+  - GPIO logs: `tail -f logs/gpio_service.log` (for on your local machine if using `python gpio_service.py --test`)
 - **Check running services:**
   ```bash
   docker ps
@@ -260,12 +268,14 @@ To make working with the Dream Recorder easier, you can use the `dreamctl` scrip
 - `config`      Edit the Dream Recorder configuration
 - `test`        Run unit tests
 - `test-cov`    Run unit tests with coverage report
+- `gpio-logs`   Tail the GPIO service log (logs/gpio_service.log)
 - `help`        Show help message
 
 For example:
 - `./dreamctl config` will open the configuration editor
 - `./dreamctl test` will run the test suite
 - `./dreamctl test-cov` will run the test suite with coverage reporting
+- `./dreamctl gpio-logs` will tail the GPIO service log (logs/gpio_service.log)
 
 You can extend `dreamctl` to add more commands as needed.
 

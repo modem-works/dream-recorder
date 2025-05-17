@@ -6,6 +6,7 @@ COMMANDS = {
     'config': ['python3', 'scripts/config_editor.py'],
     'test': ['pytest'],
     'test-cov': ['pytest', '--cov=.', '--cov-report=term-missing'],
+    'gpio-logs': ['tail', '-f', 'logs/gpio_service.log'],
 }
 
 HELP = """
@@ -18,6 +19,7 @@ Commands:
   config      Edit the Dream Recorder configuration
   test        Run unit tests
   test-cov    Run unit tests with coverage report
+  gpio-logs   Tail the GPIO service log (logs/gpio_service.log)
   help        Show this help message
 """
 

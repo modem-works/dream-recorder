@@ -2,6 +2,7 @@
 temp_scripts/
 templates/loading.kiosk.html
 config.json
+logs/
 
 # Node.js
 node_modules/
