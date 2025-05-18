@@ -153,7 +153,7 @@ You now need to find the IP address that your local network has assigned to the 
    - Login / sign up to [LumaLabs](https://lumalabs.ai/api/dashboard) and create a secret / API key
    - Copy the value and paste it to a text file temporarily as you will need it shortly
    - Add a few dollars of credits to your account (~$20 suggested)
-- Copy the URL of the Git repository at the top of this Github page by clicking on the Code button at the top right and copying the 'SSH' url
+- Copy the URL of the Git repository at the top of this Github page by clicking on the Code button at the top right and copying the 'HTTP' url
 
 #### 💻️ <u>On your computer (in the Terminal window)</u>
 - Make sure you are still connected to the Dream Recorder
