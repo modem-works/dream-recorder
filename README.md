@@ -71,6 +71,33 @@ In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. Th
 - Insert the microSD card into the Raspberry Pi
 - Plug the Raspberry Pi in using the power supply and wait for it to boot up
 
+#### Finding the Raspberry Pi's local IP address
+You now need to find the IP address that your local network has assigned to the Raspberry Pi. You can do this in one of three ways:
+1.  EASY: On the device:
+    -   Plug a USB mouse in to the Raspberry Pi
+    -   Click on the Wifi icon on the top right of the screen
+    -   Advanced Options -> Connection Information
+    -   Note the IP address (e.g. 192.168.1.100)
+    - ...or...
+2.  MEDIUM: On your network router's admin software interface:
+	- This approach's exact steps will depend on what your home network's router and software is
+	- Essentially you will need to find all connected devices and find the Raspberry Pi
+    - ...or...
+3.  HARD: In a Terminal console on your computer:
+    - Open up a terminal window
+    - Check if you have nmap installed by running:
+	    - `nmap`
+	    - If it's not installed, do so now - [Downloads & instructions](https://nmap.org/download.html)
+    -   Find your computer's IP by either:
+	    1. Running this command in the terminal:
+		    - `ifconfig | grep "inet "`
+		    -   Make a note of your computer's IP address (which will most likely look something like `192.168.X.X`)
+		    - ...or...
+	    2. Referring to your computer's Wifi / Ethernet connection details via settings
+    -   Run this command in the terminal, keeping the first three numbers sets the same as your computer's IP and leaving the 0/24 at the end:
+	    - `nmap -sn 192.168.1.0/24 | grep dreamer`
+	    - So if your computer's IP address is 192.168.1.100 for example, you would run: `nmap -sn 192.168.1.0/24 | grep dreamer`
+
 #### 💻️ <u>On your computer (in a Terminal window)</u>
 
 - Open up a terminal / command line / bash window
@@ -114,8 +141,6 @@ In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. Th
    |--|--|--|
 
    <a href="./docs/images/vnc_viewer_4.jpg"><img style="display: block; width: 800px;" src="./docs/images/vnc_viewer_4.jpg"/></a>
-
-   <a href="./docs/images/vnc_viewer_5.jpg"><img style="display: block; width: 800px;" src="./docs/images/vnc_viewer_5.jpg"/></a>
 </details>
 
 #### 💻️ <u>On your computer (in a web browser)</u>
@@ -128,7 +153,7 @@ In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. Th
    - Login / sign up to [LumaLabs](https://lumalabs.ai/api/dashboard) and create a secret / API key
    - Copy the value and paste it to a text file temporarily as you will need it shortly
    - Add a few dollars of credits to your account (~$20 suggested)
-- Copy the URL of the Git repository at the top of this Github page by clicking on the blue Code button at the top right and copying the 'SSH' url
+- Copy the URL of the Git repository at the top of this Github page by clicking on the Code button at the top right and copying the 'SSH' url
 
 #### 💻️ <u>On your computer (in the Terminal window)</u>
 - Make sure you are still connected to the Dream Recorder
@@ -233,16 +258,10 @@ You can access the dream management page from your computer by going to http://d
 </details>
 
 ## Troubleshooting
-- **Connecting to the Raspberry Pi:**
-   - If you struggle to connect to the Raspberry Pi using "dreamer" as the hostname, you might need to find its IP address and use that instead of x.x.x.x or http://dreamer. Sometimes this is due to issues with local DNS due to network router configuration.
-   - To find the IP address, you can use one of three methods:
-      - Connect a mouse to the Raspberry Pi and find the IP address by hovering over the Wifi symbol on the system tray at the top right of the screen
-      - Use your router's admin console to find the IP address by finding what devices are connected to your network
-      - Use nmap to scan for network device in the same range as your computer's IP address (eg. 192.168.1.x)
 - **Logs:**
   - App logs: `docker compose logs -f`
   - GPIO logs: `./dreamctl gpio-logs` (for on the Dream Recorder)
-  - GPIO logs: `tail -f logs/gpio_service.log` (for on your local machine if using `python gpio_service.py --test`)
+  - GPIO logs: `tail -f logs/gpio_service.log` (for during development on your local machine if using `python gpio_service.py --test`)
 - **Check running services:**
   ```bash
   docker ps
