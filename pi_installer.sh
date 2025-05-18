@@ -331,8 +331,8 @@ cat <<'EOF'
    .:'    \   .;  .;.-' ;   :   ;;  ;;  ;;     .::.   ).;.-' ;     ;   ;'.;   :   ; .;.-'   .;     
  .-:.      ).;'    `:::'`:::'-'';  ;;  ';    .-:. `:-'  `:::'`;;;;'`;;'.;'    `:::'`.`:::'.;'      
 (_/  `----'                   _;        `-' (_/     `:._.                                          
+
 EOF
 
 echo -e "${GREEN}Docker Compose and Chromium kiosk mode will auto-start on boot.${NC}"
 echo -e "${YELLOW}You may need to reboot for all changes to take effect.${NC}"
-echo -e "${BLUE}If you see any warnings about systemd user services, log in with a desktop session and re-run this script or run the suggested commands.${NC}" 
