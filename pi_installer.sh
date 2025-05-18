@@ -104,9 +104,12 @@ else
       sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     sudo apt update
     sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-    sudo usermod -aG docker $USER
-    log_info "Docker installed. You may need to log out and back in for group changes to take effect."
+    log_info "Docker installed."
 fi
+
+# Always ensure user is in docker group
+sudo usermod -aG docker $USER
+log_info "Ensured $USER is in the docker group. You may need to log out and back in for group changes to take effect."
 
 # =============================
 # 5. jq Installation
@@ -315,6 +318,21 @@ log_step "Setting desktop wallpaper to @0.jpg"
 python3 "$SCRIPT_DIR/scripts/set_pi_background.py"
 
 log_step "Setup Complete!"
+
+# ASCII art for DREAM RECORDER (GENERATED WITH https://patorjk.com/software/taag)
+# Font: Cola
+# Author : MikeChat
+# Date   : 2006/6/7 14:32:11
+# Version: 1.0
+cat <<'EOF'
+   .-.                                         .-.                                                 
+  (_) )-.                                     (_) )-.                               .'             
+    .:   \    .;.::..-.  .-.    . ,';.,';.      .:   \   .-.  .-.   .-.  .;.::..-..'  .-.   .;.::. 
+   .:'    \   .;  .;.-' ;   :   ;;  ;;  ;;     .::.   ).;.-' ;     ;   ;'.;   :   ; .;.-'   .;     
+ .-:.      ).;'    `:::'`:::'-'';  ;;  ';    .-:. `:-'  `:::'`;;;;'`;;'.;'    `:::'`.`:::'.;'      
+(_/  `----'                   _;        `-' (_/     `:._.                                          
+EOF
+
 echo -e "${GREEN}Docker Compose and Chromium kiosk mode will auto-start on boot.${NC}"
 echo -e "${YELLOW}You may need to reboot for all changes to take effect.${NC}"
 echo -e "${BLUE}If you see any warnings about systemd user services, log in with a desktop session and re-run this script or run the suggested commands.${NC}" 
