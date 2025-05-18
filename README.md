@@ -102,7 +102,7 @@ You now need to find the IP address that your local network has assigned to the 
 
 - Open up a terminal / command line / bash window
 - SSH into the Dream Recorder with the following command, using the simple password you created in the Raspberry Pi imager:
-   - `ssh dreamer@dreamer`
+   - `ssh dreamer@<DREAM_RECORDER_IP_ADDRESS>`
 - Run the Raspberry Pi config tool by running this command:
    - `sudo raspi-config`
    - Interface Options -> VNC -> Yes -> OK
@@ -158,7 +158,7 @@ You now need to find the IP address that your local network has assigned to the 
 #### 💻️ <u>On your computer (in the Terminal window)</u>
 - Make sure you are still connected to the Dream Recorder
    - If not, connect again:
-      - `ssh dreamer@dreamer`
+      - `ssh dreamer@<DREAM_RECORDER_IP_ADDRESS>`
 - Clone the Dream Recorder from Github using the URL you just copied in the step above
    - `git clone <repo_ssh_url>`
 - Once completed, navigate into the repo folder:
@@ -169,13 +169,22 @@ You now need to find the IP address that your local network has assigned to the 
 - Reboot the Raspberry Pi: `sudo reboot`
 - You are now up and running once the Pi has rebooted!
 
+## Using the Dream Recorder
+- Single tap: Play the latest dream
+   - Single tapping while a dream is playing will play the previous dream
+   - Double tapping while a dream is playing will go back to clock mode
+- Double tap: Record a dream
+   - Single tap once you are done talking for the dream to be generated
+
 <br />
 
 > <br />*You should be good to go with your Dream Recorder now! Everything below is mostly for those that want to take things further to start tinkering and contributing*<br /><br />
 
-#### Adjusting the configuration of the Dream Recorder
+## Configuring the Dream Recorder (optional)
+To change the default settings for the Dream Recorder, you can use the command line configuration tool:
+
 - SSH into the Dream Recorder with the following command, using the simple password you created in the Raspberry Pi imager:
-   - `ssh dreamer@dreamer`
+   - `ssh dreamer@<DREAM_RECORDER_IP_ADDRESS>`
 - Navigate to the Dream Recorder's root folder:
    - `cd dream-recorder`
 - Run this command:
@@ -239,13 +248,6 @@ Run this command to run the tests and see overall test coverage:
 To see how the application's architecture and communication works visually, please refer to the Mermaid diagrams:
 - 📈 [Application Architecture](./docs/diagrams/application_architecture.mmd)
 - 📈 [Conversation flow](./docs/diagrams/conversation_flow.mmd)
-
-## Using the Dream Recorder
-- Single tap: Play the latest dream
-   - Single tapping while a dream is playing will play the previous dream
-   - Double tapping while a dream is playing will go back to clock mode
-- Double tap: Record a dream
-   - Single tap once you are done talking for the dream to be generated
 
 ## Managing your dreams
 You can access the dream management page from your computer by going to http://dreamer:5000/dreams
