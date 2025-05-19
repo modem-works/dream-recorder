@@ -315,6 +315,9 @@ If you would like to contribute to the project, here are some areas we would lov
    - Support for alternative video generation providers
 - Adding in support for config-based screen-blanking between configurable times
 
+## License
+Dream Recorder is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the [LICENSE.md](./LICENSE.md) file in the project repository.
+
 ## Questions / Issues / Feedback
 Open an issue or contact the lead maintainer for help:
 
