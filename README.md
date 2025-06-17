@@ -29,6 +29,10 @@ In order to generate dreams, this application uses OpenAI and LumaLabs' APIs. Th
 - OpenAI text-to-speech and video prompt generation: < $ 0.01 per dream - [OpenAI Pricing](https://openai.com/api/pricing)
 - LumaLabs dream generation (using 540p, 21:9, 5 seconds, ray-flash-2): $ 0.14 per dream - [LumaLabs Pricing](https://lumalabs.ai/api/pricing)
 
+<br />
+
+---
+
 ## Getting your Dream Recorder set up
 
 ### Building the device
@@ -198,6 +202,58 @@ To change the default settings for the Dream Recorder, you can use the command l
    <a href="./docs/images/config_tool_1.jpg"><img style="display: block; width: 450px;" src="./docs/images/config_tool_1.jpg"/></a>
 </details>
 
+## Printing the enclosure
+In the `./3DAssets` folder you will find STL and G-code files for the translucent two-part 3D-printable enclosure. Designed with accessibility in mind, it should print reliably on most FDM printers using basic slicer settings.
+
+### Files included
+
+| Filename                    | Description                         |
+|-----------------------------|-------------------------------------|
+| `dream-recorder_front.stl`  | Front half of the enclosure         |
+| `dream-recorder_back.stl`   | Back half of the enclosure          |
+| `dream-recorder_front.gcode`| Pre-sliced G-code for front shell   |
+| `dream-recorder_back.gcode` | Pre-sliced G-code for back shell    |
+
+G-code was sliced for a 0.4 mm nozzle with standard PLA settings at 0.2 mm layer height.
+
+### Recommended print settings
+
+| Setting                   | Value                       |
+|---------------------------|-----------------------------|
+| **Layer height**          | 0.2 mm                      |
+| **Nozzle diameter**       | 0.4 mm                      |
+| **Infill**                | 15%, Rectilinear            |
+| **Wall loops**            | 2                           |
+| **Top/Bottom Layers**     | 4 (Monotonic pattern)       |
+| **Supports**              | Enabled, Tree (Auto)        |
+| **Support angle**         | 45°                         |
+| **Flush options**         | Flush into support: ✔️      |
+| **Material**              | Translucent PLA recommended |
+
+**Note**: Prime tower is disabled to ensure simplicity and material efficiency.
+
+### Compatibility & customization
+
+- Optimized for **standard 0.2 mm settings**, but prints well across a range of layer heights
+- You can use your own slicer or directly print using the included `.gcode` files (assuming printer compatibility)
+
+### Orientation on the printer bed
+
+|<a href="./docs/images/3d_printing/DR_Back_Angle1.jpg"><img style="display: block; width: 450px;" src="./docs/images/3d_printing/DR_Back_Angle1.jpg"/></a>|<a href="./docs/images/3d_printing/DR_Back_Angle2.jpg"><img style="display: block; width: 450px;" src="./docs/images/3d_printing/DR_Back_Angle2.jpg"/></a>|<a href="./docs/images/3d_printing/DR_Back_Angle3.jpg"><img style="display: block; width: 450px;" src="./docs/images/3d_printing/DR_Back_Angle3.jpg"/></a>|
+|--|--|--|
+|<a href="./docs/images/3d_printing/DR_Front_Angle1.jpg"><img style="display: block; width: 450px;" src="./docs/images/3d_printing/DR_Front_Angle1.jpg"/></a>|<a href="./docs/images/3d_printing/DR_Front_Angle2.jpg"><img style="display: block; width: 450px;" src="./docs/images/3d_printing/DR_Front_Angle2.jpg"/></a>|<a href="./docs/images/3d_printing/DR_Back_Angle3.jpg"><img style="display: block; width: 450px;" src="./docs/images/3d_printing/DR_Front_Angle3.jpg"/></a>|
+
+### Assembly Instructions
+
+1. Print both front and back pieces
+2. Remove supports carefully (tree structures minimize scarring)
+3. Clean up seam edges with light sanding if needed
+4. Press-fit the two parts together (t)he enclosure is designed for a friction fit, so no glue or fasteners required)
+
+<br />
+
+---
+
 ## Taking things further
 
 ### To get the Dream Recorder up and running on your local machine (for developers & contributors)
@@ -280,6 +336,7 @@ You can access the dream management page from your computer by going to http://d
   docker compose up -d
   systemctl --user start dream_recorder_gpio.service
   ```
+
 ## dreamctl: Simple Command Runner
 
 To make working with the Dream Recorder easier, you can use the `dreamctl` script in the project root. This script simplifies running common commands inside the Docker container.
@@ -315,11 +372,11 @@ If you would like to contribute to the project, here are some areas we would lov
    - Support for alternative video generation providers
 - Adding in support for config-based screen-blanking between configurable times
 
-## License
-Dream Recorder is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the [LICENSE.md](./LICENSE.md) file in the project repository.
-
 ## Questions / Issues / Feedback
 Open an issue or contact the lead maintainer for help:
 
 <img src="https://github.com/markhinch.png" width="80px;"/><br /><a href="https://github.com/markhinch">@markhinch</a>
 
+
+## License
+Dream Recorder is licensed under the MIT License. This means you are free to use, modify, and distribute the software, subject to the terms and conditions of the MIT License. For more details, please see the [LICENSE.md](./LICENSE.md) file in the project repository.
