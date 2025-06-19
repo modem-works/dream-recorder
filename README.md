@@ -17,7 +17,7 @@ To build a Dream Recorder, these are the components you will need. The overall c
 | Dupont Jumper Wires - 10 cm (you need 3 x female-female) | https://www.amazon.nl/dp/B07GJLCGG8 |
 | USB microphone | https://www.amazon.nl/dp/B0BWFTQL95 |
 | 90 degree right-angled FPV male-male HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B08C7G4J6B |
-| 90 degree right-angled FPV male-male Micro-HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B0177EWVMQ |
+| 90 degree down-angled FPV male-male Micro-HDMI ribbon cable (20cm) | https://www.amazon.nl/dp/B0177EWVMQ |
 | Up-angled USB 2.0 male Type-A to male Micro-USB ribbon cable (20cm) | https://www.amazon.nl/dp/B095LVLTLJ |
 | 90 degree USB-C adapter | https://www.amazon.nl/dp/B0DGD52DL3 |
 | M2.5 nylon screwset (you need 4 x 15mm male-female stands) | https://www.amazon.nl/dp/B0DCS5C7SN |
