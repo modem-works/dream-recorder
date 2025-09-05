@@ -17,6 +17,7 @@
     
     <!-- General CSS -->
     <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/animations.css">
     <link rel="stylesheet" href="/static/css/icon-animations.css">
     <link rel="stylesheet" href="/static/css/clock.css">
 
@@ -35,6 +36,7 @@
                 <span class="colon">:</span>
                 <span class="digit minute-tens">0</span>
                 <span class="digit minute-ones">0</span>
+                <span class="ampm" style="display: none;"></span>
             </div>
         </div>
         
@@ -51,7 +53,10 @@
         <div id="loading" class="loading"></div>
 
         <div id="videoContainer">
-            <video id="generatedVideo" muted autoplay loop>
+            <video id="generatedVideo" class="video-player video-player-active" muted autoplay loop>
+                Your browser does not support the video tag.
+            </video>
+            <video id="generatedVideo2" class="video-player" muted autoplay loop>
                 Your browser does not support the video tag.
             </video>
         </div>
@@ -90,6 +95,68 @@
             <h4>Message</h4>
             <div id="message"></div>
         </div>
+        
+        <div class="debug-section">
+            <h4>Font Settings</h4>
+            <div class="font-controls">
+                <label for="fontSelector">Font Family:</label>
+                <select id="fontSelector">
+                    <option value="'Ballet', cursive" data-font-url="https://fonts.googleapis.com/css2?family=Ballet&display=swap">Ballet (Default)</option>
+                    <option value="Arial, sans-serif">Arial</option>
+                    <option value="'Times New Roman', serif">Times New Roman</option>
+                    <option value="'Courier New', monospace">Courier New</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                    <option value="'Roboto', sans-serif" data-font-url="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap">Roboto</option>
+                    <option value="'Open Sans', sans-serif" data-font-url="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap">Open Sans</option>
+                    <option value="'Lato', sans-serif" data-font-url="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap">Lato</option>
+                    <option value="'Playfair Display', serif" data-font-url="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap">Playfair Display</option>
+                    <option value="'Montserrat', sans-serif" data-font-url="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap">Montserrat</option>
+                    <option value="'Bebas Neue', cursive" data-font-url="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">Bebas Neue</option>
+                    <option value="custom">Custom Google Font...</option>
+                </select>
+                
+                <div id="customFontInput" style="display: none; margin-top: 10px;">
+                    <label for="googleFontUrl">Google Font URL:</label>
+                    <input type="text" id="googleFontUrl" placeholder="e.g., https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" style="width: 100%;">
+                    <button id="applyGoogleFont" style="margin-top: 5px;">Apply</button>
+                    <small style="display: block; margin-top: 5px; color: #888;">Paste a Google Fonts URL or enter a font name (e.g., "Roboto", "Open Sans")</small>
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    <label for="fontSize">Font Size:</label>
+                    <input type="range" id="fontSize" min="50" max="300" value="192" style="width: 100%;">
+                    <span id="fontSizeValue">192px</span>
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    <label for="fontWeight">Font Weight:</label>
+                    <select id="fontWeight">
+                        <option value="100">Thin (100)</option>
+                        <option value="300">Light (300)</option>
+                        <option value="400" selected>Regular (400)</option>
+                        <option value="500">Medium (500)</option>
+                        <option value="700">Bold (700)</option>
+                        <option value="900">Black (900)</option>
+                    </select>
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    <label for="timeFormat">Time Format:</label>
+                    <select id="timeFormat">
+                        <option value="24hr" selected>24-hour</option>
+                        <option value="12hr">12-hour</option>
+                    </select>
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    <label for="showAmPm">
+                        <input type="checkbox" id="showAmPm">
+                        Show AM/PM (when using 12-hour format)
+                    </label>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/static/js/icon-animations.js"></script>
@@ -98,6 +165,7 @@
     <script src="/static/js/recorder.js"></script>
     <script src="/static/js/sockets.js"></script>
     <script src="/static/js/ui-controller.js"></script>
+    <script src="/static/js/font-manager.js"></script>
     <script src="/static/js/background-manager.js"></script>
 </body>
 </html> 

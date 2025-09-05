@@ -17,12 +17,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (StateManager) {
         updateUIForState(StateManager.currentState);
     }
+    
+    // Add keyboard shortcut to toggle debug console
+    document.addEventListener('keydown', (event) => {
+        // Check for Ctrl+D (Windows/Linux) or Cmd+D (Mac)
+        if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
+            event.preventDefault(); // Prevent default browser behavior
+            toggleDebugConsole();
+        }
+    });
 });
 
 // Simulate input for development/testing
 function simulateInput(eventType) {
     console.log(`Simulating input: ${eventType}`);
-    if (StateManager) {
+    // Instead of handling locally, emit to server so all clients receive it
+    if (window.socket) {
+        // Call the API endpoint to broadcast to all clients
+        const endpoint = eventType === 'single_tap' ? '/api/gpio_single_tap' : '/api/gpio_double_tap';
+        fetch(endpoint, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => console.log(`API response:`, data))
+            .catch(error => console.error(`API error:`, error));
+    } else if (StateManager) {
+        // Fallback to local handling if no socket
         StateManager.handleDeviceEvent(eventType);
     }
 }
@@ -36,4 +54,13 @@ function updateUIForState(state) {
     
     // Add current state class
     container.classList.add(state);
+}
+
+// Toggle debug console visibility
+function toggleDebugConsole() {
+    const debugConsole = document.querySelector('.debug-console');
+    if (debugConsole) {
+        debugConsole.classList.toggle('hidden');
+        console.log('Debug console toggled:', !debugConsole.classList.contains('hidden') ? 'visible' : 'hidden');
+    }
 } 

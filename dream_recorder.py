@@ -10,7 +10,7 @@ import gevent
 import io
 import argparse
 
-from flask import Flask, render_template, jsonify, request, send_file
+from flask import Flask, render_template, jsonify, request, send_file, send_from_directory
 from flask_socketio import SocketIO, emit
 from functions.dream_db import DreamDB
 from functions.audio import create_wav_file, process_audio
@@ -108,6 +108,19 @@ def handle_connect(auth=None):
     if logger:
         logger.info('Client connected')
     emit('state_update', recording_state)
+    
+    # Send all available video URLs for preloading
+    try:
+        dreams = dream_db.get_all_dreams()
+        if dreams:
+            video_urls = [f"/media/video/{dream['video_filename']}" for dream in dreams if dream and 'video_filename' in dream]
+            if video_urls:
+                emit('preload_videos', {'urls': video_urls})
+                if logger:
+                    logger.info(f'Sent {len(video_urls)} videos for preloading')
+    except Exception as e:
+        if logger:
+            logger.error(f"Error sending videos for preload: {str(e)}")
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -187,9 +200,15 @@ def handle_show_previous_dream():
             video_playback_state['is_playing'] = True
         # Get the dream at the current index
         dream = dreams[video_playback_state['current_index']]
-        # Emit the video URL to the client
+        
+        # Get the next dream for preloading
+        next_index = (video_playback_state['current_index'] + 1) % len(dreams)
+        next_dream = dreams[next_index]
+        
+        # Emit the video URL to the client with preload hint
         socketio.emit('play_video', {
             'video_url': f"/media/video/{dream['video_filename']}",
+            'next_video_url': f"/media/video/{next_dream['video_filename']}",
             'loop': True  # Enable looping for the video
         })
         if logger:
@@ -305,6 +324,55 @@ def clock_config_path():
     if not config_path:
         return jsonify({'error': 'CLOCK_CONFIG_PATH not set in config'}), 500
     return jsonify({'configPath': config_path})
+
+@app.route('/api/clock-config', methods=['POST'])
+def update_clock_config():
+    """Update the clock configuration file"""
+    try:
+        import json
+        import os
+        from functions.config_loader import get_config
+        
+        # Get the clock config path
+        config_path = get_config().get('CLOCK_CONFIG_PATH')
+        if not config_path:
+            return jsonify({'error': 'CLOCK_CONFIG_PATH not set in config'}), 500
+        
+        # Convert relative path to absolute path
+        if config_path.startswith('/static/'):
+            config_path = os.path.join(app.root_path, config_path.lstrip('/'))
+        
+        # Get the new configuration from request
+        new_config = request.get_json()
+        if not new_config:
+            return jsonify({'error': 'No configuration data provided'}), 400
+        
+        # Read existing config to preserve any fields not being updated
+        existing_config = {}
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                existing_config = json.load(f)
+        
+        # Merge new config with existing config
+        existing_config.update(new_config)
+        
+        # Write the updated config
+        with open(config_path, 'w') as f:
+            json.dump(existing_config, f, indent=4)
+        
+        if logger:
+            logger.info(f"Clock configuration updated: {new_config}")
+        
+        # Emit socket event for font and time format changes
+        if any(key in new_config for key in ['fontFamily', 'fontSize', 'fontWeight', 'fontUrl', 'timeFormat', 'showAmPm']):
+            socketio.emit('font_config_update', {'config': existing_config})
+        
+        return jsonify({'success': True, 'config': existing_config})
+        
+    except Exception as e:
+        if logger:
+            logger.error(f"Error updating clock config: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/notify_config_reload', methods=['POST'])
 def notify_config_reload():

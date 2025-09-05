@@ -189,16 +189,32 @@ canvas {
     z-index: 20;
     opacity: 0;
     transition: opacity 0.5s ease-out;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: opacity;
 }
 
-#generatedVideo {
+.video-player {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center;
     opacity: 0;
-    transition: opacity 0.5s ease-out;
+    /* Transition will be set by JavaScript for better control */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
     will-change: opacity;
+    image-rendering: optimizeSpeed;
+    image-rendering: -webkit-optimize-contrast;
+}
+
+.video-player-active {
+    opacity: 1;
 }
 
 #stopRecordingBtn {
@@ -243,16 +259,41 @@ canvas {
 }
 
 .debug-console {
-    width: 100%;
-    max-width: 1280px;
-    margin: 20px auto 0 auto;
-    background-color: #1e1e1e;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 350px;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.95);
+    border-left: 1px solid #333;
     font-family: 'Courier New', monospace;
     color: #00ff00;
+    font-size: 12px;
     padding: 20px;
     box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1000;
+    scrollbar-width: thin;
+    scrollbar-color: #00ff00 #1a1a1a;
+}
+
+/* Webkit scrollbar styling */
+.debug-console::-webkit-scrollbar {
+    width: 8px;
+}
+
+.debug-console::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.debug-console::-webkit-scrollbar-thumb {
+    background: #00ff00;
+    border-radius: 4px;
+}
+
+.debug-console::-webkit-scrollbar-thumb:hover {
+    background: #00cc00;
 }
 
 .debug-console.hidden {
@@ -366,4 +407,61 @@ canvas {
     padding: 0rem 3rem 3rem 3rem;
     display: none;
     box-sizing: border-box;
+}
+
+/* Font control styles */
+.font-controls {
+    font-size: 12px;
+}
+
+.font-controls label {
+    display: block;
+    margin-bottom: 5px;
+    color: #00ff00;
+    font-weight: bold;
+}
+
+.font-controls select,
+.font-controls input[type="text"],
+.font-controls input[type="range"] {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 3px;
+}
+
+.font-controls select {
+    cursor: pointer;
+}
+
+.font-controls input[type="text"] {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+}
+
+.font-controls button {
+    padding: 5px 15px;
+    background-color: #00ff00;
+    color: #000;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.font-controls button:hover {
+    background-color: #00cc00;
+}
+
+.font-controls small {
+    font-size: 10px;
+}
+
+#fontSizeValue {
+    color: #00ff00;
+    margin-left: 10px;
+    font-weight: bold;
 } 

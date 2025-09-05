@@ -160,7 +160,8 @@ const StateManager = {
     handleStateTransition(newState) {
         const clockDisplay = document.getElementById('clockDisplay');
         const videoContainer = document.getElementById('videoContainer');
-        const video = document.getElementById('generatedVideo');
+        const video1 = document.getElementById('generatedVideo');
+        const video2 = document.getElementById('generatedVideo2');
 
         // Handle video container
         if (videoContainer) {
@@ -174,29 +175,28 @@ const StateManager = {
                 // Fade in video container
                 videoContainer.style.opacity = '1';
                 
-                // After container is visible, fade in video
+                // After container is visible, ensure active video is playing
                 setTimeout(() => {
-                    if (video) {
-                        video.style.opacity = '1';
-                        if (video.paused) {
-                            video.play().catch(error => console.error('Error playing video:', error));
-                        }
+                    // Play whichever video is active
+                    const activeVideo = video1.classList.contains('video-player-active') ? video1 : video2;
+                    if (activeVideo && activeVideo.paused) {
+                        activeVideo.play().catch(error => console.error('Error playing video:', error));
                     }
                 }, this.config.transitionDelay);
             } else if (this.currentState === this.STATES.PLAYBACK) {
-                // Fade out video first
-                if (video) {
-                    video.style.opacity = '0';
-                }
-                
-                // Then fade out container
+                // Fade out container
                 videoContainer.style.opacity = '0';
                 setTimeout(() => {
                     if (this.currentState !== this.STATES.PLAYBACK) {
                         videoContainer.style.display = 'none';
-                        if (video) {
-                            video.pause();
-                            video.currentTime = 0;
+                        // Pause both videos
+                        if (video1) {
+                            video1.pause();
+                            video1.currentTime = 0;
+                        }
+                        if (video2) {
+                            video2.pause();
+                            video2.currentTime = 0;
                         }
                     }
                 }, this.config.logoFadeOutDuration);

@@ -29,3 +29,11 @@
 .colon.hidden {
     opacity: 0;
 }
+
+/* AM/PM indicator */
+.ampm {
+    font-size: calc(var(--clock-font-size) * 0.4);
+    margin-left: 0.5em;
+    vertical-align: middle;
+    opacity: 0.8;
+}

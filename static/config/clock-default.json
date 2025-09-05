@@ -4,5 +4,7 @@
     "color": "#ffffff",
     "fontWeight": "normal",
     "fontStyle": "normal",
-    "fontUrl": "https://fonts.googleapis.com/css2?family=Ballet&display=swap"
+    "fontUrl": "https://fonts.googleapis.com/css2?family=Ballet&display=swap",
+    "timeFormat": "24hr",
+    "showAmPm": false
 }

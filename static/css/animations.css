@@ -79,3 +79,34 @@
     from { background-position: 0px; }
     to { background-position: -92160px; }
 } 
+
+/* Optimized video crossfade animations */
+@keyframes videoFadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(1.02) translateZ(0);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateZ(0);
+    }
+}
+
+@keyframes videoFadeOut {
+    0% {
+        opacity: 1;
+        transform: scale(1) translateZ(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.98) translateZ(0);
+    }
+}
+
+.video-crossfade-in {
+    animation: videoFadeIn 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.video-crossfade-out {
+    animation: videoFadeOut 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+} 

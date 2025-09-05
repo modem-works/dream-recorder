@@ -7,7 +7,8 @@ const Clock = {
         hourOnes: null,
         colon: null,
         minuteTens: null,
-        minuteOnes: null
+        minuteOnes: null,
+        ampm: null
     },
 
     // Configuration options will be loaded from file
@@ -53,6 +54,7 @@ const Clock = {
         this.elements.colon = document.querySelector('.colon');
         this.elements.minuteTens = document.querySelector('.minute-tens');
         this.elements.minuteOnes = document.querySelector('.minute-ones');
+        this.elements.ampm = document.querySelector('.ampm');
         
         // Start the clock
         this.updateClock();
@@ -75,8 +77,18 @@ const Clock = {
     // Update the clock display
     updateClock() {
         const now = new Date();
-        const hours = now.getHours().toString().padStart(2, '0');
+        let hours = now.getHours();
         const minutes = now.getMinutes().toString().padStart(2, '0');
+        let ampm = '';
+        
+        // Handle 12-hour format if enabled
+        if (this.config.timeFormat === '12hr') {
+            ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12; // Convert 0 to 12 for midnight
+        }
+        
+        // Pad hours to 2 digits
+        hours = hours.toString().padStart(2, '0');
         
         // Helper to update digit only if changed
         function updateDigit(element, newValue) {
@@ -93,6 +105,17 @@ const Clock = {
         updateDigit(this.elements.hourOnes, hours[1]);
         updateDigit(this.elements.minuteTens, minutes[0]);
         updateDigit(this.elements.minuteOnes, minutes[1]);
+        
+        // Update AM/PM indicator
+        if (this.elements.ampm) {
+            // Show AM/PM only if using 12hr format AND showAmPm is true
+            if (this.config.timeFormat === '12hr' && this.config.showAmPm !== false) {
+                this.elements.ampm.style.display = 'inline-block';
+                updateDigit(this.elements.ampm, ampm);
+            } else {
+                this.elements.ampm.style.display = 'none';
+            }
+        }
         
         // Toggle colon visibility
         this.colonVisible = !this.colonVisible;
