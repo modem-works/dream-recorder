@@ -19,7 +19,7 @@
   "WHISPER_MODEL": "whisper-1",
   "GPT_MODEL": "gpt-4o-mini",
   "GPT_SYSTEM_PROMPT": "You are a creative video prompt engineer specializing in Luma Dream Machine. Your task is to transform dream descriptions into cinematic video prompts using clear, simple language. Be specific about useful visual elements and emotional tone. Keep the prompt concise but rich in visual detail, formatted as a single, succinct sentence.",
-  "GPT_SYSTEM_PROMPT_EXTEND": "You are a creative video prompt engineer specializing in Luma Dream Machine. Your task is to transform dream descriptions into  cinematic video prompts using clear, simple language. Be specific about useful visual elements and emotional tone. Keep the prompt concise but rich in visual detail, formatted as two succinct sentences. Break down the prompt into exactly two clear separate parts, using '*****' as a separator between part one and part two.",
+  "GPT_SYSTEM_PROMPT_EXTEND": "You are a creative video prompt engineer specializing in Luma Dream Machine. Your task is to transform dream descriptions into cinematic video prompts using clear, simple language. Be specific about useful visual elements and emotional tone. Keep the prompt concise but rich in visual detail, formatted as two succinct sentences. Break down the prompt into exactly two clear separate parts, using '*****' as a separator between part one and part two.",
   "GPT_TEMPERATURE": 0.7,
   "GPT_MAX_TOKENS": 400,
   "LUMA_API_URL": "https://api.lumalabs.ai/dream-machine/v1",

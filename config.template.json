@@ -38,7 +38,7 @@
         "options": [
             "540p",
             "720p",
-            "1080",
+            "1080p",
             "4k"
         ]
     },
@@ -91,7 +91,7 @@
         "name": "GPT_SYSTEM_PROMPT_EXTEND",
         "category": "OpenAI",
         "description": "System prompt for the GPT model (two-sentence/extended version).",
-        "default": "You are a creative video prompt engineer specializing in Luma Dream Machine. Your task is to transform dream descriptions into  cinematic video prompts using clear, simple language. Be specific about useful visual elements and emotional tone. Keep the prompt concise but rich in visual detail, formatted as two succinct sentences. Break down the prompt into exactly two clear separate parts, using '*****' as a separator between part one and part two.",
+        "default": "You are a creative video prompt engineer specializing in Luma Dream Machine. Your task is to transform dream descriptions into cinematic video prompts using clear, simple language. Be specific about useful visual elements and emotional tone. Keep the prompt concise but rich in visual detail, formatted as two succinct sentences. Break down the prompt into exactly two clear separate parts, using '*****' as a separator between part one and part two.",
         "type": "string"
     },
     {
