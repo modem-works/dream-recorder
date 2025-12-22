@@ -248,7 +248,7 @@ G-code was sliced for a 0.4 mm nozzle with standard PLA settings at 0.2 mm layer
 1. Print both front and back pieces
 2. Remove supports carefully (tree structures minimize scarring)
 3. Clean up seam edges with light sanding if needed
-4. Press-fit the two parts together (t)he enclosure is designed for a friction fit, so no glue or fasteners required)
+4. Press-fit the two parts together (the enclosure is designed for a friction fit, so no glue or fasteners required)
 
 <br />
 
@@ -264,7 +264,7 @@ git clone <repo_url>
 cd dream-recorder
 cp ./.env.example ./.env
 cp ./config.example.json ./config.json
-# Add your API keys using vim, nano or any text editor you're compfortable with
+# Add your API keys using vim, nano or any text editor you're comfortable with
 vim .env
 docker compose -f docker-compose.dev.yml build
 docker compose -f docker-compose.dev.yml up -d
