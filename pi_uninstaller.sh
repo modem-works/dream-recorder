@@ -59,12 +59,13 @@ for SERVICE in "${SERVICES[@]}"; do
     else
         log_info "$SERVICE_PATH not found. Skipping."
     fi
-    # Remove log files if present
-    if [ -d "$LOGS_DIR" ]; then
-        find "$LOGS_DIR" -type f -name '*.log' -exec rm -f {} +
-        log_info "Removed all .log files in $LOGS_DIR."
-    fi
-    done
+done
+
+# Remove log files if present
+if [ -d "$LOGS_DIR" ]; then
+    find "$LOGS_DIR" -type f -name '*.log' -exec rm -f {} +
+    log_info "Removed all .log files in $LOGS_DIR."
+fi
 
 systemctl --user daemon-reload || true
 
@@ -81,7 +82,7 @@ for FILE in "$KIOSK_DESKTOP_FILE" "$BLANKING_AUTOSTART"; do
     else
         log_info "$FILE not found. Skipping."
     fi
-    done
+done
 
 # =============================
 # 4. Remove disable-screen-blanking.sh
